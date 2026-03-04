@@ -210,7 +210,8 @@ After validating the design direction, evaluate whether detailed UX design is ne
 - **using-git-worktrees** — During pre-flight checks, if user is on `main`/`master` and wants a branch
 
 **Called by:**
-- Any task that needs creative design work (per skill description trigger)
+- Directly via `/brainstorming`
+- Any task creating features, building components, adding functionality, or modifying behavior (per skill trigger)
 
 **Pairs with:**
 - **writing-plans** — Terminal state; brainstorming always transitions to planning
