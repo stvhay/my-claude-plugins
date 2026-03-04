@@ -108,7 +108,7 @@ dev-container() {
     nixos/nix \
     /bin/sh -c '
       # Install Claude Code if not already cached in shared Nix store
-      command -v claude >/dev/null 2>&1 || nix-env -iA nixpkgs.nodejs && npm i -g @anthropic-ai/claude-code
+      command -v claude >/dev/null 2>&1 || { nix-env -iA nixpkgs.nodejs && npm i -g @anthropic-ai/claude-code; }
 
       # Alias claude to bypass permissions (container is isolated)
       echo "alias claude=\"claude --dangerously-skip-permissions\"" >> ~/.profile
