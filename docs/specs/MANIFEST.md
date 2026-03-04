@@ -20,7 +20,7 @@ rather than navigating the manifest manually.
 
 | Subsystem | Spec Path | Summary |
 |---|---|---|
-| *(none yet — use `/codify-subsystem` to add the first)* | | |
+| Skills | `.claude/skills/SPEC.md` | Reusable agent instructions as Markdown with YAML frontmatter |
 
 ## Cross-Cutting Concerns
 

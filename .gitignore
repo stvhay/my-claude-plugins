@@ -9,6 +9,7 @@ result
 .claude/*
 !.claude/skills/
 .claude/skills/*
+!.claude/skills/SPEC.md
 !.claude/skills/UPSTREAM-superpowers.md
 !.claude/skills/brainstorming/
 !.claude/skills/code-simplification/

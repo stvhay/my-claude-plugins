@@ -88,7 +88,7 @@ load the nearest SPEC.md. This mirrors how .gitignore resolution works.
 
 | Subsystem | Path | Purpose |
 |---|---|---|
-| *(populated as project grows — use `/codify-subsystem`)* | | |
+| Skills | `.claude/skills/` | Reusable agent instructions as Markdown with YAML frontmatter |
 
 For detailed specifications, read the SPEC.md in each subsystem directory.
 
