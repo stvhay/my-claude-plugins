@@ -186,7 +186,7 @@ After validating the design direction, evaluate whether detailed UX design is ne
 
 **Implementation (if continuing):**
 - Ask: "Ready to set up for implementation?"
-- Use using-git-worktrees to create isolated workspace
+- If no worktree was created during pre-flight, use using-git-worktrees to create one
 - Use writing-plans to create detailed implementation plan
 
 ## Key Principles
