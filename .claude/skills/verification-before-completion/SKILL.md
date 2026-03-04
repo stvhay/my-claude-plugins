@@ -161,14 +161,21 @@ After standard verification passes, check for subsystem specifications:
 1. **Find SPEC.md** — Walk up from modified files to find the nearest SPEC.md
 2. **If found, check invariants** — Review each invariant in the spec's table.
    For each one, verify it still holds after your changes.
-3. **Report** — Include invariant check results in verification output
+3. **Check coverage** — If the SPEC.md has a Coverage table in its Testing
+   section, verify that every INV-N and FAIL-N has a corresponding test and
+   that the test passes. Flag uncovered spec items.
+4. **Report** — Include invariant and coverage check results in verification output
 
-This is a lightweight consistency check, not a replacement for tests. If an
-invariant is unclear or untestable, note it rather than skipping it.
+This is a lightweight consistency check, not a replacement for the full test
+suite. If an invariant is unclear or untestable, note it rather than skipping it.
 
 ```
 SPEC.md invariant check:
 - [path/to/SPEC.md]
-- Invariant 1: [description] → ✅ Still holds / ❌ Violated
-- Invariant 2: [description] → ✅ Still holds / ❌ Violated
+- INV-1: [description] → ✅ Still holds / ❌ Violated
+- FAIL-1: [description] → ✅ Handled / ❌ Unhandled
+
+Coverage check:
+- INV-1 → test_inv1_* ✅ Covered / ❌ Missing test
+- FAIL-1 → test_fail1_* ✅ Covered / ❌ Missing test
 ```

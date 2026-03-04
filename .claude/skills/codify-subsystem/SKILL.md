@@ -71,6 +71,10 @@ seen, and what caused them?"
 **Testing:** "How do you verify this subsystem works? What's the exact command?
 Any special setup needed?"
 
+**Test mapping:** "Are there existing tests for this subsystem? If so, which
+tests verify which invariants or failure modes?" (This populates the coverage
+table in the Testing section.)
+
 **Purpose:** "Anything about *why* this subsystem exists that isn't obvious from
 the code?" (Sometimes the code shows *what* but not *why* — design decisions,
 alternatives considered, constraints from external systems.)
@@ -78,6 +82,10 @@ alternatives considered, constraints from external systems.)
 ### Step 5: Finalize SPEC.md
 
 Incorporate all answers. Write the final SPEC.md to the target directory.
+
+**Coverage table:** Populate the Testing section's Coverage table by mapping
+existing tests to spec item IDs (INV-N, FAIL-N). Flag any spec items that
+lack corresponding tests — these need tests written.
 
 **Size check:** If the spec exceeds 400 lines, suggest splitting the subsystem
 or summarizing verbose sections.

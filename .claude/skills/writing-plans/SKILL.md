@@ -72,7 +72,9 @@ Each task must be self-contained — a subagent receiving only this task text ha
 **Context:** [What this task builds, where it fits in the system, any relevant architectural decisions. Include enough that a fresh subagent understands the landscape without reading other tasks.]
 
 **Subsystem spec(s):** [Path(s) to nearest SPEC.md, or "None — new subsystem". If the task crosses subsystem boundaries, list all relevant specs.]
-**Key invariants from spec:** [List the invariants the subagent must not violate, or "N/A"]
+**Key invariants from spec:** [List with IDs — the subagent must not violate these and must write tests for them]
+- INV-N: [description] → test: `test_invN_*`
+- FAIL-N: [description] → test: `test_failN_*`
 
 **Files:**
 - Create: `exact/path/to/file.py`
@@ -133,6 +135,7 @@ Mark each task's dependencies explicitly. Independent tasks can be dispatched to
 - Include nearest SPEC.md path and key invariants in each task
 - Mark dependencies between tasks
 - Acceptance criteria = what must be TRUE = the tests
+- Anchor tests to SPEC.md item IDs (INV-N, FAIL-N) when a spec exists
 - DRY, YAGNI, TDD, frequent commits
 
 ## Execution Handoff
