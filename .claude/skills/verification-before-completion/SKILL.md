@@ -177,6 +177,21 @@ After standard verification passes, check for subsystem specifications:
 This is a lightweight consistency check, not a replacement for the full test
 suite. If an invariant is unclear or untestable, note it rather than skipping it.
 
+### Staleness Check
+
+After checking invariants, assess whether the SPEC.md is still current:
+
+1. **Compare modification dates** — If source files in the subsystem have been
+   modified more recently than SPEC.md (check via `git log -1 --format=%ci`),
+   the spec may be stale.
+2. **Check for drift** — Do your changes introduce new invariants, failure modes,
+   or public interfaces not captured in the spec? If yes, flag for update.
+3. **Report staleness** — Include in verification output. Recommend
+   `/codify-subsystem` to refresh the spec if significant drift is detected.
+
+A stale spec is better than no spec — don't block completion on staleness alone.
+Flag it and move on.
+
 ```
 SPEC.md invariant check:
 - [path/to/SPEC.md]
@@ -186,4 +201,10 @@ SPEC.md invariant check:
 Coverage check:
 - INV-1 → test_inv1_* ✅ Covered / ❌ Missing test
 - FAIL-1 → test_fail1_* ✅ Covered / ❌ Missing test
+
+Staleness:
+- SPEC.md last modified: [date]
+- Source files modified after spec: [yes/no — list files if yes]
+- New invariants/interfaces not in spec: [yes/no — describe if yes]
+- Recommendation: [Current / Recommend re-codification]
 ```
