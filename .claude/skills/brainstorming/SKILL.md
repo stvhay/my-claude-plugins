@@ -19,23 +19,53 @@ Do NOT invoke any implementation skill, write any code, scaffold any project, or
 
 Every project goes through this process. A todo list, a single-function utility, a config change — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but you MUST present it and get approval.
 
+## Pre-flight Checks
+
+Before exploring the project, verify the CONTRIBUTING.md workflow prerequisites. Both checks are **soft gates** — the user can always proceed anyway.
+
+### 1a. Issue Check
+
+Ask: "Which GitHub issue does this work address? (Enter issue number, URL, or 'none' to skip)"
+
+- **If number or URL provided:** Run `gh issue view <number> --json title,state` to verify the issue exists. Capture the issue number and title for the design doc header.
+- **If 'none':** Warn: "CONTRIBUTING.md requires filing a GitHub issue before brainstorming. You can create one now or proceed without one." If the user proceeds, record `Issue: None (exploratory)` for the design doc.
+
+### 1b. Branch Check
+
+Run `git branch --show-current` to detect the current branch.
+
+- **If on `main` or `master`:** Warn: "You're on `<branch>`. CONTRIBUTING.md requires a feature branch before brainstorming. Want me to run `/using-git-worktrees` to create one?"
+  - If yes: invoke using-git-worktrees, then resume brainstorming from Step 2.
+  - If no: allow proceeding with a warning.
+- **If on any other branch:** Proceed to Step 2.
+
 ## Checklist
 
 You MUST create a task for each of these items and complete them in order:
 
-1. **Explore project context** — check files, docs, recent commits
-2. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-3. **Propose 2-3 approaches** — with trade-offs and your recommendation
-4. **Consider subsystem boundaries** — does this fit in one subsystem or cross boundaries? If it crosses, note which SPEC.md files are relevant and flag that the plan should be split by subsystem. If a new subsystem boundary is identified that lacks a SPEC.md, recommend `/codify-subsystem` after implementation
-5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` (local working directory, not committed)
-7. **Evaluate UX design need** — if user-facing or agentic, recommend ux-design-agent
-8. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+1. **Pre-flight checks** — verify issue exists and on feature branch (soft gates, see Pre-flight Checks section)
+2. **Explore project context** — check files, docs, recent commits
+3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
+4. **Propose 2-3 approaches** — with trade-offs and your recommendation
+5. **Consider subsystem boundaries** — does this fit in one subsystem or cross boundaries? If it crosses, note which SPEC.md files are relevant and flag that the plan should be split by subsystem. If a new subsystem boundary is identified that lacks a SPEC.md, recommend `/codify-subsystem` after implementation
+6. **Present design** — in sections scaled to their complexity, get user approval after each section
+7. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` (local working directory, not committed)
+8. **Evaluate UX design need** — if user-facing or agentic, recommend ux-design-agent
+9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
 
 ```dot
 digraph brainstorming {
+    "Pre-flight checks" [shape=box];
+    "Issue provided?" [shape=diamond];
+    "Verify issue exists" [shape=box];
+    "Warn: issue recommended" [shape=box];
+    "User proceeds?" [shape=diamond];
+    "On feature branch?" [shape=diamond];
+    "Warn: on main" [shape=box];
+    "Create branch?" [shape=diamond];
+    "Invoke using-git-worktrees" [shape=box];
     "Explore project context" [shape=box];
     "Prior ideation exists?" [shape=diamond];
     "Read idea files" [shape=box];
@@ -48,7 +78,21 @@ digraph brainstorming {
     "UX design needed?" [shape=diamond];
     "Invoke ux-design-agent" [shape=box];
     "Invoke writing-plans skill" [shape=doublecircle];
+    "END" [shape=doublecircle];
 
+    "Pre-flight checks" -> "Issue provided?";
+    "Issue provided?" -> "Verify issue exists" [label="yes"];
+    "Issue provided?" -> "Warn: issue recommended" [label="none"];
+    "Verify issue exists" -> "On feature branch?";
+    "Warn: issue recommended" -> "User proceeds?";
+    "User proceeds?" -> "On feature branch?" [label="yes"];
+    "User proceeds?" -> "END" [label="no"];
+    "On feature branch?" -> "Explore project context" [label="yes"];
+    "On feature branch?" -> "Warn: on main" [label="no"];
+    "Warn: on main" -> "Create branch?";
+    "Create branch?" -> "Invoke using-git-worktrees" [label="yes"];
+    "Create branch?" -> "Explore project context" [label="no, proceed anyway"];
+    "Invoke using-git-worktrees" -> "Explore project context";
     "Explore project context" -> "Prior ideation exists?";
     "Prior ideation exists?" -> "Read idea files" [label="yes"];
     "Prior ideation exists?" -> "Ask clarifying questions" [label="no"];
@@ -66,7 +110,7 @@ digraph brainstorming {
 }
 ```
 
-**The terminal state is invoking writing-plans.** The only intermediate skill you may invoke is ux-design-agent (when UX design is needed). Do NOT invoke any other implementation skill.
+**The terminal state is invoking writing-plans.** The only intermediate skills you may invoke are using-git-worktrees (during pre-flight, if on main) and ux-design-agent (when UX design is needed). Do NOT invoke any other implementation skill.
 
 ## The Process
 
@@ -127,6 +171,16 @@ After validating the design direction, evaluate whether detailed UX design is ne
 
 **Documentation:**
 - Write the validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md` (local working directory, not committed)
+- Include this header at the top of the design doc:
+  ```markdown
+  # Design: <topic>
+
+  **Issue:** #<number> — <title>
+  **Date:** YYYY-MM-DD
+  **Branch:** <branch-name>
+  ```
+  If the issue check was skipped, use `**Issue:** None (exploratory)`.
+  Get the branch name from `git branch --show-current`.
 - Use writing-clearly-and-concisely skill if available
 - Paste the design into the PR body when you open it
 
@@ -143,3 +197,15 @@ After validating the design direction, evaluate whether detailed UX design is ne
 - **Explore alternatives** - Always propose 2-3 approaches before settling
 - **Incremental validation** - Present design in sections, validate each
 - **Be flexible** - Go back and clarify when something doesn't make sense
+
+## Integration
+
+**Invokes:**
+- **using-git-worktrees** — During pre-flight checks, if user is on `main`/`master` and wants a branch
+
+**Called by:**
+- Any task that needs creative design work (per skill description trigger)
+
+**Pairs with:**
+- **writing-plans** — Terminal state; brainstorming always transitions to planning
+- **ux-design-agent** — Optional intermediate step for user-facing or agentic designs
