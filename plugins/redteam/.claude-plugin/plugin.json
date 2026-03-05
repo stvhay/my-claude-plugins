@@ -1,0 +1,7 @@
+{
+  "name": "redteam",
+  "description": "Adversarial analysis with parallel agent deployment: stress-test ideas and produce content through competition",
+  "version": "1.0.0",
+  "author": { "name": "stvhay" },
+  "license": "Apache-2.0"
+}
