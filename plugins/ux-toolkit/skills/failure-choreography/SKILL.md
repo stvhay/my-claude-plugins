@@ -178,3 +178,4 @@ Add to requirements document:
 - `references/failure-explanation.md` - Calibrated explanation
 - `references/recovery-patterns.md` - Recovery options
 - `references/handoff-patterns.md` - Handoff templates
+- `references/team-coordination.md` - Multi-agent failure coordination
