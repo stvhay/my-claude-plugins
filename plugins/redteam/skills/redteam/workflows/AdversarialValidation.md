@@ -101,6 +101,17 @@ than any individual proposal, not just a blend.
 [Original proposals + Critic's assessment]
 ```
 
+## Choosing Multi-Round vs Single-Prompt
+
+| Use Multi-Round (3 separate rounds) | Use Single-Prompt (collapsed template) |
+|--------------------------------------|----------------------------------------|
+| High-stakes decisions (architecture, strategy) | Quick exploration of trade-offs |
+| You need genuinely independent proposals | Time-constrained — need a fast answer |
+| The problem space is large or ambiguous | The problem is well-scoped with 2-3 obvious approaches |
+| You want to iterate on critique before synthesis | You trust the LLM to self-critique honestly |
+
+Multi-round produces higher quality because each round gets full context window attention. Single-prompt is faster but proposals tend to be less independent (the model knows it will critique them).
+
 ## Complete Adversarial Validation Template
 
 For a single-prompt execution:
