@@ -123,6 +123,7 @@ dev-container() {
       export PATH="/nix/.npm-global/bin:$PATH"
 
       cd /workspace || { echo "Error: /workspace not available" >&2; exit 1; }
+      # \$1 because outer single-quote → inner sh sees \$1 in double quotes → literal $1 for awk
       CONTAINER_IP=$(hostname -i 2>/dev/null | awk "{print \$1}")
       [ -n "$CONTAINER_IP" ] || echo "Warning: could not determine container IP" >&2
 
