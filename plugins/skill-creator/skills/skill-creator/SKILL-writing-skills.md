@@ -1,7 +1,6 @@
----
-name: writing-skills
-description: Use when creating new skills, editing existing skills, or verifying skills work before deployment
----
+<!-- Reference snapshot of obra/superpowers writing-skills SKILL.md -->
+<!-- Original frontmatter: name: writing-skills -->
+<!-- Stripped to avoid name collision — this file is never loaded as a standalone skill -->
 
 # Writing Skills
 
