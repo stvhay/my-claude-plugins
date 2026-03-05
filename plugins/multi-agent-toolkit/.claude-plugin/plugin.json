@@ -1,0 +1,7 @@
+{
+  "name": "multi-agent-toolkit",
+  "description": "Multi-agent coordination skills: council debates and parallel research",
+  "version": "1.0.0",
+  "author": { "name": "stvhay" },
+  "license": "Apache-2.0"
+}
