@@ -122,6 +122,7 @@ dev-container() {
     --ssh \
     nixos/nix \
     /bin/sh -c '
+      set -e
       # Install Claude Code if not already cached in shared Nix store
       [ -x /nix/.npm-global/bin/claude ] || {
         nix-env -iA nixpkgs.nodejs && npm i -g --prefix /nix/.npm-global @anthropic-ai/claude-code || {
