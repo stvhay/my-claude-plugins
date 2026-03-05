@@ -29,6 +29,13 @@
       "version": "1.0.0",
       "license": "Apache-2.0",
       "source": "./plugins/ux-toolkit"
+    },
+    {
+      "name": "thinking-toolkit",
+      "description": "Thinking and reasoning skills: first-principles analysis and divergent ideation",
+      "version": "1.0.0",
+      "license": "Apache-2.0",
+      "source": "./plugins/thinking-toolkit"
     }
   ]
 }
