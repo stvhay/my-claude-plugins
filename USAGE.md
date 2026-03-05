@@ -141,7 +141,7 @@ Then: `dev-container ~/Projects/my-app`
 ### What each step does
 
 - **Argument validation** — Requires exactly one argument (a directory path) and verifies the directory exists.
-- `mkdir -p "$nix_cache"` — Ensure the shared Nix store directory exists on the host.
+- `mkdir -p "$nix_cache" "$claude_config"` — Ensure the shared Nix store and Claude config directories exist on the host.
 - `-v "$project_dir:/workspace"` — Bind-mount the project directory into the container. Edits are visible on both sides.
 - `-v "$nix_cache:/nix"` — Bind-mount a shared Nix store. Persisted across containers so packages are downloaded once.
 - `-v "$claude_config:/root/.claude"` — Bind-mount Claude Code's config directory. Persists authentication and settings across containers so you only log in once.
