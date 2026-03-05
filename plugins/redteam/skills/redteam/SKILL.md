@@ -65,3 +65,6 @@ User: "battle of bots - which approach is better for this feature?"
 
 **Use AFTER RedTeam:**
 - Consider alternatives or adjustments based on findings
+
+**Use FOR system-level security:**
+- `stamp-stpa-sec` - Control-theoretic security threat modeling for systems with control structures. When redteam reveals security concerns about a system architecture, hand off to STPA-Sec for formal threat modeling with STRIDE integration.
