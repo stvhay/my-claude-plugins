@@ -49,7 +49,7 @@ Divergent exploration for fuzzy problem spaces. Generates a network of idea arti
 
 ## Output Format
 
-Files at: `docs/{date}-{slug}-idea-{status}.md`
+Files at: `docs/plans/{date}-{slug}-idea-{status}.md`
 
 Status levels:
 - `raw` - Just captured, minimal structure
@@ -58,9 +58,9 @@ Status levels:
 
 Example:
 ```
-docs/2026-01-18-caching-layer-idea-raw.md
-docs/2026-01-18-api-redesign-idea-refined.md
-docs/2026-01-18-dashboard-rethink-idea-actionable.md
+docs/plans/2026-01-18-caching-layer-idea-raw.md
+docs/plans/2026-01-18-api-redesign-idea-refined.md
+docs/plans/2026-01-18-dashboard-rethink-idea-actionable.md
 ```
 
 ## Idea File Content
@@ -79,7 +79,7 @@ Minimal - only what emerged:
 ## Open Questions
 [Optional - things to explore further]
 
-Related: [[other-idea-filename]]
+Related: other-idea-filename.md
 ```
 
 Context and Open Questions are optional. Sometimes you're in unknown-unknowns territory.
