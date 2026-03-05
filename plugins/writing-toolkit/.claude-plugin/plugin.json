@@ -1,0 +1,7 @@
+{
+  "name": "writing-toolkit",
+  "description": "Writing skills: Strunk's rules applied to any prose humans read",
+  "version": "1.0.0",
+  "author": { "name": "stvhay" },
+  "license": "Apache-2.0"
+}
