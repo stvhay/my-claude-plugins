@@ -99,7 +99,7 @@ dev-container() {
     return 1
   }
 
-  mkdir -p "$nix_cache"
+  mkdir -p "$nix_cache" || return 1
 
   container run \
     -v "$project_dir:/workspace" \
@@ -108,7 +108,8 @@ dev-container() {
     nixos/nix \
     /bin/sh -c '
       # Install Claude Code if not already cached in shared Nix store
-      command -v claude >/dev/null 2>&1 || { nix-env -iA nixpkgs.nodejs && npm i -g @anthropic-ai/claude-code; }
+      command -v claude >/dev/null 2>&1 || { nix-env -iA nixpkgs.nodejs && npm i -g --prefix /nix/.npm-global @anthropic-ai/claude-code; }
+      export PATH="/nix/.npm-global/bin:$PATH"
 
       # Alias claude to bypass permissions (container is isolated)
       echo "alias claude=\"claude --dangerously-skip-permissions\"" >> ~/.profile
@@ -130,7 +131,7 @@ Then: `dev-container ~/Projects/my-app`
 - `-v "$nix_cache:/nix"` — Bind-mount a shared Nix store. Persisted across containers so packages are downloaded once.
 - `--ssh` — Forward the host SSH agent so git clone/push works inside the container.
 - `nixos/nix` — Stock OCI image with Nix pre-installed (Alpine-based).
-- **Claude Code install** — Installs Node.js via Nix and Claude Code via npm on first run. Skipped on subsequent runs (cached in shared Nix store).
+- **Claude Code install** — Installs Node.js via Nix and Claude Code via npm on first run. The npm prefix is set to `/nix/.npm-global` so it persists in the shared Nix store across containers.
 - **claude alias** — Aliases `claude` to `claude --dangerously-skip-permissions` since the container is an isolated environment.
 
 ### Environment variables
