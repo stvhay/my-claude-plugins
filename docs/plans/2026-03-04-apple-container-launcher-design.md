@@ -158,6 +158,14 @@ PROFILE
 1. Add the `dev-container` function to `USAGE.md` alongside `dev-init`
 2. Document the env vars and what each mount does
 
+## Known Limitations
+
+- **Container name collision** — `dev-${project_dir##*/}` uses only the
+  directory basename. Two projects with the same basename (e.g., `~/work/app`
+  and `~/personal/app`) will try to create `dev-app`, and the second
+  `container run` will fail with a duplicate name error. Rename one
+  directory to disambiguate.
+
 ## Not In Scope
 
 - Custom OCI image building (can iterate later)
