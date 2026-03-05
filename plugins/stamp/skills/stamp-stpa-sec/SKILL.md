@@ -110,6 +110,10 @@ STPA-Sec generates compliance artifacts as outputs, not separate activities:
 **From stamp-stpa** — When STPA identifies adversarial concerns:
 > Receive handoff when stamp-stpa detects security-relevant control paths.
 
+## Methodology Deep Dive
+
+For detailed coverage of mission-focused analysis, wargaming with STPA-Sec (DoD Cyber Table Top exercises), and security requirements derivation, see [references/stpa-security.md](references/stpa-security.md).
+
 ## Core Insight
 
 **Security threats are causal scenarios for unsafe control actions.**

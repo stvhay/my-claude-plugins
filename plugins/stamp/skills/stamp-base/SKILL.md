@@ -104,6 +104,15 @@ STAMP analysis serves different audiences. See [references/output-formats.md](re
 - **Incident Report** — Compliance-ready, methodology-documented
 - **Quick Brief** — Verbal settings, alignment conversations
 
+## Combined Workflows
+
+For systems with both safety and security concerns, skills can be chained:
+- **STPA → STPA-Sec**: Run STPA first for safety hazards, then STPA-Sec to add adversarial scenarios to the same control structure
+- **STPA-Sec → STPA**: Start with security threats, then extend to full safety analysis
+- **CAST → STPA / STPA-Sec**: After incident analysis, run prospective analysis on the redesigned control structure
+
+The control structure model is shared across all three methodologies—each builds on rather than duplicates the others.
+
 ## Related Skills
 
 - **stamp-stpa** — Prospective hazard analysis (what could go wrong?)

@@ -123,6 +123,9 @@ When incident response or compliance deadline is tight:
 **To stamp-stpa after CAST** — Common pattern for "prevent recurrence":
 > "CAST analysis complete. To prevent similar incidents, want me to run STPA on the redesigned control structure?"
 
+**To stamp-stpa-sec** — If security failures contributed to the incident:
+> "This incident involved security vulnerabilities in the control structure. Want me to switch to STPA-Sec to analyze adversarial attack scenarios?"
+
 ## Theoretical Foundation
 
 CAST is built on STAMP (Systems-Theoretic Accident Model and Processes). See stamp-base for the core theoretical framework: why accidents emerge from inadequate control rather than component failures, the four conditions for safe control, and why "human error" is a symptom not a cause.
