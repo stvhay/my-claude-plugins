@@ -164,8 +164,7 @@ Then: `dev-container ~/Projects/my-app`
 - `--ssh` — Forward the host SSH agent so git clone/push works inside the container.
 - `nixos/nix` — Stock OCI image with Nix pre-installed (Alpine-based).
 - **Claude Code install** — Checks for the `claude` binary at the known install path (`/nix/.npm-global/bin/claude`). If missing, installs Node.js via Nix and Claude Code via npm. The npm prefix is set to `/nix/.npm-global` so it persists in the shared Nix store across containers.
-- **PATH persistence** — Writes `export PATH="/nix/.npm-global/bin:$PATH"` to `~/.profile` so the login shell can find the `claude` binary after `exec /bin/sh -l` replaces the setup script.
-- **claude alias** — Aliases `claude` to `claude --dangerously-skip-permissions` with `--append-system-prompt` injecting the container IP. This tells Claude to display dev server URLs using the container IP instead of localhost. Guarded to avoid duplicate entries. The alias is written to `~/.profile` inside the container, which persists in the bind-mounted Claude config directory — it does not affect the host shell.
+- **Shell profile** — The setup script writes a PATH export and `claude` alias to `~/.profile` on the container filesystem (`/root/.profile` — not inside a bind mount). When `exec /bin/sh -l` replaces the setup script with a login shell, it sources this file. The PATH entry lets the shell find the `claude` binary. The alias adds `--dangerously-skip-permissions` and `--append-system-prompt` with the container IP so Claude displays correct dev server URLs. The `grep` guard prevents duplicate entries if a stopped container is restarted. The alias does not affect the host shell.
 - **Startup message** — Prints the container's IP address. Services launched inside the container (dev servers, etc.) are directly accessible from the host at `http://<container-ip>:<port>` — no port forwarding required.
 
 ### Networking

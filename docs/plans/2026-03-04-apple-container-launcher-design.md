@@ -83,10 +83,10 @@ prompt without replacing the defaults. The container IP is interpolated at
 startup so Claude always shows the correct URL for accessing dev servers
 from the host.
 
-Both the PATH export and alias are written to `~/.profile` via a single
-heredoc block, guarded by a `# dev-container` marker to avoid duplicate
-entries. This avoids writing config files into the project directory.
-The alias only exists inside the container.
+Both the PATH export and alias are written to `~/.profile` on the container
+filesystem (`/root/.profile` — not inside a bind mount). The
+`# dev-container` marker guards against duplicate entries if a stopped
+container is restarted. The alias only exists inside the container.
 
 ### Environment Variables
 
