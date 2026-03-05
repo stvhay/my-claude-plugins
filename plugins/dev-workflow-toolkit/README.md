@@ -50,6 +50,35 @@ Select `dev-workflow-toolkit` from the plugin list.
 | `finishing-a-development-branch` | Branch completion — merge, PR, or cleanup |
 | `codify-subsystem` | Encode subsystem knowledge as SPEC.md |
 
+## Skill Dependencies
+
+Skills invoke other skills to create workflow orchestration. This prevents circular invocations:
+
+```
+brainstorming (entry)
+  └─> using-git-worktrees (pre-flight, if on main)
+  └─> ux-design-agent* (optional, for user-facing/agentic designs)
+  └─> writing-plans (terminal state)
+       └─> executing-plans OR subagent-driven-development
+            └─> test-driven-development (during implementation)
+            └─> systematic-debugging (when bugs occur)
+            └─> verification-before-completion (before completion)
+                 └─> code-simplification (after verification passes)
+            └─> finishing-a-development-branch (after implementation)
+
+requesting-code-review (parallel workflow)
+  └─> code-reviewer agent (separate invocation)
+
+codify-subsystem (standalone)
+project-init (standalone)
+setup-rag (standalone)
+dispatching-parallel-agents (standalone)
+```
+
+**\* External dependency:** ux-design-agent is in the ux-toolkit plugin
+
+**Terminal states:** Skills that don't invoke others: `receiving-code-review`, `code-simplification`, `verification-before-completion`, `finishing-a-development-branch`
+
 ## Documentation
 
 - `docs/architecture/` — Design rationale and foundations
