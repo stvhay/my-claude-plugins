@@ -121,6 +121,10 @@ dev-container() {
       cd /workspace
       CONTAINER_IP=$(hostname -i 2>/dev/null | awk "{print \$1}")
 
+      # Persist PATH so login shell can find claude
+      grep -q "/nix/.npm-global/bin" ~/.profile 2>/dev/null \
+        || echo 'export PATH="/nix/.npm-global/bin:$PATH"' >> ~/.profile
+
       # Alias claude to bypass permissions (container is isolated)
       # and inject container IP so Claude displays correct URLs for dev servers
       grep -q "dangerously-skip-permissions" ~/.profile 2>/dev/null \
@@ -145,6 +149,7 @@ Then: `dev-container ~/Projects/my-app`
 - `--ssh` — Forward the host SSH agent so git clone/push works inside the container.
 - `nixos/nix` — Stock OCI image with Nix pre-installed (Alpine-based).
 - **Claude Code install** — Checks for the `claude` binary at the known install path (`/nix/.npm-global/bin/claude`). If missing, installs Node.js via Nix and Claude Code via npm. The npm prefix is set to `/nix/.npm-global` so it persists in the shared Nix store across containers.
+- **PATH persistence** — Writes `export PATH="/nix/.npm-global/bin:$PATH"` to `~/.profile` so the login shell can find the `claude` binary after `exec /bin/sh -l` replaces the setup script.
 - **claude alias** — Aliases `claude` to `claude --dangerously-skip-permissions` with `--append-system-prompt` injecting the container IP. This tells Claude to display dev server URLs using the container IP instead of localhost. Guarded to avoid duplicate entries.
 - **Startup message** — Prints the container's IP address. Services launched inside the container (dev servers, etc.) are directly accessible from the host at `http://<container-ip>:<port>` — no port forwarding required.
 
