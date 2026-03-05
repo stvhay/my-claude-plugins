@@ -127,7 +127,10 @@ dev-container() {
       CONTAINER_IP=$(hostname -i 2>/dev/null | awk "{print \$1}")
       [ -n "$CONTAINER_IP" ] || echo "Warning: could not determine container IP" >&2
 
-      # Write PATH and claude alias to ~/.profile for the login shell
+      # Write PATH and claude alias to ~/.profile for the login shell.
+      # The heredoc (<<PROFILE) is parsed by the inner sh, not the outer shell,
+      # because it appears inside a single-quoted sh -c string. $CONTAINER_IP
+      # expands (inner sh variable), while \$PATH is literal (escaped for profile).
       grep -q "# dev-container" ~/.profile 2>/dev/null || cat >> ~/.profile <<PROFILE
 # dev-container
 export PATH="/nix/.npm-global/bin:\$PATH"
