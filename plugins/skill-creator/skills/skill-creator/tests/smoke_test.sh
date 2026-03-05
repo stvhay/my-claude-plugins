@@ -35,21 +35,35 @@ echo "skill dir: $SKILL_DIR"
 echo "work dir:  $WORK"
 echo ""
 
+# ── Set up venv with dependencies ────────────────────────────────────
+echo "── setup ──"
+VENV="$WORK/.venv"
+if command -v uv &> /dev/null; then
+    uv venv "$VENV" --quiet
+    uv pip install --quiet -p "$VENV/bin/python" -r "$SKILL_DIR/requirements.txt"
+    PYTHON="$VENV/bin/python"
+    pass "uv venv created with dependencies"
+else
+    PYTHON=python3
+    echo "  SKIP  uv not found, using system python (some tests may skip)"
+fi
+echo ""
+
 # ── 1. quick_validate.py ─────────────────────────────────────────────
 echo "── quick_validate ──"
-if ! python3 -c "import yaml" 2>/dev/null; then
+if ! "$PYTHON" -c "import yaml" 2>/dev/null; then
     echo "  SKIP  pyyaml not installed (pip install pyyaml)"
 else
-    if python3 "$SKILL_DIR/scripts/quick_validate.py" "$SKILL_DIR" > /dev/null 2>&1; then
+    if "$PYTHON" "$SKILL_DIR/scripts/quick_validate.py" "$SKILL_DIR" > /dev/null 2>&1; then
         pass "SKILL.md validates"
     else
-        fail "SKILL.md validation failed ($(python3 "$SKILL_DIR/scripts/quick_validate.py" "$SKILL_DIR" 2>&1))"
+        fail "SKILL.md validation failed ($("$PYTHON" "$SKILL_DIR/scripts/quick_validate.py" "$SKILL_DIR" 2>&1))"
     fi
 fi
 
 # ── 2. utils.py parse_skill_md ───────────────────────────────────────
 echo "── parse_skill_md ──"
-PARSE_OUT=$(cd "$SKILL_DIR" && python3 -c "
+PARSE_OUT=$(cd "$SKILL_DIR" && "$PYTHON" -c "
 from scripts.utils import parse_skill_md
 from pathlib import Path
 name, desc, content = parse_skill_md(Path('.'))
@@ -94,10 +108,10 @@ GRADE
     done
 done
 
-if python3 "$SKILL_DIR/scripts/aggregate_benchmark.py" "$BENCH" \
+if "$PYTHON" "$SKILL_DIR/scripts/aggregate_benchmark.py" "$BENCH" \
     --skill-name smoke-test -o "$WORK/benchmark.json" > /dev/null 2>&1; then
     # Verify output files exist and contain expected structure
-    if python3 -c "
+    if "$PYTHON" -c "
 import json, sys
 b = json.load(open('$WORK/benchmark.json'))
 assert 'run_summary' in b, 'missing run_summary'
@@ -133,7 +147,7 @@ META
 cp "$BENCH/eval-1/with_skill/run-1/grading.json" "$RUN1/grading.json"
 
 REVIEW_HTML="$WORK/review.html"
-if python3 "$SKILL_DIR/eval-viewer/generate_review.py" "$WS" \
+if "$PYTHON" "$SKILL_DIR/eval-viewer/generate_review.py" "$WS" \
     --static "$REVIEW_HTML" --skill-name smoke-test > /dev/null 2>&1; then
     if [ -f "$REVIEW_HTML" ] && [ "$(wc -c < "$REVIEW_HTML")" -gt 100 ]; then
         pass "generate_review produces static HTML"
@@ -167,7 +181,7 @@ cat > "$WORK/loop_output.json" <<'LOOP'
 }
 LOOP
 REPORT_HTML="$WORK/report.html"
-if python3 "$SKILL_DIR/scripts/generate_report.py" "$WORK/loop_output.json" \
+if "$PYTHON" "$SKILL_DIR/scripts/generate_report.py" "$WORK/loop_output.json" \
     -o "$REPORT_HTML" --skill-name smoke-test > /dev/null 2>&1; then
     if [ -f "$REPORT_HTML" ] && [ "$(wc -c < "$REPORT_HTML")" -gt 100 ]; then
         pass "generate_report produces HTML report"
@@ -191,7 +205,7 @@ if $LIVE; then
   {"query": "What is the weather today?", "should_trigger": false}
 ]
 EVAL
-        if cd "$SKILL_DIR" && python3 -m scripts.run_eval \
+        if cd "$SKILL_DIR" && "$PYTHON" -m scripts.run_eval \
             --eval-set "$WORK/eval_set.json" \
             --skill-path "$SKILL_DIR" \
             --num-workers 2 \
