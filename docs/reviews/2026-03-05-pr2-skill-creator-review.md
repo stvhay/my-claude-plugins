@@ -28,9 +28,29 @@ Both `SKILL-upstream.md` and `SKILL.md` had `name: skill-creator` in YAML frontm
 
 Mixed `**bold**` and `` `backtick` `` styles for file paths. Standardized on backticks.
 
-### 4. No end-to-end integration test
+### 4. No end-to-end integration test (Fixed)
 
-**Status:** Deferred — noted as recommendation. The skill's own TDD philosophy suggests running a full RED-GREEN-REFACTOR cycle on a trivial skill before v1.0.0, but this is operational validation, not a code issue.
+**Commits:** `test: add smoke test for skill-creator toolchain`, `fix: use uv venv in smoke test for dependency isolation`
+
+Added `tests/smoke_test.sh` that validates all offline scripts using synthetic fixtures in a temporary uv venv. All 7 checks pass:
+
+```
+── setup ──
+  PASS  uv venv created with dependencies
+── quick_validate ──
+  PASS  SKILL.md validates
+── parse_skill_md ──
+  PASS  parse_skill_md returns correct name and description
+── aggregate_benchmark ──
+  PASS  aggregate_benchmark produces valid benchmark.json
+  PASS  aggregate_benchmark produces benchmark.md
+── generate_review ──
+  PASS  generate_review produces static HTML
+── generate_report ──
+  PASS  generate_report produces HTML report
+```
+
+Live trigger eval via `claude -p` available with `--live` flag (uses CC subscription, no API key).
 
 ## Strengths Noted
 
