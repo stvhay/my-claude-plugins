@@ -5,8 +5,9 @@
 
 ## Target Size
 
-80-300 lines. Under 80 means missing invariants or failure modes. Over 300
-means the subsystem should be split.
+80-300 lines (reduced from 100-400 after removing the Testing/Coverage section).
+Under 80 means missing invariants or failure modes. Over 300 means the
+subsystem should be split.
 
 ---
 
