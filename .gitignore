@@ -11,5 +11,8 @@ flake.nix
 flake.lock
 result
 
+# Worktrees
+.worktrees/
+
 # Local working files
 MEMORY.md
