@@ -1,0 +1,12 @@
+{
+  "name": "my-claude-plugins",
+  "owner": {
+    "name": "stvhay"
+  },
+  "metadata": {
+    "description": "Personal Claude Code plugin collection",
+    "version": "0.1.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": []
+}
