@@ -132,6 +132,7 @@ Stress-test the new approach before committing.
 **Document it:**
 - Write to `docs/plans/YYYY-MM-DD-<topic>-first-principles.md`
 - Capture: problem, assumptions challenged, fundamentals, new approach
+- Note: `docs/plans/` may or may not be git-tracked depending on the project — don't assume either way
 
 **If implementing:**
 - Use a design/brainstorming skill to refine the chosen approach
