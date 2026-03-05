@@ -34,7 +34,8 @@ OCI-compatible). No custom image build required.
 > **Caution:** Do not delete `~/.dev-containers/nix/` while a container is
 > running. The bind mount replaces the container's entire `/nix`, so removing
 > the host directory breaks the container's Nix installation (including
-> `nix-env` itself).
+> `nix-env` itself). Likewise, avoid deleting `~/.dev-containers/claude/`
+> while running — Claude Code may fail or lose session state mid-operation.
 
 ### Networking
 
