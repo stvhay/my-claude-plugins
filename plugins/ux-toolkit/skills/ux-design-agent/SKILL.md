@@ -99,6 +99,7 @@ digraph ux_flow {
 
 **If GUI selected:**
 - **REQUIRED SUB-SKILL:** Use design-principles for visual design
+- design-principles covers the full aesthetic range — from restrained enterprise (Precision, Utility) to bold creative (Maximalist, Editorial). Guide the user toward the right direction based on product context and user model from Phase 2.
 - Then: Use writing-plans for implementation
 
 **If Agentic selected:**
