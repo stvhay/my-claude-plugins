@@ -13,7 +13,6 @@ UX design skills for agentic systems and user-facing interfaces.
 | **failure-choreography** | Graceful failure with preserved state and human handoff |
 | **trust-calibration** | Communicating agent confidence calibrated to evidence |
 | **ux-writing** | Interface copy: buttons, labels, errors, notifications |
-| **writing-clearly-and-concisely** | Strunk's rules applied to any prose humans read |
 
 ## Skill Coordination
 
@@ -21,7 +20,8 @@ UX design skills for agentic systems and user-facing interfaces.
 
 - **GUI** -> `design-principles` -> implementation
 - **Agentic** -> `delegation-oversight` -> `approval-confirmation` / `failure-choreography`
-- **All modalities** use `trust-calibration`, `ux-writing`, and `writing-clearly-and-concisely` as technique skills
+- **All modalities** use `trust-calibration` and `ux-writing` as technique skills
+- For general prose editing, see the standalone **writing-toolkit** plugin
 
 ## Install
 
