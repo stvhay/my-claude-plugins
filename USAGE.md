@@ -122,7 +122,7 @@ dev-container() {
       }
       export PATH="/nix/.npm-global/bin:$PATH"
 
-      cd /workspace
+      cd /workspace || { echo "Error: /workspace not available" >&2; exit 1; }
       CONTAINER_IP=$(hostname -i 2>/dev/null | awk "{print \$1}")
 
       # Write PATH and claude alias to ~/.profile for the login shell
