@@ -77,9 +77,10 @@ prompt without replacing the defaults. The container IP is interpolated at
 startup so Claude always shows the correct URL for accessing dev servers
 from the host.
 
-The alias is guarded (`grep -q`) to avoid duplicate entries if `~/.profile`
-somehow persists. This avoids writing config files into the project
-directory. The alias only exists inside the container.
+Both the PATH export and alias are written to `~/.profile` via a single
+heredoc block, guarded by a `# dev-container` marker to avoid duplicate
+entries. This avoids writing config files into the project directory.
+The alias only exists inside the container.
 
 ### Environment Variables
 
@@ -127,14 +128,12 @@ dev-container() {
       cd /workspace
       CONTAINER_IP=$(hostname -i 2>/dev/null | awk "{print \$1}")
 
-      # Persist PATH so login shell can find claude
-      grep -q "/nix/.npm-global/bin" ~/.profile 2>/dev/null \
-        || echo 'export PATH="/nix/.npm-global/bin:$PATH"' >> ~/.profile
-
-      # Alias claude to bypass permissions (container is isolated)
-      # and inject container IP so Claude displays correct URLs for dev servers
-      grep -q "dangerously-skip-permissions" ~/.profile 2>/dev/null \
-        || echo "alias claude=\"claude --dangerously-skip-permissions --append-system-prompt \\\"You are running inside an Apple Container. The container IP is $CONTAINER_IP. When launching or displaying URLs for dev servers, use http://$CONTAINER_IP:<port> instead of localhost.\\\"\"" >> ~/.profile
+      # Write PATH and claude alias to ~/.profile for the login shell
+      grep -q "# dev-container" ~/.profile 2>/dev/null || cat >> ~/.profile <<PROFILE
+# dev-container
+export PATH="/nix/.npm-global/bin:\$PATH"
+alias claude="claude --dangerously-skip-permissions --append-system-prompt \"You are running inside an Apple Container. The container IP is $CONTAINER_IP. When launching or displaying URLs for dev servers, use http://$CONTAINER_IP:<port> instead of localhost.\""
+PROFILE
       echo "Dev container ready at ${CONTAINER_IP:-<unknown IP>}"
       echo "Services are accessible from the host at http://$CONTAINER_IP:<port>"
       echo "Run: claude"
