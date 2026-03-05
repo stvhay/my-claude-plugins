@@ -79,6 +79,22 @@ dispatching-parallel-agents (standalone)
 
 **Terminal states:** Skills that don't invoke others: `receiving-code-review`, `code-simplification`, `verification-before-completion`, `finishing-a-development-branch`
 
+## Testing
+
+Run the test suite:
+```bash
+cd plugins/dev-workflow-toolkit
+./tests/run-all.sh
+```
+
+Tests validate:
+- YAML frontmatter in all SKILL.md files
+- Template structure and content (project-init)
+- Configuration generation logic (setup-rag)
+- Path resolution for skill resources
+
+See `tests/README.md` for details.
+
 ## Documentation
 
 - `docs/architecture/` — Design rationale and foundations
