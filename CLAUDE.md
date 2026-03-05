@@ -44,7 +44,7 @@ Plans and other working documents go under `.claude/` which is fully gitignored:
 ## Workflow
 
 1. **Create GitHub issue** — All work starts with an issue
-2. **Develop plugin** — Use skill-creator from [claude-gh-project-template](https://github.com/stvhay/claude-gh-project-template)
+2. **Develop plugin** — Install dev-workflow-toolkit plugin for brainstorming, planning, and TDD workflows
 3. **Follow TDD** — Write tests first
 4. **Always create PRs** — Never commit directly to main
 5. **Reference issue in PR** — Link back to the originating issue
