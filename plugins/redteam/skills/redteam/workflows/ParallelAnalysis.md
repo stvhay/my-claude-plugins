@@ -2,7 +2,7 @@
 
 ## Overview
 
-Adversarial analysis using parallel agent deployment. Breaks arguments into atomic components, attacks from 32 different expert perspectives simultaneously, synthesizes findings, and produces the ultimate counter-argument.
+Adversarial analysis using parallel agent deployment. Breaks arguments into atomic components, attacks from 32 expert perspectives simultaneously, synthesizes findings, and produces the ultimate counter-argument.
 
 **Key Philosophy:** This is NOT about nitpicking or being contrarian. It's about finding the fundamental flaw in an argument's logic - the assumption that, if challenged, causes the entire structure to collapse.
 
@@ -57,7 +57,9 @@ Each claim should be:
 ## PHASE 2: Parallel Agent Deployment
 
 ### Launch Protocol
-Deploy 32 agents in a SINGLE message with multiple Task tool calls. Each agent receives:
+Deploy all 32 agents using parallel Task tool calls. If the platform limits concurrent agents, batch into rounds (e.g., 4 rounds of 8). All 32 perspectives should run — batching only affects parallelism, not coverage.
+
+Each agent receives:
 1. The full original argument
 2. The 24-claim decomposition
 3. Their specific personality and attack angle
@@ -346,7 +348,7 @@ The 8-point sequence should:
 
 [ ] PHASE 2: Parallel Analysis
   [ ] Prepare 32 agent prompts with unique personalities
-  [ ] Launch ALL 32 agents in a SINGLE message (parallel)
+  [ ] Launch agents in parallel (batch into rounds of 8 if platform limits concurrency)
   [ ] Each agent: engineer, architect, pentester, or intern type
   [ ] Each agent examines BOTH strengths AND weaknesses
   [ ] Wait for all agents to complete
