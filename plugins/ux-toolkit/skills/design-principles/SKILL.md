@@ -236,7 +236,7 @@ The enemy of good design is not any specific technique — it's context-unaware 
 
 **Signs of lazy defaults (avoid these):**
 - Using the same font, color scheme, and layout across unrelated projects
-- Purple gradients on white backgrounds because "it looks techy"
+- Trendy color schemes (purple gradients, etc.) applied without connection to product identity
 - Rounded cards with drop shadows because that's what the template had
 - Choosing colors, fonts, or layouts without considering the design direction
 
