@@ -1,0 +1,7 @@
+{
+  "name": "stamp",
+  "description": "STAMP-based systems analysis: safety (STPA), security (STPA-Sec), and incident investigation (CAST)",
+  "version": "1.0.0",
+  "author": { "name": "stvhay" },
+  "license": "Apache-2.0"
+}
