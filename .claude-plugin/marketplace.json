@@ -15,6 +15,13 @@
       "version": "1.0.0",
       "license": "Apache-2.0",
       "source": "./plugins/skill-creator"
+    },
+    {
+      "name": "stamp",
+      "description": "STAMP-based systems analysis: safety (STPA), security (STPA-Sec), and incident investigation (CAST)",
+      "version": "1.0.0",
+      "license": "Apache-2.0",
+      "source": "./plugins/stamp"
     }
   ]
 }
