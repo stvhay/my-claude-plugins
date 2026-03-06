@@ -1,6 +1,6 @@
 ---
 name: skill-creator
-description: "Create new skills, modify and improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, update or optimize an existing skill, run evals to test a skill, benchmark skill performance with variance analysis, or optimize a skill's description for better triggering accuracy."
+description: "Use when users want to create a skill from scratch, update or optimize an existing skill, run evals to test a skill, benchmark skill performance with variance analysis, or optimize a skill's description for better triggering accuracy."
 ---
 
 # Skill Creator
@@ -12,8 +12,8 @@ description: "Create new skills, modify and improve existing skills, and measure
 Write test cases (pressure scenarios), watch them fail (baseline behavior), write the skill, watch tests pass (agents comply), refactor (close loopholes). This skill combines Anthropic's eval tooling with TDD methodology.
 
 **Two upstream references power this skill:**
-- `SKILL-upstream.md` — Anthropic's official skill-creator: eval workflows, benchmarking, description optimization, tooling scripts
-- `SKILL-writing-skills.md` — TDD methodology: the Iron Law, RED-GREEN-REFACTOR for documentation, CSO guidance, rationalization bulletproofing
+- `references/upstream.md` — Anthropic's official skill-creator: eval workflows, benchmarking, description optimization, tooling scripts
+- `references/writing-skills.md` — TDD methodology: the Iron Law, RED-GREEN-REFACTOR for documentation, CSO guidance, rationalization bulletproofing
 
 Read each when directed below. This document synthesizes both into a unified workflow.
 
@@ -55,7 +55,7 @@ Write skill before testing? Delete it. Start over. No exceptions:
 
 ### 1. Capture Intent
 
-Start by understanding what the skill should do. Read `SKILL-upstream.md` § "Creating a skill" for the complete interview and research workflow. Key questions:
+Start by understanding what the skill should do. Read `references/upstream.md` § "Creating a skill" for the complete interview and research workflow. Key questions:
 1. What should this skill enable Claude to do?
 2. When should this skill trigger?
 3. What's the expected output format?
@@ -80,15 +80,15 @@ This is the TDD "write failing test first" step. You must see what agents natura
 
 **Detailed pressure testing methodology:** Read `writing-skills-refs/testing-skills-with-subagents.md`
 
-**Using the eval system for baselines:** Read `SKILL-upstream.md` § "Running and evaluating test cases" — the "baseline run" in the eval system IS the RED phase. When you spawn subagent runs, always include a `without_skill` baseline. This is not optional housekeeping — it's the failing test.
+**Using the eval system for baselines:** Read `references/upstream.md` § "Running and evaluating test cases" — the "baseline run" in the eval system IS the RED phase. When you spawn subagent runs, always include a `without_skill` baseline. This is not optional housekeeping — it's the failing test.
 
 ### 3. GREEN — Write Minimal Skill
 
 Write skill addressing the specific failures you documented. Don't add content for hypothetical cases.
 
-**Structure guidance:** Read `SKILL-writing-skills.md` § "SKILL.md Structure" for frontmatter rules and document organization.
+**Structure guidance:** Read `references/writing-skills.md` § "SKILL.md Structure" for frontmatter rules and document organization.
 
-**CSO (Claude Search Optimization):** Read `SKILL-writing-skills.md` § "Claude Search Optimization" for description best practices.
+**CSO (Claude Search Optimization):** Read `references/writing-skills.md` § "Claude Search Optimization" for description best practices.
 
 > **The description trap:** Testing revealed that when a description summarizes the skill's workflow, Claude follows the description instead of reading the full skill. Descriptions must contain ONLY triggering conditions, never workflow summaries.
 
@@ -96,7 +96,7 @@ Run same scenarios WITH skill. Agent should now comply / produce correct output.
 
 ### 4. Evaluate with Benchmarks
 
-Read `SKILL-upstream.md` § "Running and evaluating test cases" for the complete eval workflow:
+Read `references/upstream.md` § "Running and evaluating test cases" for the complete eval workflow:
 - Spawn with-skill and baseline runs in parallel
 - Draft quantitative assertions while runs execute
 - Grade results, aggregate benchmarks
@@ -112,13 +112,13 @@ Read eval feedback. For each test case where the skill didn't help:
 - Build rationalization table (for discipline skills)
 - Add red flags list
 
-**Detailed rationalization bulletproofing:** Read `SKILL-writing-skills.md` § "Bulletproofing Skills Against Rationalization"
+**Detailed rationalization bulletproofing:** Read `references/writing-skills.md` § "Bulletproofing Skills Against Rationalization"
 
 **Psychology behind bulletproofing:** Read `writing-skills-refs/persuasion-principles.md` for research on authority, commitment, and scarcity principles (Cialdini, 2021; Meincke et al., 2025).
 
 ### 6. Iterate
 
-Improve the skill, rerun all test cases into a new iteration directory. Read `SKILL-upstream.md` § "Improving the skill" for guidance on:
+Improve the skill, rerun all test cases into a new iteration directory. Read `references/upstream.md` § "Improving the skill" for guidance on:
 - Generalizing from feedback (don't overfit to test cases)
 - Keeping the prompt lean
 - Explaining the why
@@ -131,7 +131,7 @@ Improve the skill, rerun all test cases into a new iteration directory. Read `SK
 
 ### 7. Optimize Description
 
-After the skill content is stable, optimize the description for triggering accuracy. Read `SKILL-upstream.md` § "Description Optimization" for the full loop:
+After the skill content is stable, optimize the description for triggering accuracy. Read `references/upstream.md` § "Description Optimization" for the full loop:
 - Generate trigger eval queries (should-trigger and should-not-trigger)
 - Review with user via HTML template
 - Run optimization loop
@@ -164,7 +164,7 @@ This is the core synthesis — how TDD phases map to the eval system:
 - Put heavy reference in separate files
 - One level deep (SKILL.md → reference, never reference → reference)
 
-**Full guidance:** Read `SKILL-writing-skills.md` § "SKILL.md Structure" and `SKILL-upstream.md` § "Skill Writing Guide"
+**Full guidance:** Read `references/writing-skills.md` § "SKILL.md Structure" and `references/upstream.md` § "Skill Writing Guide"
 
 ## Testing Different Skill Types
 
@@ -183,7 +183,7 @@ Use flowcharts ONLY for non-obvious decision points, not for linear instructions
 
 ## Tooling Reference
 
-All scripts live in `scripts/` and are documented in `SKILL-upstream.md`:
+All scripts live in `scripts/` and are documented in `references/upstream.md`:
 - `run_eval.py` — Run evaluation queries
 - `run_loop.py` — Description optimization loop
 - `aggregate_benchmark.py` — Aggregate benchmark results

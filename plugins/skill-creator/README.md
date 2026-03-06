@@ -23,8 +23,8 @@ Layers TDD methodology onto Anthropic's official skill-creator:
 
 Three-file layer:
 - `SKILL.md` — Entrypoint: TDD philosophy + traffic director
-- `SKILL-upstream.md` — Snapshot of Anthropic's official skill-creator
-- `SKILL-writing-skills.md` — Snapshot of obra/superpowers writing-skills
+- `references/upstream.md` — Snapshot of Anthropic's official skill-creator
+- `references/writing-skills.md` — Snapshot of obra/superpowers writing-skills
 
 ## Upstream Sources
 
