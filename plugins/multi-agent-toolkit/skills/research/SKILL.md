@@ -47,6 +47,6 @@ See `references/QuickReference.md` for detailed comparison.
 
 ## File Organization
 
-**Scratch (temporary work artifacts):** `.superpowers/research/scratch/`
+**Scratch (temporary work artifacts):** `.claude/research/scratch/`
 
-**History (permanent):** `.superpowers/research/YYYY-MM-DD-[topic]/`
+**History (permanent):** `.claude/research/YYYY-MM-DD-[topic]/`

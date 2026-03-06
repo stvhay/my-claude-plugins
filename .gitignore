@@ -14,5 +14,8 @@ result
 # Worktrees
 .worktrees/
 
+# Python
+__pycache__/
+
 # Local working files
 MEMORY.md

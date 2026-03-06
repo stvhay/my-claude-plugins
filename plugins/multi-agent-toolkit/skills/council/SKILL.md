@@ -56,8 +56,8 @@ Route to the appropriate workflow based on the request.
 ## Integration
 
 **Works well with:**
-- **redteam** - Pure adversarial attack after collaborative discussion
-- **brainstorming-design** - Before major architectural decisions
+- **redteam** (redteam plugin) - Pure adversarial attack after collaborative discussion
+- **brainstorming** (dev-workflow-toolkit plugin) - Before major architectural decisions
 - **research** - Gather context before convening the council
 
 ## Best Practices

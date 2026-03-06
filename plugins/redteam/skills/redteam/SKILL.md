@@ -13,8 +13,8 @@ Route to the appropriate workflow based on the request.
 
 | Trigger | Workflow |
 |---------|----------|
-| Red team analysis (stress-test existing content) | `workflows/ParallelAnalysis.md` |
-| Adversarial validation (produce new content via competition) | `workflows/AdversarialValidation.md` |
+| Red team analysis (stress-test existing content) | `references/ParallelAnalysis.md` |
+| Adversarial validation (produce new content via competition) | `references/AdversarialValidation.md` |
 
 ## Quick Reference
 
@@ -40,21 +40,21 @@ Route to the appropriate workflow based on the request.
 **Attack an architecture proposal:**
 ```
 User: "red team this microservices migration plan"
---> workflows/ParallelAnalysis.md
+--> references/ParallelAnalysis.md
 --> Returns steelman + devastating counter-argument (8 points each)
 ```
 
 **Devil's advocate on a business decision:**
 ```
 User: "poke holes in my plan to raise prices 20%"
---> workflows/ParallelAnalysis.md
+--> references/ParallelAnalysis.md
 --> Surfaces the ONE core issue that could collapse the plan
 ```
 
 **Adversarial validation for content:**
 ```
 User: "battle of bots - which approach is better for this feature?"
---> workflows/AdversarialValidation.md
+--> references/AdversarialValidation.md
 --> Synthesizes best solution from competing ideas
 ```
 

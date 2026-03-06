@@ -5,7 +5,7 @@ This plugin layers two upstream sources into a unified skill-creator.
 ## Anthropic Official skill-creator
 
 - **Source:** `~/.claude/plugins/cache/claude-plugins-official/skill-creator/`
-- **Snapshot:** `SKILL-upstream.md`
+- **Snapshot:** `references/upstream.md`
 - **Commit:** `205b6e0b30366a969412d9aab7b99bea99d58db1`
 - **License:** Apache 2.0 (see `LICENSE.txt`)
 - **Copied files:** `agents/`, `assets/`, `eval-viewer/`, `references/`, `scripts/`
@@ -13,22 +13,22 @@ This plugin layers two upstream sources into a unified skill-creator.
 ## obra/superpowers writing-skills
 
 - **Source:** https://github.com/obra/superpowers
-- **Snapshot:** `SKILL-writing-skills.md`
+- **Snapshot:** `references/writing-skills.md`
 - **Last synced:** `e4a2375cb705ca5800f0833528ce36a3faf9017a` (2026-02-21)
 - **License:** MIT
 - **Copied files:** `writing-skills-refs/` (persuasion-principles.md, testing-skills-with-subagents.md, graphviz-conventions.dot, render-graphs.js)
-- **Dropped:** `anthropic-best-practices.md` (redundant with SKILL-upstream.md)
+- **Dropped:** `anthropic-best-practices.md` (redundant with references/upstream.md)
 
 ## How to Sync
 
 ### Anthropic skill-creator
 
 1. Check `~/.claude/plugins/cache/claude-plugins-official/skill-creator/` for new version
-2. Diff the new SKILL.md against `SKILL-upstream.md`:
+2. Diff the new SKILL.md against `references/upstream.md`:
    ```bash
-   diff SKILL-upstream.md ~/.claude/plugins/cache/claude-plugins-official/skill-creator/<new-version>/skills/skill-creator/SKILL.md
+   diff references/upstream.md ~/.claude/plugins/cache/claude-plugins-official/skill-creator/<new-version>/skills/skill-creator/SKILL.md
    ```
-3. Update `SKILL-upstream.md` with new content
+3. Update `references/upstream.md` with new content
 4. Copy updated tooling directories (scripts/, agents/, etc.)
 5. Review `SKILL.md` cross-references — section names may have changed
 6. Update commit SHA in this file
@@ -41,7 +41,7 @@ This plugin layers two upstream sources into a unified skill-creator.
    ```
 2. Diff against snapshot:
    ```bash
-   diff SKILL-writing-skills.md /tmp/superpowers/skills/writing-skills/SKILL.md
+   diff references/writing-skills.md /tmp/superpowers/skills/writing-skills/SKILL.md
    ```
 3. Diff reference files:
    ```bash

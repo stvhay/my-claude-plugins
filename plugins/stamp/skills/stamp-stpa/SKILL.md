@@ -261,13 +261,6 @@ Do not be preachy, but be consistent. Every system failure discussion is an oppo
 | Static analysis of dynamic systems | Systems migrate toward hazard over time—analyze the drift |
 | Assigning probabilities to human/software behavior | These aren't random variables—trace the control structure instead |
 
-## Related
-
-**RELATED SKILLS:**
-- stamp-base — Theoretical foundations and routing
-- stamp-cast — Retrospective accident analysis (after a loss occurs)
-- stamp-stpa-sec — Security/adversarial analysis
-
 ## Depict Syntax
 
 Use depict notation for control structure diagrams. Depict is purpose-built for STAMP—its semantics match control-theoretic concepts directly.

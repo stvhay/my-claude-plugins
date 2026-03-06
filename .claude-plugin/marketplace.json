@@ -12,56 +12,56 @@
     {
       "name": "skill-creator",
       "description": "TDD-focused skill creator combining Anthropic's eval tooling with test-driven development philosophy",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "license": "Apache-2.0",
       "source": "./plugins/skill-creator"
     },
     {
       "name": "stamp",
       "description": "STAMP-based systems analysis: safety (STPA), security (STPA-Sec), and incident investigation (CAST)",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "license": "Apache-2.0",
       "source": "./plugins/stamp"
     },
     {
       "name": "ux-toolkit",
       "description": "UX design skills for agentic systems: design principles, delegation, approval, failure handling, trust calibration, and UX writing",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "license": "Apache-2.0",
       "source": "./plugins/ux-toolkit"
     },
     {
       "name": "thinking-toolkit",
       "description": "Thinking and reasoning skills: first-principles analysis and divergent ideation",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "license": "Apache-2.0",
       "source": "./plugins/thinking-toolkit"
     },
     {
       "name": "writing-toolkit",
       "description": "Writing skills: Strunk's rules applied to any prose humans read",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "license": "Apache-2.0",
       "source": "./plugins/writing-toolkit"
     },
     {
       "name": "multi-agent-toolkit",
       "description": "Multi-agent coordination skills: council debates and parallel research",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "license": "Apache-2.0",
       "source": "./plugins/multi-agent-toolkit"
     },
     {
       "name": "redteam",
       "description": "Adversarial analysis with parallel agent deployment: stress-test ideas and produce content through competition",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "license": "Apache-2.0",
       "source": "./plugins/redteam"
     },
     {
       "name": "dev-workflow-toolkit",
       "description": "Development workflow skills: brainstorming, planning, execution, debugging, testing, code review, and project scaffolding",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "license": "Apache-2.0",
       "source": "./plugins/dev-workflow-toolkit"
     }

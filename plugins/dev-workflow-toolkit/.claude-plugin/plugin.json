@@ -1,7 +1,7 @@
 {
   "name": "dev-workflow-toolkit",
   "description": "Development workflow skills: brainstorming, planning, execution, debugging, testing, code review, and project scaffolding",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": { "name": "stvhay" },
   "license": "Apache-2.0"
 }
