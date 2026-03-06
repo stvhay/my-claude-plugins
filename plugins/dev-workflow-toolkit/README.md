@@ -87,11 +87,13 @@ cd plugins/dev-workflow-toolkit
 ./tests/run-all.sh
 ```
 
-Tests validate:
-- YAML frontmatter in all SKILL.md files
-- Template structure and content (project-init)
-- Configuration generation logic (setup-rag)
-- Path resolution for skill resources
+**72 tests** validate:
+- YAML frontmatter in all SKILL.md files (16 tests)
+- Template structure and content (10 tests)
+- RAG configuration generation logic (11 tests)
+- Skill invocation and dependency resolution (35 tests)
+- Template path resolution and substitution
+- MCP server configuration patterns
 
 See `tests/README.md` for details.
 

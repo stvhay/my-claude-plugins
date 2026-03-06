@@ -14,6 +14,7 @@ Run individual tests:
 ./tests/validate-frontmatter.sh
 ./tests/test-project-init.sh
 ./tests/test-setup-rag.sh
+./tests/test-integration.sh
 ```
 
 ## Test Coverage
@@ -50,6 +51,19 @@ Validates setup-rag skill configuration logic:
 
 **Tests:** 11 validations
 **Addresses:** Finding 1 - Configuration generation
+
+### test-integration.sh
+Integration tests for skill system:
+- **Skill invocation:** Validates all 16 skills can be loaded (proper YAML frontmatter)
+- **Dependency resolution:** Verifies cross-skill references resolve correctly
+- **Template path resolution:** Ensures template files exist and paths are correct
+- **Template substitution:** Validates template content and substitution patterns
+- **Reference file resolution:** Checks skills with reference/ directories
+- **Trigger pattern conflicts:** Detects overly broad or duplicate trigger patterns
+- **MCP configuration:** Validates setup-rag generates correct MCP server config
+
+**Tests:** 35 validations
+**Addresses:** All four suggested integration tests from code review
 
 ## Exit Codes
 
