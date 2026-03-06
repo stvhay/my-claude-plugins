@@ -1,7 +1,7 @@
 {
   "name": "ux-toolkit",
   "description": "UX design skills for agentic systems: design principles, delegation, approval, failure handling, trust calibration, and UX writing",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": { "name": "stvhay" },
   "license": "Apache-2.0"
 }
