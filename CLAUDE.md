@@ -13,6 +13,8 @@ plugins/
     .claude-plugin/
       plugin.json          # Plugin manifest
     skills/
+      SPEC.md              # Subsystem spec (VSA — agents walk up to find it)
+      UPSTREAM-*.md        # Upstream provenance tracking
       skill-name/
         SKILL.md           # Skill definition (Agent Skills standard)
         references/        # Optional supporting docs
