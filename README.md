@@ -20,6 +20,7 @@ Personal Claude Code plugin marketplace.
 | [writing-toolkit](plugins/writing-toolkit/) | Writing skills: Strunk's rules applied to any prose humans read |
 | [multi-agent-toolkit](plugins/multi-agent-toolkit/) | Multi-agent coordination skills: council debates and parallel research |
 | [redteam](plugins/redteam/) | Adversarial analysis with parallel agent deployment: stress-test ideas and produce content through competition |
+| [dev-workflow-toolkit](plugins/dev-workflow-toolkit/) | Development workflow skills: brainstorming, planning, execution, debugging, testing, code review, and project scaffolding |
 
 ## Contributing
 
