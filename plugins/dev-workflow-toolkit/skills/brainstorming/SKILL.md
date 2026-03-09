@@ -25,10 +25,12 @@ Before exploring the project, verify the CONTRIBUTING.md workflow prerequisites.
 
 ### 1a. Issue Check
 
-Ask: "Which GitHub issue does this work address? (Enter issue number, URL, or 'none' to skip)"
+Ask: "What feature are you building? (One-line summary for the GitHub issue title, or enter an existing issue number)"
 
-- **If number or URL provided:** Run `gh issue view <number> --json title,state` to verify the issue exists. Capture the issue number and title for the design doc header. If the issue is **closed**, warn: "Issue #N is closed. Continue with this issue, pick a different one, or proceed without?" Handle accordingly.
-- **If 'none':** Warn: "CONTRIBUTING.md requires filing a GitHub issue before brainstorming. You can create one now or proceed without one." If the user proceeds, record `Issue: None (exploratory)` for the design doc.
+- **If new feature summary provided:** Run `gh issue create --title "<summary>" --body "Brainstorming in progress"` to create the GH issue. Capture the issue number. Then run `bd create --title="<summary>" --type=feature --external-ref=gh-<N> --json` to create the beads feature linking to it.
+- **If existing issue number or URL provided:** Run `gh issue view <number> --json title,state` to verify it exists. Capture the title. Then run `bd create --title="<title>" --type=feature --external-ref=gh-<N> --json` to create the beads feature. If the issue is **closed**, warn: "Issue #N is closed. Continue with this issue, pick a different one, or proceed without?" Handle accordingly.
+- **If 'none':** Warn: "CONTRIBUTING.md requires a GitHub issue. You can create one now or proceed without." If proceeding, create a beads feature without an external-ref: `bd create --title="<summary>" --type=feature --json`. Record `Issue: None (exploratory)`.
+- **Record both:** Capture the GH issue number and beads feature ID for the design doc header.
 
 ### 1b. Branch Check
 
@@ -182,6 +184,7 @@ After validating the design direction, evaluate whether detailed UX design is ne
   # Design: <topic>
 
   **Issue:** #<number> — <title>
+  **Beads:** <beads-id>
   **Date:** YYYY-MM-DD
   **Branch:** <branch-name>
   ```
