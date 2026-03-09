@@ -20,17 +20,17 @@ Load plan, review critically, execute tasks in batches, report for review betwee
 2. Review critically — identify questions or concerns
 3. Note acceptance criteria from plan header
 4. If concerns: Raise them before starting
-5. If clear: Create TodoWrite and proceed
+5. If clear: Run `bd ready --json` to see available beads tasks. If no beads tasks exist, run `/plan-to-beads` on the plan file to create them. Proceed.
 
 ### Step 2: Execute Batch
 **Default: First 3 tasks**
 
-For each task:
-1. Mark as in_progress
+Run `bd ready --json` to find unblocked tasks. For each task in the batch:
+1. Claim it: `bd update <id> --claim`
 2. Load nearest SPEC.md for the task's target files (if one exists). Review its Invariants before starting — these are constraints you must not violate. If the task crosses subsystems, load the primary spec in full and only the Public Interface section from adjacent specs.
 3. Follow each step exactly (plan has bite-sized steps)
 4. Run verifications as specified
-5. Mark as completed
+5. Complete it: `bd close <id> --reason "Implemented"`
 
 ### Step 3: Report
 When batch complete:
