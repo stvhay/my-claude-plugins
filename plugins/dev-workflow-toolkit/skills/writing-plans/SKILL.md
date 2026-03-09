@@ -140,11 +140,22 @@ Mark each task's dependencies explicitly. Independent tasks can be dispatched to
 - Anchor tests to SPEC.md item IDs (INV-N, FAIL-N) with inline `# Tests INV-N` comments on declaration lines
 - DRY, YAGNI, TDD, frequent commits
 
+## Beads Conversion
+
+After saving the plan, convert it to beads issues for cross-session tracking:
+
+**Run `/plan-to-beads docs/plans/<filename>.md`** — This creates:
+- A beads epic for the plan
+- Task issues for each plan task
+- Dependencies between tasks matching the plan's dependency structure
+
+This replaces TodoWrite — tasks persist across sessions and track dependencies automatically.
+
 ## Execution Handoff
 
-After saving the plan, offer execution choice:
+After saving the plan and converting to beads, offer execution choice:
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Execution options:**
+**"Plan complete and saved to `docs/plans/<filename>.md`. Beads epic created. Execution options:**
 
 **1. Subagent-Driven (this session)** — I orchestrate fresh subagents per task, independent tasks run in parallel, review between tasks
 
