@@ -118,12 +118,14 @@ EOF
 )"
 ```
 
-The `Closes #<N>` line comes from the beads feature issue's `external-ref` field (e.g., `gh-21` → `Closes #21`). This ensures the GitHub issue is closed when the PR merges.
+The `Closes #<N>` line comes from the beads feature issue's `external-ref` field. Strip the `gh-` prefix to get the issue number (e.g., `gh-21` → `Closes #21`). This ensures the GitHub issue is closed when the PR merges.
 
 After PR creation, close the beads feature issue:
 ```bash
-bd close <feature-id> --reason "PR created"
+bd close <feature-id> --reason "PR #<N> created"
 ```
+
+> **If the PR is rejected or needs rework:** Reopen the beads feature with `bd reopen <feature-id>` and continue working.
 
 Then: Cleanup worktree (Step 5)
 

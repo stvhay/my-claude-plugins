@@ -30,7 +30,8 @@ Ask: "What feature are you building? (One-line summary for the GitHub issue titl
 - **If new feature summary provided:** Run `gh issue create --title "<summary>" --body "Brainstorming in progress"` to create the GH issue. Capture the issue number. Then run `bd create --title="<summary>" --type=feature --external-ref=gh-<N> --json` to create the beads feature linking to it.
 - **If existing issue number or URL provided:** Run `gh issue view <number> --json title,state` to verify it exists. Capture the title. Then run `bd create --title="<title>" --type=feature --external-ref=gh-<N> --json` to create the beads feature. If the issue is **closed**, warn: "Issue #N is closed. Continue with this issue, pick a different one, or proceed without?" Handle accordingly.
 - **If 'none':** Warn: "CONTRIBUTING.md requires a GitHub issue. You can create one now or proceed without." If proceeding, ask for a one-line summary, then create a beads feature without an external-ref: `bd create --title="<summary>" --type=feature --json`. Record `Issue: None (exploratory)`.
-- **Record both:** Capture the GH issue number and beads feature ID (the `id` field from `bd create --json` output) for the design doc header.
+- **If `bd` is unavailable or fails:** Proceed without beads tracking — the GitHub issue alone is sufficient for brainstorming.
+- **Record both:** Capture the GH issue number and beads feature ID (the `id` field from the `--json` response, e.g., `{"id": "beads-NNN", ...}`) for the design doc header.
 
 ### 1b. Branch Check
 
