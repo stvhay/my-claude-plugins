@@ -32,7 +32,10 @@ BEFORE claiming any status or expressing satisfaction:
 4. VERIFY: Does output confirm the claim?
    - If NO: State actual status with evidence
    - If YES: State claim WITH evidence
-5. ONLY THEN: Make the claim
+5. PREFLIGHT: If `bd preflight` is available, run `bd preflight --check` for pre-PR readiness
+   - Reviews tests, lint, formatting, and project-specific checks (varies by project)
+   - Address any failing checks before claiming completion; skipped checks are informational
+6. ONLY THEN: Make the claim
 
 Skip any step = lying, not verifying
 ```
