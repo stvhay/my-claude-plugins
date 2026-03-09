@@ -53,13 +53,13 @@ digraph process {
         "Mark task complete" [shape=box];
     }
 
-    "Read plan, extract tasks, note dependencies, create TodoWrite" [shape=box];
+    "Read plan, extract tasks, verify beads tasks exist (bd ready)" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Verify acceptance criteria" [shape=box];
     "Dispatch final code reviewer for entire implementation" [shape=box];
     "Use finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract tasks, note dependencies, create TodoWrite" -> "Dispatch implementer subagent";
+    "Read plan, extract tasks, verify beads tasks exist (bd ready)" -> "Dispatch implementer subagent";
     "Dispatch implementer subagent" -> "Implementer asks questions?";
     "Implementer asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent";
@@ -83,7 +83,7 @@ digraph process {
 
 ### Step by step
 
-1. **Read plan.** Extract all tasks with full text. Note dependencies.
+1. **Read plan.** Extract all tasks with full text. Run `bd ready --json` to verify beads tasks exist. If not, run `/plan-to-beads` on the plan file. Use `bd ready` to identify unblocked tasks for dispatch.
 2. **Check task sizing.** Each task should fit ~50% of a subagent's context window. If a task looks too large, break it up before dispatching.
 3. **Load subsystem context.** For each task, find the nearest SPEC.md to the task's target files. If one exists, prepend its key sections (Purpose, Invariants, Failure Modes) to the task context when dispatching. For cross-cutting tasks: include the full spec for the primary subsystem and only the Public Interface section from adjacent subsystems. If a task needs >2 specs, it crosses too many boundaries — split it before dispatching.
 4. **Dispatch task.** Fresh subagent (via Task tool) with full task text and context. For independent tasks, dispatch in parallel. For dependent tasks, wait.
@@ -125,7 +125,7 @@ You: I'm using Subagent-Driven Development to execute this plan.
 
 [Read plan: docs/plans/feature-plan.md]
 [3 tasks: Task 1 (independent), Task 2 (independent), Task 3 (depends on 1+2)]
-[Create TodoWrite with all tasks]
+[Verify beads tasks exist: bd ready shows Task 1, Task 2 ready; Task 3 blocked]
 
 Tasks 1 and 2 are independent — dispatch in parallel:
 
