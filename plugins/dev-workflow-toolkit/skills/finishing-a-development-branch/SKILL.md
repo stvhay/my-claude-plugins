@@ -92,15 +92,37 @@ Then: Cleanup worktree (Step 5)
 # Push branch
 git push -u origin <feature-branch>
 
-# Create PR
+# Gather beads context for PR body
+bd list --status=closed --json   # Closed tasks for summary
+bd list --status=open --json     # Remaining open tasks
+bd list --type=feature --json    # Find feature issue with external-ref
+```
+
+Build the PR body with beads context:
+
+```bash
 gh pr create --title "<title>" --body "$(cat <<'EOF'
 ## Summary
 <2-3 bullets of what changed>
 
+## Beads
+**Epic:** <epic-id>
+**Completed:** <list of closed beads task IDs and titles>
+**Remaining:** <list of open beads task IDs, or "None">
+
 ## Test Plan
 - [ ] <verification steps>
+
+Closes #<N>
 EOF
 )"
+```
+
+The `Closes #<N>` line comes from the beads feature issue's `external-ref` field (e.g., `gh-21` → `Closes #21`). This ensures the GitHub issue is closed when the PR merges.
+
+After PR creation, close the beads feature issue:
+```bash
+bd close <feature-id> --reason "PR created"
 ```
 
 Then: Cleanup worktree (Step 5)
