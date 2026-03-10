@@ -89,7 +89,7 @@ Skills compose into a development workflow graph. The primary flow is:
 
 ## Testing
 
-**Traceability:** INV-1, INV-2: enforced by `tests/validate-frontmatter.sh` (17 tests).
+**Traceability:** INV-1, INV-2: enforced by `tests/validate-frontmatter.sh`.
 INV-3: structural — plugin distribution eliminates the need for gitignore management.
 INV-4: reasoning-required — maintainer-only, verified during plugin releases.
 INV-5: reasoning-required — verified during code review.

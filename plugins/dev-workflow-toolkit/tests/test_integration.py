@@ -1,0 +1,209 @@
+"""
+Integration tests for dev-workflow-toolkit.
+
+Replaces test-integration.sh: skill loading, dependency resolution,
+template paths, reference files, trigger patterns, MCP configuration.
+"""
+
+import re
+from pathlib import Path
+
+import pytest
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _skill_dirs(skills_dir: Path) -> list[tuple[str, Path]]:
+    """Return (name, path) for each skill directory with a SKILL.md."""
+    return sorted(
+        (d.name, d)
+        for d in skills_dir.iterdir()
+        if d.is_dir() and (d / "SKILL.md").exists()
+    )
+
+
+def _extract_frontmatter_field(skill_file: Path, field: str) -> str | None:
+    """Extract a field from YAML frontmatter without a YAML dependency."""
+    text = skill_file.read_text()
+    if not text.startswith("---"):
+        return None
+    end = text.find("\n---", 3)
+    if end == -1:
+        return None
+    for line in text[3:end].splitlines():
+        if line.startswith(f"{field}:"):
+            return line.split(":", 1)[1].strip().strip('"').strip("'")
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Skill loading
+# ---------------------------------------------------------------------------
+
+class TestSkillLoading:
+    """Every skill directory must have a loadable SKILL.md with frontmatter."""
+
+    def test_all_skills_loadable(self, skills_dir: Path):
+        errors = []
+        for name, skill_dir in _skill_dirs(skills_dir):
+            skill_file = skill_dir / "SKILL.md"
+            text = skill_file.read_text()
+            if not text.startswith("---"):
+                errors.append(f"{name}: missing frontmatter opening delimiter")
+                continue
+            fm_name = _extract_frontmatter_field(skill_file, "name")
+            if not fm_name:
+                errors.append(f"{name}: missing 'name' field in frontmatter")
+        assert not errors, "Skills not loadable:\n" + "\n".join(errors)
+
+
+# ---------------------------------------------------------------------------
+# Dependency resolution
+# ---------------------------------------------------------------------------
+
+EXPECTED_DEPS = {
+    "brainstorming": "using-git-worktrees|writing-plans|documentation-standards",
+    "writing-plans": "executing-plans|subagent-driven-development",
+    "executing-plans": "test-driven-development|systematic-debugging|verification-before-completion|finishing-a-development-branch",
+    "subagent-driven-development": "test-driven-development|systematic-debugging|verification-before-completion|finishing-a-development-branch",
+    "verification-before-completion": "code-simplification",
+    "requesting-code-review": "code-reviewer",
+    "finishing-a-development-branch": "documentation-standards",
+}
+
+
+class TestDependencyResolution:
+    """Skills that reference other skills must contain the expected references."""
+
+    @pytest.mark.parametrize(
+        "skill,expected_pattern",
+        list(EXPECTED_DEPS.items()),
+        ids=list(EXPECTED_DEPS.keys()),
+    )
+    def test_dependency_referenced(self, skills_dir: Path, skill: str, expected_pattern: str):
+        skill_file = skills_dir / skill / "SKILL.md"
+        assert skill_file.exists(), f"Skill file not found: {skill}"
+        text = skill_file.read_text()
+        assert re.search(expected_pattern, text), (
+            f"{skill} does not reference expected dependencies: {expected_pattern}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Template path resolution
+# ---------------------------------------------------------------------------
+
+class TestTemplatePaths:
+    """project-init skill must reference and ship its templates."""
+
+    def test_skill_references_templates(self, skills_dir: Path):
+        skill_file = skills_dir / "project-init" / "SKILL.md"
+        assert "templates/" in skill_file.read_text()
+
+    @pytest.mark.parametrize("template", [
+        "bug-report.yml",
+        "feature-request.yml",
+        "pull_request_template.md",
+        "CONTRIBUTING.md",
+    ])
+    def test_template_exists(self, skills_dir: Path, template: str):
+        path = skills_dir / "project-init" / "templates" / template
+        assert path.exists(), f"Missing template: {template}"
+
+
+# ---------------------------------------------------------------------------
+# Template substitution
+# ---------------------------------------------------------------------------
+
+class TestTemplateSubstitution:
+    """Templates should be static (no substitution markers)."""
+
+    def test_bug_report_is_static(self, skills_dir: Path):
+        path = skills_dir / "project-init" / "templates" / "bug-report.yml"
+        if path.exists():
+            assert "{{" not in path.read_text(), "Bug report template has unexpected substitution markers"
+
+    def test_contributing_is_valid(self, skills_dir: Path):
+        path = skills_dir / "project-init" / "templates" / "CONTRIBUTING.md"
+        if path.exists():
+            assert path.stat().st_size > 0, "CONTRIBUTING template is empty"
+
+
+# ---------------------------------------------------------------------------
+# Reference file resolution
+# ---------------------------------------------------------------------------
+
+SKILLS_WITH_REFS = [
+    "code-simplification",
+    "systematic-debugging",
+    "test-driven-development",
+    "requesting-code-review",
+    "subagent-driven-development",
+    "documentation-standards",
+]
+
+
+class TestReferenceFiles:
+    """Skills that mention references/ must have the directory."""
+
+    def test_reference_dirs_exist(self, skills_dir: Path):
+        missing = []
+        for skill in SKILLS_WITH_REFS:
+            skill_file = skills_dir / skill / "SKILL.md"
+            if not skill_file.exists():
+                continue
+            if "references/" in skill_file.read_text():
+                refs_dir = skills_dir / skill / "references"
+                if not refs_dir.is_dir():
+                    missing.append(f"{skill}/references")
+        assert not missing, f"Missing reference directories: {missing}"
+
+
+# ---------------------------------------------------------------------------
+# Trigger pattern uniqueness
+# ---------------------------------------------------------------------------
+
+class TestTriggerPatterns:
+    """Skill descriptions should not have obvious trigger conflicts."""
+
+    def test_no_trigger_conflicts(self, skills_dir: Path):
+        seen: dict[str, str] = {}
+        conflicts = []
+        for name, skill_dir in _skill_dirs(skills_dir):
+            desc = _extract_frontmatter_field(skill_dir / "SKILL.md", "description")
+            if not desc:
+                continue
+            # Extract first 6 significant words as trigger fingerprint.
+            # Common prefixes like "Use when" are expected across skills;
+            # conflicts only matter when the full trigger phrase matches.
+            words = desc.lower().split()[:6]
+            trigger = " ".join(words)
+            if trigger in seen:
+                conflicts.append(f"'{trigger}' in both {seen[trigger]} and {name}")
+            else:
+                seen[trigger] = name
+        assert not conflicts, "Trigger pattern conflicts:\n" + "\n".join(conflicts)
+
+
+# ---------------------------------------------------------------------------
+# MCP configuration (setup-rag)
+# ---------------------------------------------------------------------------
+
+class TestMcpConfiguration:
+    """setup-rag skill must include MCP configuration patterns."""
+
+    @pytest.mark.parametrize("term", [
+        "ragling init",
+        "mcpServers.ragling",
+        ".ragling",
+        "ragling.json",
+    ])
+    def test_mcp_config_includes(self, skills_dir: Path, term: str):
+        skill_file = skills_dir / "setup-rag" / "SKILL.md"
+        assert term in skill_file.read_text(), f"MCP config missing: {term}"
+
+    def test_references_mcp_json(self, skills_dir: Path):
+        skill_file = skills_dir / "setup-rag" / "SKILL.md"
+        assert ".mcp.json" in skill_file.read_text()

@@ -9,12 +9,13 @@ Usage:
     quality-gate.py --help
 
 Checks: inv-numbering, issue-tracking, skill-structure, doc-structure,
-        vsa-coverage, tool-health
+        vsa-coverage, tool-health, doc-stats
 """
 
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import shutil
 import subprocess
@@ -22,6 +23,7 @@ import sys
 from pathlib import Path
 
 from markdown_it import MarkdownIt
+from mdit_py_plugins.footnote import footnote_plugin
 from mdit_py_plugins.front_matter import front_matter_plugin
 
 # ── Colors ───────────────────────────────────────────────────────────
@@ -56,6 +58,7 @@ def parse_md(path: Path) -> list:
     """Parse a markdown file into tokens using markdown-it-py."""
     md = MarkdownIt().enable("table")
     front_matter_plugin(md)
+    footnote_plugin(md)
     return md.parse(path.read_text(encoding="utf-8"))
 
 
@@ -426,6 +429,163 @@ def check_issue_tracking(project_root: Path) -> None:
             pass
 
 
+# ── Check: doc-stats ─────────────────────────────────────────────────
+
+# Stat check registry: each function takes (project_root, plugin_dir) and
+# returns the actual integer value. plugin_dir is the plugin containing the
+# markdown file with the footnote, or None for project-level docs.
+
+
+def _stat_total_test_count(project_root: Path, plugin_dir: Path | None) -> int:
+    """Count total tests using pytest --collect-only (sub-second, no execution)."""
+    test_dir = (plugin_dir or project_root) / "tests"
+    if not test_dir.exists():
+        return 0
+    try:
+        result = subprocess.run(
+            ["uv", "run", "--project", str(plugin_dir or project_root),
+             "pytest", "--collect-only", "-q", str(test_dir)],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        # Last meaningful line: "N tests collected" or "N test collected"
+        for line in reversed(result.stdout.splitlines()):
+            m = re.match(r"(\d+) tests? collected", line.strip())
+            if m:
+                return int(m.group(1))
+    except (subprocess.TimeoutExpired, OSError):
+        pass
+    return 0
+
+
+def _stat_test_suite_count(project_root: Path, plugin_dir: Path | None) -> int:
+    """Count number of test modules (test_*.py files)."""
+    test_dir = (plugin_dir or project_root) / "tests"
+    if not test_dir.exists():
+        return 0
+    return len(list(test_dir.glob("test_*.py")))
+
+
+def _stat_skill_count(project_root: Path, plugin_dir: Path | None) -> int:
+    """Count number of SKILL.md files in a plugin."""
+    skills_dir = (plugin_dir or project_root) / "skills"
+    if not skills_dir.exists():
+        return 0
+    return len(list(skills_dir.rglob("SKILL.md")))
+
+
+STAT_CHECKS: dict[str, callable] = {
+    "total-test-count": _stat_total_test_count,
+    "test-suite-count": _stat_test_suite_count,
+    "skill-count": _stat_skill_count,
+}
+
+
+def _extract_stat_refs(tokens: list) -> list[tuple[str, int, str]]:
+    """Extract stat-check footnote references from parsed tokens.
+
+    Returns list of (label, claimed_number, check_name) tuples.
+    """
+    # Build footnote label -> check name mapping from footnote definitions
+    label_to_check: dict[str, str] = {}
+    in_footnote: str | None = None
+    for token in tokens:
+        if token.type == "footnote_open" and token.meta:
+            in_footnote = token.meta.get("label", "")
+        elif token.type == "footnote_close":
+            in_footnote = None
+        elif in_footnote and token.type == "inline":
+            m = re.match(r"stat-check:\s*(\S+)", token.content.strip())
+            if m:
+                label_to_check[in_footnote] = m.group(1)
+
+    if not label_to_check:
+        return []
+
+    # Find footnote refs and extract the number from preceding text
+    refs: list[tuple[str, int, str]] = []
+    for token in tokens:
+        if token.type != "inline" or not token.children:
+            continue
+        for i, child in enumerate(token.children):
+            if child.type != "footnote_ref":
+                continue
+            label = child.meta.get("label", "") if child.meta else ""
+            if label not in label_to_check:
+                continue
+            # Look backward for the nearest number in preceding text children
+            number = None
+            for j in range(i - 1, -1, -1):
+                sib = token.children[j]
+                if sib.content:
+                    nums = re.findall(r"\d+", sib.content)
+                    if nums:
+                        number = int(nums[-1])
+                        break
+            if number is not None:
+                refs.append((label, number, label_to_check[label]))
+
+    return refs
+
+
+def _find_plugin_for_file(filepath: Path, project_root: Path) -> Path | None:
+    """Find the plugin directory containing a file, or None."""
+    plugins_dir = project_root / "plugins"
+    try:
+        rel = filepath.relative_to(plugins_dir)
+        return plugins_dir / rel.parts[0]
+    except (ValueError, IndexError):
+        return None
+
+
+def check_doc_stats(project_root: Path) -> None:
+    """Validate stat-check footnotes in markdown files."""
+    md_files = sorted(project_root.rglob("*.md"))
+    # Exclude hidden dirs, node_modules, .venv
+    md_files = [
+        f
+        for f in md_files
+        if not any(
+            part.startswith(".") or part in ("node_modules", "__pycache__")
+            for part in f.relative_to(project_root).parts
+        )
+    ]
+
+    found_any = False
+    for md_file in md_files:
+        try:
+            tokens = parse_md(md_file)
+        except Exception:
+            continue
+
+        refs = _extract_stat_refs(tokens)
+        if not refs:
+            continue
+
+        found_any = True
+        rel = md_file.relative_to(project_root)
+        plugin_dir = _find_plugin_for_file(md_file, project_root)
+
+        for label, claimed, check_name in refs:
+            if check_name not in STAT_CHECKS:
+                report("FAIL", "doc-stats", f"{rel}: unknown stat-check '{check_name}' in [^{label}]")
+                continue
+
+            actual = STAT_CHECKS[check_name](project_root, plugin_dir)
+            if claimed == actual:
+                report("PASS", "doc-stats", f"{rel}: [^{label}] {check_name} = {actual}")
+            else:
+                report(
+                    "FAIL",
+                    "doc-stats",
+                    f"{rel}: [^{label}] {check_name} claims {claimed}, actual {actual}",
+                )
+
+    if not found_any:
+        report("WARN", "doc-stats", "No stat-check footnotes found in any markdown files")
+
+
 # ── Main ─────────────────────────────────────────────────────────────
 
 CHECKS = {
@@ -435,6 +595,7 @@ CHECKS = {
     "doc-structure": check_doc_structure,
     "vsa-coverage": check_vsa_coverage,
     "tool-health": check_tool_health,
+    "doc-stats": check_doc_stats,
 }
 
 ALL_CHECKS_ORDER = [
@@ -442,6 +603,7 @@ ALL_CHECKS_ORDER = [
     "skill-structure",
     "doc-structure",
     "vsa-coverage",
+    "doc-stats",
     "tool-health",
     "issue-tracking",
 ]

@@ -152,6 +152,48 @@ Do NOT allow the branch to proceed to option presentation, PR creation, or merge
 | SPEC.md exceeds recommended length | Flag for subsystem decomposition |
 | Public interface change | Updated `README.md` |
 | New subsystem without SPEC.md | Recommend `/codify-subsystem` |
+| Stale statistics in docs | Add stat-check footnotes (see below) |
+
+## Stat-Check Footnotes
+
+When documentation includes numeric statistics (test counts, skill counts, component
+counts), use **stat-check footnotes** to enable machine validation via the quality gate.
+This prevents statistics from going stale as the project evolves.
+
+### Convention
+
+Place a markdown footnote reference immediately after the number, with the footnote
+body containing a `stat-check:` directive pointing to a named check:
+
+```markdown
+**110 tests**[^stat-test-count] across 4 suites[^stat-suite-count]:
+
+[^stat-test-count]: stat-check: total-test-count
+[^stat-suite-count]: stat-check: test-suite-count
+```
+
+### Available checks
+
+| Check name | What it counts |
+|---|---|
+| `total-test-count` | Sum of `Tests: N` output from `tests/test-*.sh` scripts |
+| `test-suite-count` | Number of `tests/test-*.sh` files |
+| `skill-count` | Number of `SKILL.md` files under `skills/` |
+
+### When to add stat-check footnotes
+
+- Any numeric claim in README, SPEC.md, or ARCHITECTURE.md that could go stale
+- Test counts, component counts, check counts, invariant counts
+- Cross-reference counts (e.g., "6 checks" in a description of the quality gate)
+
+### Validation
+
+The quality gate's `doc-stats` check parses all markdown files for stat-check
+footnotes and validates each claimed number against the actual count. Run:
+
+```bash
+<plugin-root>/scripts/quality-gate.sh --check doc-stats --path "$(git rev-parse --show-toplevel)"
+```
 
 ## What Doesn't Trigger the Gate
 

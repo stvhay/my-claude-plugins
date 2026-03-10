@@ -1,79 +1,52 @@
 # dev-workflow-toolkit Tests
 
-Test suite for the dev-workflow-toolkit plugin.
+pytest-based test suite for the dev-workflow-toolkit plugin.
 
 ## Running Tests
 
-Run all tests:
 ```bash
+# All tests
 ./tests/run-all.sh
+
+# Verbose output
+./tests/run-all.sh -v
+
+# Filter by name
+./tests/run-all.sh -k quality
+
+# Count tests without running
+uv run --project plugins/dev-workflow-toolkit pytest --collect-only -q tests/
 ```
 
-Run individual tests:
-```bash
-./tests/validate-frontmatter.sh
-./tests/test-project-init.sh
-./tests/test-setup-rag.sh
-./tests/test-integration.sh
-```
+## Test Modules
 
-## Test Coverage
+### test_structure.py
+Structural validation replacing validate-frontmatter.sh, validate-specs.sh,
+test-project-init.sh, and test-setup-rag.sh:
+- Frontmatter validation (all SKILL.md files)
+- SPEC.md existence and line count per plugin
+- Project-init template structure and content
+- Setup-rag skill configuration patterns
 
-### validate-frontmatter.sh
-Validates YAML frontmatter in all SKILL.md files:
-- Checks frontmatter delimiters (`---`)
-- Verifies required fields (`name`, `description`)
-- Ensures name matches directory name
-- Validates name format (lowercase, hyphenated, max 64 chars)
+### test_integration.py
+Integration tests replacing test-integration.sh:
+- Skill loading (all skills have valid frontmatter)
+- Dependency resolution (cross-skill references)
+- Template path resolution
+- Reference file directories
+- Trigger pattern uniqueness
+- MCP configuration patterns
 
-**Tests:** 16 skills
-**Addresses:** Finding 1 - YAML frontmatter validation
-
-### test-project-init.sh
-Validates project-init skill templates:
-- Verifies templates directory exists
-- Checks required template files present
-- Validates YAML structure in GitHub issue templates
-- Ensures Markdown templates have content
-- Tests path resolution in skill
-
-**Tests:** 10 validations
-**Addresses:** Finding 1 - Template generation, Finding 4 - Path resolution
-
-### test-setup-rag.sh
-Validates setup-rag skill configuration logic:
-- Checks prerequisite detection (local-rag)
-- Verifies MCP server configuration structure
-- Validates required environment variables
-- Ensures .mcp.json reference present
-- Tests gitignore safety guidance
-- Confirms project isolation concept
-
-**Tests:** 11 validations
-**Addresses:** Finding 1 - Configuration generation
-
-### test-integration.sh
-Integration tests for skill system:
-- **Skill invocation:** Validates all 16 skills can be loaded (proper YAML frontmatter)
-- **Dependency resolution:** Verifies cross-skill references resolve correctly
-- **Template path resolution:** Ensures template files exist and paths are correct
-- **Template substitution:** Validates template content and substitution patterns
-- **Reference file resolution:** Checks skills with reference/ directories
-- **Trigger pattern conflicts:** Detects overly broad or duplicate trigger patterns
-- **MCP configuration:** Validates setup-rag generates correct MCP server config
-
-**Tests:** 35 validations
-**Addresses:** All four suggested integration tests from code review
-
-## Exit Codes
-
-- `0` - All tests passed
-- `1` - One or more tests failed
+### test_quality_gate.py
+Quality gate validation replacing test-quality-gate.sh:
+- Smoke tests against real repo (all checks pass)
+- Argument validation (--help, unknown flags)
+- Fixture-based negative tests (duplicate INV/FAIL, gaps, format variants)
+- Skill structure negative cases (missing frontmatter, name mismatches)
+- Doc-stats stat-check footnote validation
 
 ## Test Philosophy
 
-These tests follow the plugin's own TDD guidance by:
-- Testing behavior, not implementation
-- Using simple, minimal dependencies (bash only)
-- Validating real configuration structures
-- Ensuring skills are self-contained and discoverable
+- Tests use pytest fixtures and parametrize for clarity
+- Quality gate tests create temporary git repos as fixtures
+- `pytest --collect-only` enables sub-second test counting for doc-stats

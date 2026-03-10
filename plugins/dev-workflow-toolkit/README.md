@@ -14,7 +14,7 @@ Select `dev-workflow-toolkit` from the plugin list.
 
 **Recommended companion:** Install `writing-toolkit` for the `writing-clearly-and-concisely` skill referenced by several workflow skills.
 
-## Skills (18)
+## Skills (18)[^stat-skill-count]
 
 ### Workflow
 
@@ -96,11 +96,10 @@ cd plugins/dev-workflow-toolkit
 ./tests/run-all.sh
 ```
 
-**102 tests** across 4 suites:
-- Integration — frontmatter, skill structure, dependency resolution (39 tests)
-- Project init — template structure and content (10 tests)
-- Setup RAG — configuration generation logic (10 tests)
-- Quality gate — positive and negative structural validation (43 tests)
+**79 tests**[^stat-test-count] across 3 modules[^stat-suite-count]:
+- Structure — frontmatter validation, SPEC.md checks, project-init templates, setup-rag config
+- Integration — skill loading, dependency resolution, trigger patterns, reference files
+- Quality gate — smoke tests, negative fixtures, doc-stats validation
 
 See `tests/README.md` for details.
 
@@ -118,3 +117,7 @@ See `tests/README.md` for details.
 ## License
 
 Apache-2.0
+
+[^stat-skill-count]: stat-check: skill-count
+[^stat-test-count]: stat-check: total-test-count
+[^stat-suite-count]: stat-check: test-suite-count
