@@ -105,7 +105,18 @@ Do NOT allow the branch to proceed to option presentation, PR creation, or merge
    - Are modified subsystem behaviors reflected in SPEC.md?
    - Has any SPEC.md grown beyond recommended length? (Flag for decomposition)
 
-7. **If gaps found — block and present:**
+7. **Run structural checks:**
+   ```bash
+   QG_SCRIPT="$(find ~/.claude/plugins/cache -path "*/dev-workflow-toolkit/*/scripts/quality-gate.sh" 2>/dev/null | head -1)"
+
+   if [ -n "$QG_SCRIPT" ] && [ -x "$QG_SCRIPT" ]; then
+       "$QG_SCRIPT" --check inv-numbering --path "$(git rev-parse --show-toplevel)"
+       "$QG_SCRIPT" --check doc-structure --path "$(git rev-parse --show-toplevel)"
+   fi
+   ```
+   Include structural check results alongside documentation gap analysis.
+
+8. **If gaps found — block and present:**
    ```
    Documentation gate: gaps found.
 
@@ -121,12 +132,12 @@ Do NOT allow the branch to proceed to option presentation, PR creation, or merge
    3. Defer documentation — reason required (recorded in PR body)
    ```
 
-8. **If option 3 (defer):**
+9. **If option 3 (defer):**
    - Require a reason
    - Record in PR body as: `**Documentation deferred:** [reason]`
    - Proceed past the gate
 
-9. **If no gaps — pass:**
+10. **If no gaps — pass:**
    ```
    Documentation gate: all tracked docs are current. Proceeding.
    ```

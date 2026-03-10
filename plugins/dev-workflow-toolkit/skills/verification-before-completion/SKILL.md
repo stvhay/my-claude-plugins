@@ -196,6 +196,23 @@ After checking invariants, assess whether the SPEC.md is still current:
 A stale spec is better than no spec — don't block completion on staleness alone.
 Flag it and move on.
 
+### Quality Gate Check
+
+After SPEC.md invariant checks pass, run the structural quality gate:
+
+```bash
+# Find the quality gate script (ships with dev-workflow-toolkit plugin)
+QG_SCRIPT="$(find ~/.claude/plugins/cache -path "*/dev-workflow-toolkit/*/scripts/quality-gate.sh" 2>/dev/null | head -1)"
+
+if [ -n "$QG_SCRIPT" ] && [ -x "$QG_SCRIPT" ]; then
+    "$QG_SCRIPT" --path "$(git rev-parse --show-toplevel)"
+fi
+```
+
+If the quality gate reports failures, include them in the verification output.
+Failures in `inv-numbering`, `skill-structure`, and `doc-structure` should block
+completion. Failures in `tool-health` and `issue-tracking` are warnings only.
+
 ```
 SPEC.md invariant check:
 - [path/to/SPEC.md]

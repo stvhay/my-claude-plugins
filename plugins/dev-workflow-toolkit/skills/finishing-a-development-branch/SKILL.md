@@ -44,6 +44,20 @@ Stop. Don't proceed to Step 2.
 
 **If tests pass:** Continue to Step 2.
 
+**After tests pass, run the quality gate:**
+
+```bash
+QG_SCRIPT="$(find ~/.claude/plugins/cache -path "*/dev-workflow-toolkit/*/scripts/quality-gate.sh" 2>/dev/null | head -1)"
+
+if [ -n "$QG_SCRIPT" ] && [ -x "$QG_SCRIPT" ]; then
+    "$QG_SCRIPT" --path "$(git rev-parse --show-toplevel)"
+fi
+```
+
+Quality gate failures in `inv-numbering`, `skill-structure`, and `doc-structure`
+must be resolved before proceeding. `tool-health` and `issue-tracking` warnings
+can proceed with a note in the PR body.
+
 ### Step 2: Validate Documentation
 
 <HARD-GATE>
