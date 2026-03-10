@@ -46,10 +46,11 @@ Stop. Don't proceed to Step 2.
 
 **After tests pass, run the quality gate:**
 
-Run `scripts/quality-gate.sh` from the dev-workflow-toolkit plugin directory:
+Run the quality gate script from this plugin's root directory (the parent of
+the `skills/` directory containing this file):
 
 ```bash
-scripts/quality-gate.sh --path "$(git rev-parse --show-toplevel)"
+<plugin-root>/scripts/quality-gate.sh --path "$(git rev-parse --show-toplevel)"
 ```
 
 Quality gate failures in `inv-numbering`, `skill-structure`, and `doc-structure`
