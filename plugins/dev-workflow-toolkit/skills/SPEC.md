@@ -24,6 +24,24 @@ never by path.
   originating from [obra/superpowers](https://github.com/obra/superpowers)
 - `*/SKILL.md` — Entry point for each skill (YAML frontmatter + Markdown body)
 
+## Composition
+
+Skills compose into a development workflow graph. The primary flow is:
+
+> brainstorming → writing-plans → executing-plans / subagent-driven-development → finishing-a-development-branch
+
+**During execution,** quality skills are invoked as needed:
+- test-driven-development, systematic-debugging, code-simplification,
+  verification-before-completion
+
+**Cross-cutting concerns:**
+- documentation-standards is invoked by brainstorming (draft standards) and
+  finishing-a-development-branch (validate standards compliance)
+- dispatching-parallel-agents, using-git-worktrees support execution at scale
+- requesting-code-review, receiving-code-review bracket the PR lifecycle
+
+**Standalone entry points:** project-init, setup-rag, codify-subsystem
+
 ## Public Interface
 
 | Export | Used By | Contract |
@@ -35,14 +53,18 @@ never by path.
 
 ## Invariants
 
-| ID | Invariant | Why It Matters |
-|---|---|---|
-| INV-1 | Every skill directory contains exactly one `SKILL.md` with valid YAML frontmatter (`name` + `description`) | Claude Code cannot discover or load skills without frontmatter |
-| INV-2 | Skill names are unique across all `SKILL.md` files | Duplicate names cause routing ambiguity |
-| INV-3 | Every tracked skill directory has a negated gitignore entry (`!.claude/skills/<name>/`) | Without the negation, git ignores the skill due to the `.claude/skills/*` blanket rule |
-| INV-4 | Skills originating from upstream have an entry in `UPSTREAM-superpowers.md` with correct sync status | Agents modifying upstream-derived skills must know divergence status to avoid clobbering upstream changes |
-| INV-5 | Skills that reference other skills use the skill name (not file path) in their Integration section | Skill directories may move; names are the stable identifier |
-| INV-6 | Support files (prompts, templates, examples) live inside the skill's own directory | Skills must be self-contained — an agent loads one directory |
+| ID | Invariant | Enforcement | Why It Matters |
+|---|---|---|---|
+| INV-1 | Every skill directory contains exactly one `SKILL.md` with valid YAML frontmatter (`name` + `description`) | structural | Claude Code cannot discover or load skills without frontmatter |
+| INV-2 | Skill names are unique across all `SKILL.md` files | structural | Duplicate names cause routing ambiguity |
+| INV-3 | Every tracked skill directory has a negated gitignore entry (`!.claude/skills/<name>/`) | structural | Without the negation, git ignores the skill due to the `.claude/skills/*` blanket rule |
+| INV-4 | Skills originating from upstream have an entry in `UPSTREAM-superpowers.md` with correct sync status | reasoning-required | Agents modifying upstream-derived skills must know divergence status to avoid clobbering upstream changes |
+| INV-5 | Skills that reference other skills use the skill name (not file path) in their Integration section | reasoning-required | Skill directories may move; names are the stable identifier |
+| INV-6 | Support files (prompts, templates, examples) live inside the skill's own directory | structural | Skills must be self-contained — an agent loads one directory |
+
+**Enforcement classification:**
+- **structural** — enforced by test suite, gitignore structure, or directory convention; pattern-matchable
+- **reasoning-required** — needs architectural understanding; verified during code review
 
 ## Failure Modes
 
@@ -54,10 +76,21 @@ never by path.
 | FAIL-4 | Upstream sync clobbers local customizations | Skill marked "identical" in UPSTREAM-superpowers.md but has local changes | Update status to "diverged" with notes on what differs |
 | FAIL-5 | Skill references broken after rename | Cross-references use file paths instead of skill names | Update references to use `/skill-name` form |
 
+## Decision Framework
+
+| Situation | Action | Invariant |
+|---|---|---|
+| Adding a skill derived from upstream | Add entry to UPSTREAM-superpowers.md with "identical" status and sync date | INV-4 |
+| Modifying a skill that originated from upstream | Update status to "diverged" in UPSTREAM-superpowers.md with change notes | INV-4 |
+| Referencing another skill from within a SKILL.md | Use skill name in Integration section (e.g., "writing-plans"), never file paths | INV-5 |
+
 ## Testing
 
-Skills are validated via subagent pressure testing — not automated test suites.
-See `/skill-creator` for the testing process.
+**Traceability:** INV-1, INV-2: enforced by `tests/validate-frontmatter.sh` (17 tests).
+INV-3: enforced by gitignore structure. INV-4, INV-5: reasoning-required — verified
+during code review. INV-6: structural — directory convention.
+
+Skills are additionally validated via subagent pressure testing — see `/skill-creator`.
 
 ## Dependencies
 
