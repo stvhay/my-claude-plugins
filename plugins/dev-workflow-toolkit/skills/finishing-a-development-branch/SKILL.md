@@ -75,26 +75,15 @@ git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 
 Or ask: "This branch split from main - is that correct?"
 
-### Step 4: Present Options
+### Step 4: Create Pull Request
 
-Present exactly these 4 options:
+**Always create a PR and attach it to the relevant GitHub issue.** Do not ask the user to choose — PRs are the default workflow.
 
-```
-Implementation complete. What would you like to do?
-
-1. Merge back to <base-branch> locally
-2. Push and create a Pull Request
-3. Keep the branch as-is (I'll handle it later)
-4. Discard this work
-
-Which option?
-```
-
-**Don't add explanation** - keep options concise.
+Skip directly to Option 2 (Push and Create PR) below.
 
 ### Step 5: Execute Choice
 
-#### Option 1: Merge Locally
+#### Option 1: Merge Locally (only if user explicitly requests)
 
 ```bash
 # Switch to base branch
