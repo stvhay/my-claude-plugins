@@ -11,6 +11,7 @@ plugins/my-plugin/
 ├── .claude-plugin/
 │   └── plugin.json
 ├── skills/
+│   ├── SPEC.md
 │   └── my-skill/
 │       └── SKILL.md
 └── README.md
@@ -51,3 +52,6 @@ description: What this skill does and when to use it.
 - Plugin names: lowercase, hyphenated
 - Skill `name` field must match its directory name
 - Every PR links to an issue
+- Every plugin must have a `skills/SPEC.md` following the [spec template](plugins/dev-workflow-toolkit/docs/spec-template.md)
+- Plugins derived from external sources must include `UPSTREAM-*.md` provenance tracking
+- Structural changes must be reflected in [ARCHITECTURE.md](docs/ARCHITECTURE.md) or [DESIGN.md](docs/DESIGN.md)

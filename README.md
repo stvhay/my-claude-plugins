@@ -22,6 +22,12 @@ Personal Claude Code plugin marketplace.
 | [redteam](plugins/redteam/) | Adversarial analysis with parallel agent deployment: stress-test ideas and produce content through competition |
 | [dev-workflow-toolkit](plugins/dev-workflow-toolkit/) | Development workflow skills: brainstorming, planning, execution, debugging, testing, code review, and project scaffolding |
 
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md) — architectural decisions and system structure
+- [Design](docs/DESIGN.md) — design patterns and conventions
+- Each plugin has a `skills/SPEC.md` — subsystem contracts with invariants and failure modes
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).

@@ -8,6 +8,9 @@ distributed via the Claude Code plugin system.
 ## Repository Structure
 
 ```
+docs/
+  ARCHITECTURE.md          # Architectural decisions and system structure
+  DESIGN.md                # Design patterns and conventions
 plugins/
   plugin-name/
     .claude-plugin/
