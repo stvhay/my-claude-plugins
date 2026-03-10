@@ -6,12 +6,12 @@ This file tracks skills derived from [obra/superpowers](https://github.com/obra/
 
 | Skill | Status | Last Sync | Notes |
 |---|---|---|---|
-| brainstorming | diverged | 2026-03-05 | Added ux-design-agent integration, updated workflow |
+| brainstorming | diverged | 2026-03-10 | Added documentation impact step, ux-design-agent integration |
 | code-simplification | diverged | 2026-03-05 | Added language-specific patterns, failure analysis |
 | codify-subsystem | diverged | 2026-03-05 | Updated for SPEC.md format, added spec-template reference |
 | dispatching-parallel-agents | identical | 2026-03-05 | No modifications from upstream |
 | executing-plans | identical | 2026-03-05 | No modifications from upstream |
-| finishing-a-development-branch | identical | 2026-03-05 | No modifications from upstream |
+| finishing-a-development-branch | diverged | 2026-03-10 | Added documentation validation hard gate (Step 1) |
 | receiving-code-review | identical | 2026-03-05 | No modifications from upstream |
 | requesting-code-review | diverged | 2026-03-05 | Updated references, added code-reviewer agent details |
 | subagent-driven-development | diverged | 2026-03-05 | Updated for two-stage review pattern |
@@ -25,6 +25,7 @@ This file tracks skills derived from [obra/superpowers](https://github.com/obra/
 
 - **project-init** — Created for this plugin (GitHub scaffolding)
 - **setup-rag** — Created for this plugin (local-rag configuration)
+- **documentation-standards** — Created for this plugin (documentation validation and drafting)
 
 ## Sync Process
 

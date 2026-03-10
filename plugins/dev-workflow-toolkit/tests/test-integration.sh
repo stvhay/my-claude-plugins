@@ -57,12 +57,13 @@ echo "Validating skill dependency resolution..."
 
 # Define expected dependencies from README
 declare -A dependencies=(
-    ["brainstorming"]="using-git-worktrees|writing-plans"
+    ["brainstorming"]="using-git-worktrees|writing-plans|documentation-standards"
     ["writing-plans"]="executing-plans|subagent-driven-development"
     ["executing-plans"]="test-driven-development|systematic-debugging|verification-before-completion|finishing-a-development-branch"
     ["subagent-driven-development"]="test-driven-development|systematic-debugging|verification-before-completion|finishing-a-development-branch"
     ["verification-before-completion"]="code-simplification"
     ["requesting-code-review"]="code-reviewer"
+    ["finishing-a-development-branch"]="documentation-standards"
 )
 
 for skill in "${!dependencies[@]}"; do
@@ -137,7 +138,7 @@ echo "Validating reference file paths..."
 
 # Skills with references/ directories
 skills_with_refs=("code-simplification" "systematic-debugging" "test-driven-development"
-                  "requesting-code-review" "subagent-driven-development")
+                  "requesting-code-review" "subagent-driven-development" "documentation-standards")
 
 for skill in "${skills_with_refs[@]}"; do
     skill_file="$SKILLS_DIR/$skill/SKILL.md"
