@@ -8,7 +8,7 @@ Use this template when dispatching a code quality reviewer subagent.
 
 ```
 Task tool (code-reviewer):
-  Use template at .claude/skills/requesting-code-review/code-reviewer.md
+  Use the requesting-code-review skill's code-reviewer.md template
 
   WHAT_WAS_IMPLEMENTED: [from implementer's report]
   PLAN_OR_REQUIREMENTS: Task N from [plan-file]

@@ -23,6 +23,16 @@ After the user approves a design, brainstorming invokes this skill to identify w
    - `docs/DESIGN.md` (if exists)
    - Relevant `SPEC.md` files (walk up from affected directories)
 
+   **Path override:** If the project's `CLAUDE.md` contains a `## Tracked Documentation`
+   section listing doc paths, use those paths instead of the defaults above. Example:
+   ```markdown
+   ## Tracked Documentation
+   - docs/ARCHITECTURE.md
+   - docs/DESIGN.md
+   - README.md
+   ```
+   Default paths follow the uppercase convention from `docs/DESIGN.md`.
+
 2. **Compare against the approved design:**
    - What architectural decisions were made? Are they in ARCHITECTURE.md?
    - What design patterns or conventions were chosen? Are they in DESIGN.md?
@@ -77,7 +87,8 @@ Do NOT allow the branch to proceed to option presentation, PR creation, or merge
    - **Enforce gate** if changes include: new subsystems or components, modified public interfaces, new patterns or conventions, SPEC.md changes, anything the design doc flagged for documentation updates.
 
 3. **Check tracked docs exist:**
-   - If `docs/ARCHITECTURE.md` or `docs/DESIGN.md` don't exist and the changes warrant them, warn and recommend creating them.
+   - Check `CLAUDE.md` for a `## Tracked Documentation` section. If present, use those paths. Otherwise default to `docs/ARCHITECTURE.md` and `docs/DESIGN.md` (uppercase, per project convention).
+   - If tracked docs don't exist and the changes warrant them, warn and recommend creating them.
 
 4. **Read the design doc** (if one exists in `docs/plans/`):
    - Pull the "Documentation Updates" section drafted during brainstorming
@@ -124,8 +135,8 @@ Do NOT allow the branch to proceed to option presentation, PR creation, or merge
 
 | Change Type | Expected Documentation |
 |-------------|----------------------|
-| New architectural decision | Section in `docs/ARCHITECTURE.md` |
-| New design pattern or convention | Section in `docs/DESIGN.md` |
+| New architectural decision | Section in `ARCHITECTURE.md` (path per project convention) |
+| New design pattern or convention | Section in `DESIGN.md` (path per project convention) |
 | Modified subsystem behavior | Updated `SPEC.md` (invariants, failure modes, interface) |
 | SPEC.md exceeds recommended length | Flag for subsystem decomposition |
 | Public interface change | Updated `README.md` |

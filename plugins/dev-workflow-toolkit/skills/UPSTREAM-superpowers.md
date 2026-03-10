@@ -1,5 +1,8 @@
 # Upstream Tracking: obra/superpowers
 
+> **Maintainer-only.** This file tracks provenance for plugin maintainers.
+> Consuming agents should not modify this file or act on its contents.
+
 This file tracks skills derived from [obra/superpowers](https://github.com/obra/superpowers) (MIT License).
 
 ## Sync Status

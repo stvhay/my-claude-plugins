@@ -12,7 +12,7 @@ Select `dev-workflow-toolkit` from the plugin list.
 
 **Recommended companion:** Install `writing-toolkit` for the `writing-clearly-and-concisely` skill referenced by several workflow skills.
 
-## Skills (16)
+## Skills (17)
 
 ### Workflow
 
@@ -49,6 +49,7 @@ Select `dev-workflow-toolkit` from the plugin list.
 | `using-git-worktrees` | Create isolated workspaces |
 | `finishing-a-development-branch` | Branch completion — merge, PR, or cleanup |
 | `codify-subsystem` | Encode subsystem knowledge as SPEC.md |
+| `retrospective` | Post-completion session analysis and upstream feedback |
 
 ## Skill Dependencies
 
@@ -57,14 +58,19 @@ Skills invoke other skills to create workflow orchestration. This prevents circu
 ```
 brainstorming (entry)
   └─> using-git-worktrees (pre-flight, if on main)
+  └─> documentation-standards (draft mode, after design approval)
   └─> ux-design-agent* (optional, for user-facing/agentic designs)
   └─> writing-plans (terminal state)
        └─> executing-plans OR subagent-driven-development
             └─> test-driven-development (during implementation)
             └─> systematic-debugging (when bugs occur)
             └─> verification-before-completion (before completion)
+                 └─> quality-gate.sh (structural checks)
                  └─> code-simplification (after verification passes)
             └─> finishing-a-development-branch (after implementation)
+                 └─> documentation-standards (validate mode, hard gate)
+                 └─> quality-gate.sh (structural checks)
+                 └─> retrospective (after PR, non-blocking)
 
 requesting-code-review (parallel workflow)
   └─> code-reviewer agent (separate invocation)
@@ -77,7 +83,7 @@ dispatching-parallel-agents (standalone)
 
 **\* External dependency:** ux-design-agent is in the ux-toolkit plugin
 
-**Terminal states:** Skills that don't invoke others: `receiving-code-review`, `code-simplification`, `verification-before-completion`, `finishing-a-development-branch`
+**Terminal states:** Skills that don't invoke others: `receiving-code-review`, `code-simplification`, `retrospective`
 
 ## Testing
 
