@@ -27,9 +27,10 @@ files. Two patterns exist:
 2. **Per-skill.** `UPSTREAM.md` inside an individual skill directory, used when
    only that skill has external provenance.
 
-Each tracking file records: source, license, sync status, adaptation notes,
-and sync process. Original work receives no UPSTREAM file — absence signals
-original authorship.
+Each tracking file records: source, license, adaptation notes, and
+(where applicable) sync process. Original work based on external research
+receives an UPSTREAM file documenting provenance; purely original work
+receives no UPSTREAM file — absence signals original authorship.
 
 ## Hub-and-Spoke Skill Architecture
 
@@ -60,8 +61,8 @@ wherever possible — moving enforcement from human judgment to automation.
 
 Documentation is organized into three tiers by lifecycle:
 
-1. **Ephemeral.** Plans and working notes under `docs/plans/` and `.claude/`.
-   Gitignored or short-lived. Used during development, discarded after merge.
+1. **Ephemeral.** Plans and working notes under `.claude/plans/`.
+   Gitignored. Used during development, discarded after merge.
 2. **Tracked project docs.** `ARCHITECTURE.md`, `DESIGN.md`, `README.md` at
    the project level. Living documents — decisions are woven into sections,
    not appended as ADRs. Git history preserves the evolution.

@@ -78,7 +78,7 @@ Two technique skills cut across all specialists:
 | Agentic interaction context identified | Route to delegation-oversight for checkpoint and escalation design | INV-3 |
 | Communicating confidence or uncertainty | Use trust-calibration's five-level framework, not free-form language | INV-4 |
 | Handling a failure or error state | Invoke failure-choreography; ensure state preservation and recovery options | INV-5 |
-| Writing any user-facing text | Invoke ux-writing for tone adaptation by user state | INV-6 |
+| Writing any user-facing text | Invoke ux-writing for tone adaptation by user state | FAIL-5 |
 
 ## Testing
 

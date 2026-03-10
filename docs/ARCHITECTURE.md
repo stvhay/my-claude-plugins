@@ -57,3 +57,11 @@ reference — no shared code, no imports.
 **Consequence.** Any plugin can be extracted to its own repository without
 modification. This preserves the option to split the mono-repo later without
 a rewrite.
+
+## Documentation Structure
+
+This document (`docs/ARCHITECTURE.md`) and its companion `docs/DESIGN.md`
+form the project-level tracked documentation tier. They are synthesized from
+plugin-level `skills/SPEC.md` files and updated when structural decisions
+change. See [DESIGN.md](DESIGN.md) for the three-tier documentation model
+and conventions like SPEC.md contracts and upstream provenance tracking.

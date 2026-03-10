@@ -74,8 +74,8 @@ graded results viewable via `eval-viewer/`.
 
 ## Dependencies
 
-| Dependency | Type | Tracking |
+| Dependency | Type | SPEC.md Path |
 |---|---|---|
-| Anthropic official skill-creator | external | UPSTREAM.md (Apache 2.0, commit SHA tracked) |
-| obra/superpowers writing-skills | external | UPSTREAM.md (MIT, commit SHA tracked) |
-| Claude Code eval tooling | external | Built into Claude Code runtime |
+| Anthropic official skill-creator | external | N/A — tracked in UPSTREAM.md (Apache 2.0, commit SHA) |
+| obra/superpowers writing-skills | external | N/A — tracked in UPSTREAM.md (MIT, commit SHA) |
+| Claude Code eval tooling | external | N/A — built into Claude Code runtime |
