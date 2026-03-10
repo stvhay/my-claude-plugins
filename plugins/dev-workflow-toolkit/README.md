@@ -14,7 +14,7 @@ Select `dev-workflow-toolkit` from the plugin list.
 
 **Recommended companion:** Install `writing-toolkit` for the `writing-clearly-and-concisely` skill referenced by several workflow skills.
 
-## Skills (17)
+## Skills (18)
 
 ### Workflow
 
@@ -36,6 +36,7 @@ Select `dev-workflow-toolkit` from the plugin list.
 | `systematic-debugging` | Structured debugging with root-cause tracing |
 | `code-simplification` | Post-verification code cleanup pipeline |
 | `verification-before-completion` | Pre-completion verification gates |
+| `documentation-standards` | Validate and draft project documentation updates |
 
 ### Code Review
 
@@ -95,11 +96,11 @@ cd plugins/dev-workflow-toolkit
 ./tests/run-all.sh
 ```
 
-**97 tests** across 4 suites:
+**102 tests** across 4 suites:
 - Integration — frontmatter, skill structure, dependency resolution (39 tests)
 - Project init — template structure and content (10 tests)
 - Setup RAG — configuration generation logic (10 tests)
-- Quality gate — positive and negative structural validation (38 tests)
+- Quality gate — positive and negative structural validation (43 tests)
 
 See `tests/README.md` for details.
 

@@ -15,7 +15,6 @@ Checks: inv-numbering, issue-tracking, skill-structure, doc-structure,
 from __future__ import annotations
 
 import argparse
-import os
 import re
 import shutil
 import subprocess
@@ -104,27 +103,49 @@ def extract_table_first_column_ids(tokens: list, prefix: str) -> list[int]:
     return ids
 
 
-def extract_bold_ids(tokens: list, prefix: str) -> list[int]:
-    """Extract numbered IDs from bold definitions like **PREFIX-N:** in lists."""
+def extract_list_item_ids(tokens: list, prefix: str) -> list[int]:
+    """Extract numbered IDs from list item definitions.
+
+    Matches PREFIX-N at the start of a list item's first text content,
+    regardless of formatting (bold, italic, plain). This uses structural
+    position (first text in a list item) rather than formatting detection.
+    """
     pattern = re.compile(rf"{re.escape(prefix)}-(\d+)")
     ids: list[int] = []
 
+    in_list_item = False
+    found_in_item = False
     for token in tokens:
-        if token.type == "inline" and token.children:
-            for child in token.children:
-                if child.type == "strong" and child.children:
-                    text = child.children[0].raw if child.children[0].type == "text" else ""
-                    m = pattern.match(text)
-                    if m:
-                        ids.append(int(m.group(1)))
+        if token.type == "list_item_open":
+            in_list_item = True
+            found_in_item = False
+        elif token.type == "list_item_close":
+            in_list_item = False
+        elif in_list_item and not found_in_item and token.type == "inline":
+            # Check the first text content in this list item
+            if token.children:
+                for child in token.children:
+                    if child.type == "text" and child.content.strip():
+                        m = pattern.match(child.content.strip())
+                        if m:
+                            ids.append(int(m.group(1)))
+                        found_in_item = True
+                        break
     return ids
 
 
 def extract_definition_ids(tokens: list, prefix: str) -> list[int]:
-    """Extract definition-site IDs from either table or bold-list format."""
+    """Extract definition-site IDs from either table or list format.
+
+    Checks two structural positions:
+    1. First column of table body rows (e.g., | INV-1 | description |)
+    2. Start of list items (e.g., - **INV-1:** description, - INV-1: description)
+
+    Paragraph text is ignored — those are references, not definitions.
+    """
     table_ids = extract_table_first_column_ids(tokens, prefix)
-    bold_ids = extract_bold_ids(tokens, prefix)
-    return table_ids or bold_ids
+    list_ids = extract_list_item_ids(tokens, prefix)
+    return table_ids or list_ids
 
 
 # ── Checks ───────────────────────────────────────────────────────────

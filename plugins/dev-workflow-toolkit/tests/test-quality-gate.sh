@@ -269,6 +269,48 @@ cat > "$BOLD_DIR/plugins/test-plugin/skills/SPEC.md" <<'SPEC'
 SPEC
 
 assert_pass "bold list format accepted" "$QG" --check inv-numbering --path "$BOLD_DIR"
+assert_output_contains "bold list IDs extracted" "INV-1 through INV-2" \
+    "$QG" --check inv-numbering --path "$BOLD_DIR"
+
+# ── inv-numbering: plain list format works ────────────────────────────
+
+PLAIN_DIR=$(setup_fixture "plain-list")
+cat > "$PLAIN_DIR/plugins/test-plugin/skills/SPEC.md" <<'SPEC'
+# Spec
+
+## Invariants
+
+- INV-1: First invariant
+- INV-2: Second invariant
+
+## Failure Modes
+
+- FAIL-1: First failure
+SPEC
+
+assert_pass "plain list format accepted" "$QG" --check inv-numbering --path "$PLAIN_DIR"
+assert_output_contains "plain list IDs extracted" "INV-1 through INV-2" \
+    "$QG" --check inv-numbering --path "$PLAIN_DIR"
+
+# ── inv-numbering: italic list format works ───────────────────────────
+
+ITALIC_DIR=$(setup_fixture "italic-list")
+cat > "$ITALIC_DIR/plugins/test-plugin/skills/SPEC.md" <<'SPEC'
+# Spec
+
+## Invariants
+
+- *INV-1:* First invariant
+- *INV-2:* Second invariant
+
+## Failure Modes
+
+- *FAIL-1:* First failure
+SPEC
+
+assert_pass "italic list format accepted" "$QG" --check inv-numbering --path "$ITALIC_DIR"
+assert_output_contains "italic list IDs extracted" "INV-1 through INV-2" \
+    "$QG" --check inv-numbering --path "$ITALIC_DIR"
 
 # ── inv-numbering: cross-references don't cause false positives ──────
 
