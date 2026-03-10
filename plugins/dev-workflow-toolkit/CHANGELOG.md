@@ -3,6 +3,26 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.5.0
+
+### New check: cross-links
+
+The quality gate now validates that file paths referenced in SPEC.md
+Dependencies tables actually exist. Paths must be in backticks in the
+third column (`SPEC.md Path`); N/A entries are ignored.
+
+### Session-start hook support
+
+The project-init skill now offers to install a Claude Code SessionStart
+hook that runs the quality gate automatically at the start of each session.
+Configuration goes in `.claude/settings.json`.
+
+### CHANGELOG reading mechanism
+
+SPEC.md now instructs agents to read `CHANGELOG.md` on plugin install/upgrade
+and apply entries marked **ACTION**. The project-init skill also references
+this in its Post-Install section.
+
 ## v1.4.0
 
 ### Quality gate rewritten in Python

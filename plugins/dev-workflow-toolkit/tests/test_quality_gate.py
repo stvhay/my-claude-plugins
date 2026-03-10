@@ -94,6 +94,7 @@ class TestSmokeChecks:
         "skill-structure",
         "doc-structure",
         "vsa-coverage",
+        "cross-links",
         "tool-health",
     ])
     def test_individual_check_passes(self, qg: str, repo_root: Path, check: str):
@@ -373,3 +374,75 @@ class TestDocStats:
         result = run_qg(qg, "--check", "doc-stats", "--path", str(fixture_dir))
         assert result.returncode == 0  # warnings don't fail
         assert "No stat-check footnotes" in result.stdout
+
+
+# ---------------------------------------------------------------------------
+# cross-links: SPEC.md dependency path validation
+# ---------------------------------------------------------------------------
+
+class TestCrossLinks:
+    def test_valid_cross_link(self, qg: str, fixture_dir: Path):
+        """Valid cross-link to existing SPEC.md passes."""
+        # Create a second plugin to reference
+        other = fixture_dir / "plugins" / "other-plugin" / "skills"
+        other.mkdir(parents=True)
+        (other / "SPEC.md").write_text("# Other Plugin Spec\n")
+
+        spec = fixture_dir / "plugins" / "test-plugin" / "skills" / "SPEC.md"
+        spec.write_text(
+            "# Spec\n\n"
+            "## Dependencies\n\n"
+            "| Dependency | Type | SPEC.md Path |\n"
+            "|---|---|---|\n"
+            "| other-plugin | external | `plugins/other-plugin/skills/SPEC.md` |\n"
+        )
+        result = run_qg(qg, "--check", "cross-links", "--path", str(fixture_dir))
+        assert result.returncode == 0, f"Valid cross-link should pass:\n{result.stdout}"
+        assert "exists" in result.stdout
+
+    def test_broken_cross_link(self, qg: str, fixture_dir: Path):
+        """Broken cross-link to non-existent path fails."""
+        spec = fixture_dir / "plugins" / "test-plugin" / "skills" / "SPEC.md"
+        spec.write_text(
+            "# Spec\n\n"
+            "## Dependencies\n\n"
+            "| Dependency | Type | SPEC.md Path |\n"
+            "|---|---|---|\n"
+            "| missing-plugin | external | `plugins/missing-plugin/skills/SPEC.md` |\n"
+        )
+        result = run_qg(qg, "--check", "cross-links", "--path", str(fixture_dir))
+        assert result.returncode != 0
+        assert "not found" in result.stdout
+
+    def test_na_entries_ignored(self, qg: str, fixture_dir: Path):
+        """N/A entries (plain text, no backticks) are not validated."""
+        spec = fixture_dir / "plugins" / "test-plugin" / "skills" / "SPEC.md"
+        spec.write_text(
+            "# Spec\n\n"
+            "## Dependencies\n\n"
+            "| Dependency | Type | SPEC.md Path |\n"
+            "|---|---|---|\n"
+            "| Claude Code runtime | external | N/A — built into Claude Code runtime |\n"
+        )
+        result = run_qg(qg, "--check", "cross-links", "--path", str(fixture_dir))
+        assert result.returncode == 0  # warnings don't fail
+        assert "No cross-link paths" in result.stdout
+
+    def test_mixed_valid_and_na(self, qg: str, fixture_dir: Path):
+        """Mix of N/A and valid backtick paths works correctly."""
+        other = fixture_dir / "plugins" / "other-plugin" / "skills"
+        other.mkdir(parents=True, exist_ok=True)
+        (other / "SPEC.md").write_text("# Other\n")
+
+        spec = fixture_dir / "plugins" / "test-plugin" / "skills" / "SPEC.md"
+        spec.write_text(
+            "# Spec\n\n"
+            "## Dependencies\n\n"
+            "| Dependency | Type | SPEC.md Path |\n"
+            "|---|---|---|\n"
+            "| Claude Code runtime | external | N/A — built into runtime |\n"
+            "| other-plugin | external | `plugins/other-plugin/skills/SPEC.md` |\n"
+        )
+        result = run_qg(qg, "--check", "cross-links", "--path", str(fixture_dir))
+        assert result.returncode == 0, f"Mixed entries should pass:\n{result.stdout}"
+        assert "exists" in result.stdout

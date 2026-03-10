@@ -11,6 +11,9 @@ agents apply during specific task types (brainstorming, planning, testing, etc.)
 The key design decision: skills are documentation-as-code, version-controlled
 alongside the project, and tested via the same TDD methodology they prescribe.
 
+> **On install/upgrade:** Read `CHANGELOG.md` in the plugin root and apply any
+> entries marked **ACTION** that are relevant to the current project.
+
 ## Core Mechanism
 
 Skills are discovered via YAML frontmatter in `*/SKILL.md` within a plugin's

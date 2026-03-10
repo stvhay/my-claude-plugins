@@ -9,7 +9,7 @@ Usage:
     quality-gate.py --help
 
 Checks: inv-numbering, issue-tracking, skill-structure, doc-structure,
-        vsa-coverage, tool-health, doc-stats
+        vsa-coverage, cross-links, tool-health, doc-stats
 """
 
 from __future__ import annotations
@@ -429,6 +429,87 @@ def check_issue_tracking(project_root: Path) -> None:
             pass
 
 
+# ── Check: cross-links ───────────────────────────────────────────────
+
+
+def _extract_dependency_paths(tokens: list) -> list[str]:
+    """Extract file paths from SPEC.md Dependencies table (third column).
+
+    Only examines tables within a ``## Dependencies`` section. Looks for
+    code_inline tokens (backtick-wrapped paths) in the third column of
+    table body rows.  N/A entries are plain text, not code spans.
+    """
+    paths: list[str] = []
+    in_deps_section = False
+    in_tbody = False
+    td_index = 0
+
+    i = 0
+    while i < len(tokens):
+        token = tokens[i]
+
+        # Track which section we're in via headings
+        if token.type == "heading_open":
+            level = token.tag  # "h1", "h2", etc.
+            # Look ahead for the heading text
+            if i + 1 < len(tokens) and tokens[i + 1].type == "inline":
+                heading_text = tokens[i + 1].content.strip()
+                if level == "h2" and heading_text == "Dependencies":
+                    in_deps_section = True
+                elif level in ("h1", "h2"):
+                    # Any other h1/h2 ends the Dependencies section
+                    in_deps_section = False
+
+        if in_deps_section:
+            if token.type == "tbody_open":
+                in_tbody = True
+            elif token.type == "tbody_close":
+                in_tbody = False
+            elif token.type == "tr_open":
+                td_index = 0
+            elif in_tbody and token.type == "td_open":
+                td_index += 1
+            elif in_tbody and token.type == "inline" and td_index == 3:
+                if token.children:
+                    for child in token.children:
+                        if child.type == "code_inline" and child.content.strip():
+                            paths.append(child.content.strip())
+
+        i += 1
+
+    return paths
+
+
+def check_cross_links(project_root: Path) -> None:
+    """Validate that paths referenced in SPEC.md Dependencies tables exist."""
+    plugins_dir = project_root / "plugins"
+    if not plugins_dir.exists():
+        report("WARN", "cross-links", "No plugins/ directory found")
+        return
+
+    spec_files = sorted(plugins_dir.rglob("skills/SPEC.md"))
+    if not spec_files:
+        report("WARN", "cross-links", "No SPEC.md files found")
+        return
+
+    found_any = False
+    for spec in spec_files:
+        rel = spec.relative_to(project_root)
+        tokens = parse_md(spec)
+        dep_paths = _extract_dependency_paths(tokens)
+
+        for dep_path in dep_paths:
+            found_any = True
+            target = project_root / dep_path
+            if target.exists():
+                report("PASS", "cross-links", f"{rel}: {dep_path} exists")
+            else:
+                report("FAIL", "cross-links", f"{rel}: {dep_path} not found")
+
+    if not found_any:
+        report("WARN", "cross-links", "No cross-link paths found in Dependencies tables")
+
+
 # ── Check: doc-stats ─────────────────────────────────────────────────
 
 # Stat check registry: each function takes (project_root, plugin_dir) and
@@ -594,6 +675,7 @@ CHECKS = {
     "skill-structure": check_skill_structure,
     "doc-structure": check_doc_structure,
     "vsa-coverage": check_vsa_coverage,
+    "cross-links": check_cross_links,
     "tool-health": check_tool_health,
     "doc-stats": check_doc_stats,
 }
@@ -603,6 +685,7 @@ ALL_CHECKS_ORDER = [
     "skill-structure",
     "doc-structure",
     "vsa-coverage",
+    "cross-links",
     "doc-stats",
     "tool-health",
     "issue-tracking",
