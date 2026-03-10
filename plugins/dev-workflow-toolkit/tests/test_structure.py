@@ -273,3 +273,87 @@ class TestVersionConsistency:
         changelog = (plugin_root / "CHANGELOG.md").read_text()
         heading = f"## v{version}"
         assert heading in changelog, f"CHANGELOG.md missing section '{heading}' for current version"
+
+
+# ---------------------------------------------------------------------------
+# Cross-plugin structural validation
+# ---------------------------------------------------------------------------
+
+
+class TestChangelogCoverage:
+    """Every plugin must have a CHANGELOG.md."""
+
+    def test_changelog_exists(self, all_plugin_dirs: list[Path]):
+        missing = []
+        for plugin_dir in all_plugin_dirs:
+            if not (plugin_dir / "CHANGELOG.md").exists():
+                missing.append(plugin_dir.name)
+        assert not missing, f"Plugins missing CHANGELOG.md: {missing}"
+
+
+class TestReadmeDepth:
+    """Every plugin README must have meaningful content."""
+
+    MIN_LINES = 10
+
+    def test_readme_not_trivial(self, all_plugin_dirs: list[Path]):
+        shallow = []
+        for plugin_dir in all_plugin_dirs:
+            readme = plugin_dir / "README.md"
+            if not readme.exists():
+                shallow.append(f"{plugin_dir.name}: missing")
+                continue
+            lines = len(readme.read_text().splitlines())
+            if lines < self.MIN_LINES:
+                shallow.append(f"{plugin_dir.name}: {lines} lines (min {self.MIN_LINES})")
+        assert not shallow, "READMEs too short:\n" + "\n".join(shallow)
+
+
+class TestMarketplaceVersionConsistency:
+    """marketplace.json versions must match each plugin's plugin.json."""
+
+    def test_versions_match(self, repo_root: Path, all_plugin_dirs: list[Path]):
+        marketplace = json.loads(
+            (repo_root / ".claude-plugin" / "marketplace.json").read_text()
+        )
+        marketplace_versions = {
+            p["name"]: p["version"] for p in marketplace["plugins"]
+        }
+        mismatches = []
+        for plugin_dir in all_plugin_dirs:
+            plugin_json = json.loads(
+                (plugin_dir / ".claude-plugin" / "plugin.json").read_text()
+            )
+            name = plugin_json["name"]
+            pj_version = plugin_json["version"]
+            mp_version = marketplace_versions.get(name)
+            if mp_version is None:
+                mismatches.append(f"{name}: not in marketplace.json")
+            elif mp_version != pj_version:
+                mismatches.append(
+                    f"{name}: marketplace={mp_version} plugin.json={pj_version}"
+                )
+        assert not mismatches, "Version mismatches:\n" + "\n".join(mismatches)
+
+
+PLUGINS_WITH_UPSTREAM = {
+    "dev-workflow-toolkit": ["UPSTREAM-superpowers.md"],
+    "stamp": ["UPSTREAM-stamp-framework.md"],
+    "writing-toolkit": ["UPSTREAM-strunk.md"],
+    "multi-agent-toolkit": ["UPSTREAM-council.md"],
+    "redteam": ["UPSTREAM-redteam.md"],
+    "thinking-toolkit": ["UPSTREAM-first-principles.md"],
+}
+
+
+class TestUpstreamProvenance:
+    """Plugins with known external origins must have UPSTREAM files."""  # Tests INV-4
+
+    def test_upstream_exists_for_known_origins(self, plugins_dir: Path):
+        missing = []
+        for plugin_name, expected_files in PLUGINS_WITH_UPSTREAM.items():
+            skills_dir = plugins_dir / plugin_name / "skills"
+            for filename in expected_files:
+                if not (skills_dir / filename).exists():
+                    missing.append(f"{plugin_name}/skills/{filename}")
+        assert not missing, f"Missing UPSTREAM files: {missing}"
