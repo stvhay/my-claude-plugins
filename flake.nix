@@ -1,5 +1,5 @@
 {
-  description = "claude-statusline development environment";
+  description = "my-claude-plugins development environment";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -19,8 +19,8 @@
           default = pkgs.mkShell {
             buildInputs = with pkgs; [
               uv
-	      python313
-	      ruff
+              python313
+              ruff
             ];
             shellHook = ''
               true

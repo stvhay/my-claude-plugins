@@ -15,12 +15,16 @@ Checks: inv-numbering, issue-tracking, skill-structure, doc-structure,
 from __future__ import annotations
 
 import argparse
-import os
 import re
 import shutil
 import subprocess
 import sys
+from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 from markdown_it import MarkdownIt
 from mdit_py_plugins.footnote import footnote_plugin
@@ -35,26 +39,28 @@ NC = "\033[0m"
 
 # ── Reporting ────────────────────────────────────────────────────────
 
-failures = 0
-checks = 0
+
+@dataclass
+class Results:
+    checks: int = 0
+    failures: int = 0
 
 
-def report(status: str, check: str, detail: str) -> None:
-    global failures, checks
-    checks += 1
+def report(results: Results, status: str, check: str, detail: str) -> None:
+    results.checks += 1
     if status == "PASS":
         print(f"{GREEN}✓{NC} [{check}] {detail}")
     elif status == "WARN":
         print(f"{YELLOW}!{NC} [{check}] {detail}")
     else:
         print(f"{RED}✗{NC} [{check}] {detail}")
-        failures += 1
+        results.failures += 1
 
 
 # ── Markdown parsing helpers ─────────────────────────────────────────
 
 
-def parse_md(path: Path) -> list:
+def parse_md(path: Path) -> list[Any]:
     """Parse a markdown file into tokens using markdown-it-py."""
     md = MarkdownIt().enable("table")
     front_matter_plugin(md)
@@ -62,7 +68,7 @@ def parse_md(path: Path) -> list:
     return md.parse(path.read_text(encoding="utf-8"))
 
 
-def extract_frontmatter(tokens: list) -> dict[str, str]:
+def extract_frontmatter(tokens: list[Any]) -> dict[str, str]:
     """Extract YAML frontmatter fields as a flat dict of strings."""
     for token in tokens:
         if token.type == "front_matter":
@@ -76,11 +82,11 @@ def extract_frontmatter(tokens: list) -> dict[str, str]:
     return {}
 
 
-def has_frontmatter(tokens: list) -> bool:
+def has_frontmatter(tokens: list[Any]) -> bool:
     return any(t.type == "front_matter" for t in tokens)
 
 
-def extract_table_first_column_ids(tokens: list, prefix: str) -> list[int]:
+def extract_table_first_column_ids(tokens: list[Any], prefix: str) -> list[int]:
     """Extract numbered IDs from the first column of table body rows.
 
     Looks for cells matching PREFIX-N (e.g. INV-1, FAIL-3) in the first
@@ -106,7 +112,7 @@ def extract_table_first_column_ids(tokens: list, prefix: str) -> list[int]:
     return ids
 
 
-def extract_list_item_ids(tokens: list, prefix: str) -> list[int]:
+def extract_list_item_ids(tokens: list[Any], prefix: str) -> list[int]:
     """Extract numbered IDs from list item definitions.
 
     Matches PREFIX-N at the start of a list item's first text content,
@@ -137,7 +143,7 @@ def extract_list_item_ids(tokens: list, prefix: str) -> list[int]:
     return ids
 
 
-def extract_definition_ids(tokens: list, prefix: str) -> list[int]:
+def extract_definition_ids(tokens: list[Any], prefix: str) -> list[int]:
     """Extract definition-site IDs from either table or list format.
 
     Checks two structural positions:
@@ -154,15 +160,15 @@ def extract_definition_ids(tokens: list, prefix: str) -> list[int]:
 # ── Checks ───────────────────────────────────────────────────────────
 
 
-def check_inv_numbering(project_root: Path) -> None:
+def check_inv_numbering(results: Results, project_root: Path) -> None:
     plugins_dir = project_root / "plugins"
     if not plugins_dir.exists():
-        report("WARN", "inv-numbering", "No plugins/ directory found")
+        report(results, "WARN", "inv-numbering", "No plugins/ directory found")
         return
 
     spec_files = sorted(plugins_dir.rglob("skills/SPEC.md"))
     if not spec_files:
-        report("WARN", "inv-numbering", "No SPEC.md files found")
+        report(results, "WARN", "inv-numbering", "No SPEC.md files found")
         return
 
     for spec in spec_files:
@@ -184,7 +190,12 @@ def check_inv_numbering(project_root: Path) -> None:
 
             if dupes:
                 dupe_str = ", ".join(f"{prefix}-{d}" for d in dupes)
-                report("FAIL", "inv-numbering", f"{rel}: duplicate definitions: {dupe_str}")
+                report(
+                    results,
+                    "FAIL",
+                    "inv-numbering",
+                    f"{rel}: duplicate definitions: {dupe_str}",
+                )
                 continue
 
             # Check sequential from 1
@@ -193,6 +204,7 @@ def check_inv_numbering(project_root: Path) -> None:
             for expected, actual in enumerate(unique, start=1):
                 if actual != expected:
                     report(
+                        results,
                         "FAIL",
                         "inv-numbering",
                         f"{rel}: {prefix}-{actual} found, expected {prefix}-{expected}",
@@ -202,21 +214,22 @@ def check_inv_numbering(project_root: Path) -> None:
 
             if ok:
                 report(
+                    results,
                     "PASS",
                     "inv-numbering",
                     f"{rel}: {prefix}-1 through {prefix}-{len(unique)} sequential, no duplicates",
                 )
 
 
-def check_skill_structure(project_root: Path) -> None:
+def check_skill_structure(results: Results, project_root: Path) -> None:
     plugins_dir = project_root / "plugins"
     if not plugins_dir.exists():
-        report("WARN", "skill-structure", "No plugins/ directory found")
+        report(results, "WARN", "skill-structure", "No plugins/ directory found")
         return
 
     skill_files = sorted(plugins_dir.rglob("SKILL.md"))
     if not skill_files:
-        report("WARN", "skill-structure", "No SKILL.md files found")
+        report(results, "WARN", "skill-structure", "No SKILL.md files found")
         return
 
     names_seen: set[str] = set()
@@ -228,7 +241,7 @@ def check_skill_structure(project_root: Path) -> None:
 
         # Check frontmatter exists
         if not has_frontmatter(tokens):
-            report("FAIL", "skill-structure", f"{rel}: missing YAML frontmatter")
+            report(results, "FAIL", "skill-structure", f"{rel}: missing YAML frontmatter")
             continue
 
         fm = extract_frontmatter(tokens)
@@ -236,11 +249,12 @@ def check_skill_structure(project_root: Path) -> None:
         # Check name
         skill_name = fm.get("name", "")
         if not skill_name:
-            report("FAIL", "skill-structure", f"{rel}: missing 'name' in frontmatter")
+            report(results, "FAIL", "skill-structure", f"{rel}: missing 'name' in frontmatter")
             continue
 
         if skill_name != dir_name:
             report(
+                results,
                 "FAIL",
                 "skill-structure",
                 f"{rel}: name '{skill_name}' doesn't match directory '{dir_name}'",
@@ -249,6 +263,7 @@ def check_skill_structure(project_root: Path) -> None:
 
         if not re.match(r"^[a-z][a-z0-9-]*$", skill_name):
             report(
+                results,
                 "FAIL",
                 "skill-structure",
                 f"{rel}: name '{skill_name}' not lowercase-hyphenated",
@@ -256,30 +271,40 @@ def check_skill_structure(project_root: Path) -> None:
             continue
 
         if len(skill_name) > 64:
-            report("FAIL", "skill-structure", f"{rel}: name '{skill_name}' exceeds 64 chars")
+            report(
+                results,
+                "FAIL",
+                "skill-structure",
+                f"{rel}: name '{skill_name}' exceeds 64 chars",
+            )
             continue
 
         # Check description
         if "description" not in fm:
-            report("FAIL", "skill-structure", f"{rel}: missing 'description' in frontmatter")
+            report(
+                results,
+                "FAIL",
+                "skill-structure",
+                f"{rel}: missing 'description' in frontmatter",
+            )
             continue
 
         # Check uniqueness
         if skill_name in names_seen:
-            report("FAIL", "skill-structure", f"{rel}: duplicate name '{skill_name}'")
+            report(results, "FAIL", "skill-structure", f"{rel}: duplicate name '{skill_name}'")
             continue
         names_seen.add(skill_name)
 
-        report("PASS", "skill-structure", f"{rel}: valid ({skill_name})")
+        report(results, "PASS", "skill-structure", f"{rel}: valid ({skill_name})")
 
 
-def check_doc_structure(project_root: Path) -> None:
+def check_doc_structure(results: Results, project_root: Path) -> None:
     for doc in ("README.md", "docs/ARCHITECTURE.md", "docs/DESIGN.md"):
         path = project_root / doc
         if path.exists():
-            report("PASS", "doc-structure", f"{doc} exists")
+            report(results, "PASS", "doc-structure", f"{doc} exists")
         else:
-            report("WARN", "doc-structure", f"{doc} missing (recommended)")
+            report(results, "WARN", "doc-structure", f"{doc} missing (recommended)")
 
     plugins_dir = project_root / "plugins"
     if not plugins_dir.exists():
@@ -291,12 +316,12 @@ def check_doc_structure(project_root: Path) -> None:
         spec = plugin_dir / "skills" / "SPEC.md"
         name = plugin_dir.name
         if spec.exists():
-            report("PASS", "doc-structure", f"plugins/{name}/skills/SPEC.md exists")
+            report(results, "PASS", "doc-structure", f"plugins/{name}/skills/SPEC.md exists")
         else:
-            report("FAIL", "doc-structure", f"plugins/{name}/skills/SPEC.md missing")
+            report(results, "FAIL", "doc-structure", f"plugins/{name}/skills/SPEC.md missing")
 
 
-def check_vsa_coverage(project_root: Path) -> None:
+def check_vsa_coverage(results: Results, project_root: Path) -> None:
     plugins_dir = project_root / "plugins"
     if not plugins_dir.exists():
         return
@@ -309,23 +334,33 @@ def check_vsa_coverage(project_root: Path) -> None:
             continue
         name = plugin_dir.name
         if (skills_dir / "SPEC.md").exists():
-            report("PASS", "vsa-coverage", f"plugins/{name}: skills/SPEC.md covers subsystem")
+            report(
+                results,
+                "PASS",
+                "vsa-coverage",
+                f"plugins/{name}: skills/SPEC.md covers subsystem",
+            )
         else:
-            report("FAIL", "vsa-coverage", f"plugins/{name}/skills/ has no SPEC.md")
+            report(results, "FAIL", "vsa-coverage", f"plugins/{name}/skills/ has no SPEC.md")
 
 
-def check_tool_health(project_root: Path) -> None:
+def check_tool_health(results: Results, project_root: Path) -> None:
     # uv
     if shutil.which("uv"):
         try:
             ver = subprocess.run(
                 ["uv", "--version"], capture_output=True, text=True, check=True
             ).stdout.strip()
-            report("PASS", "tool-health", f"uv: {ver}")
+            report(results, "PASS", "tool-health", f"uv: {ver}")
         except subprocess.CalledProcessError:
-            report("FAIL", "tool-health", "uv: error running uv --version")
+            report(results, "FAIL", "tool-health", "uv: error running uv --version")
     else:
-        report("FAIL", "tool-health", "uv: not installed (required — curl -LsSf https://astral.sh/uv/install.sh | sh)")
+        report(
+            results,
+            "FAIL",
+            "tool-health",
+            "uv: not installed (required — curl -LsSf https://astral.sh/uv/install.sh | sh)",
+        )
 
     # git
     if shutil.which("git"):
@@ -333,11 +368,11 @@ def check_tool_health(project_root: Path) -> None:
             ver = subprocess.run(
                 ["git", "--version"], capture_output=True, text=True, check=True
             ).stdout.strip()
-            report("PASS", "tool-health", f"git: {ver}")
+            report(results, "PASS", "tool-health", f"git: {ver}")
         except subprocess.CalledProcessError:
-            report("FAIL", "tool-health", "git: error running git --version")
+            report(results, "FAIL", "tool-health", "git: error running git --version")
     else:
-        report("FAIL", "tool-health", "git: not installed")
+        report(results, "FAIL", "tool-health", "git: not installed")
 
     # gh
     if shutil.which("gh"):
@@ -349,11 +384,11 @@ def check_tool_health(project_root: Path) -> None:
                 ["gh", "auth", "status"], capture_output=True, text=True
             ).returncode
             status = "authenticated" if auth == 0 else "not authenticated"
-            report("PASS" if auth == 0 else "WARN", "tool-health", f"gh: {ver} ({status})")
+            report(results, "PASS" if auth == 0 else "WARN", "tool-health", f"gh: {ver} ({status})")
         except subprocess.CalledProcessError:
-            report("WARN", "tool-health", "gh: error checking version")
+            report(results, "WARN", "tool-health", "gh: error checking version")
     else:
-        report("WARN", "tool-health", "gh: not installed (optional)")
+        report(results, "WARN", "tool-health", "gh: not installed (optional)")
 
     # bd (beads)
     if shutil.which("bd"):
@@ -361,14 +396,14 @@ def check_tool_health(project_root: Path) -> None:
             ver = subprocess.run(
                 ["bd", "--version"], capture_output=True, text=True, check=True
             ).stdout.strip()
-            report("PASS", "tool-health", f"bd: {ver}")
+            report(results, "PASS", "tool-health", f"bd: {ver}")
         except subprocess.CalledProcessError:
-            report("PASS", "tool-health", "bd: installed (version unknown)")
+            report(results, "PASS", "tool-health", "bd: installed (version unknown)")
     else:
-        report("WARN", "tool-health", "bd: not installed (optional)")
+        report(results, "WARN", "tool-health", "bd: not installed (optional)")
 
 
-def check_issue_tracking(project_root: Path) -> None:
+def check_issue_tracking(results: Results, project_root: Path) -> None:
     try:
         branch = subprocess.run(
             ["git", "-C", str(project_root), "branch", "--show-current"],
@@ -379,7 +414,8 @@ def check_issue_tracking(project_root: Path) -> None:
         branch = ""
 
     if not branch or branch in ("main", "master"):
-        report("WARN", "issue-tracking", f"On {branch or 'detached HEAD'} — issue tracking not applicable")
+        msg = f"On {branch or 'detached HEAD'} — issue tracking not applicable"
+        report(results, "WARN", "issue-tracking", msg)
         return
 
     # Check for GitHub issue via PR
@@ -405,11 +441,16 @@ def check_issue_tracking(project_root: Path) -> None:
             pr_body = ""
 
         if re.search(r"(closes|fixes|resolves)\s+#\d+", pr_body, re.IGNORECASE):
-            report("PASS", "issue-tracking", "PR links to GitHub issue")
+            report(results, "PASS", "issue-tracking", "PR links to GitHub issue")
         else:
-            report("WARN", "issue-tracking", "PR exists but no issue linkage found in body")
+            report(
+                results,
+                "WARN",
+                "issue-tracking",
+                "PR exists but no issue linkage found in body",
+            )
     else:
-        report("WARN", "issue-tracking", f"No PR found for branch {branch}")
+        report(results, "WARN", "issue-tracking", f"No PR found for branch {branch}")
 
     # Check beads if available
     if shutil.which("bd") and (project_root / ".beads").is_dir():
@@ -422,9 +463,9 @@ def check_issue_tracking(project_root: Path) -> None:
             )
             output = result.stdout.strip()
             if output and output != "[]":
-                report("PASS", "issue-tracking", "Beads issues found for in-progress work")
+                report(results, "PASS", "issue-tracking", "Beads issues found for in-progress work")
             else:
-                report("WARN", "issue-tracking", "No in-progress beads issues found")
+                report(results, "WARN", "issue-tracking", "No in-progress beads issues found")
         except FileNotFoundError:
             pass
 
@@ -432,7 +473,7 @@ def check_issue_tracking(project_root: Path) -> None:
 # ── Check: cross-links ───────────────────────────────────────────────
 
 
-def _extract_dependency_paths(tokens: list) -> list[str]:
+def _extract_dependency_paths(tokens: list[Any]) -> list[str]:
     """Extract file paths from SPEC.md Dependencies table (third column).
 
     Only examines tables within a ``## Dependencies`` section. Looks for
@@ -469,27 +510,26 @@ def _extract_dependency_paths(tokens: list) -> list[str]:
                 td_index = 0
             elif in_tbody and token.type == "td_open":
                 td_index += 1
-            elif in_tbody and token.type == "inline" and td_index == 3:
-                if token.children:
-                    for child in token.children:
-                        if child.type == "code_inline" and child.content.strip():
-                            paths.append(child.content.strip())
+            elif in_tbody and token.type == "inline" and td_index == 3 and token.children:
+                for child in token.children:
+                    if child.type == "code_inline" and child.content.strip():
+                        paths.append(child.content.strip())
 
         i += 1
 
     return paths
 
 
-def check_cross_links(project_root: Path) -> None:
+def check_cross_links(results: Results, project_root: Path) -> None:
     """Validate that paths referenced in SPEC.md Dependencies tables exist."""
     plugins_dir = project_root / "plugins"
     if not plugins_dir.exists():
-        report("WARN", "cross-links", "No plugins/ directory found")
+        report(results, "WARN", "cross-links", "No plugins/ directory found")
         return
 
     spec_files = sorted(plugins_dir.rglob("skills/SPEC.md"))
     if not spec_files:
-        report("WARN", "cross-links", "No SPEC.md files found")
+        report(results, "WARN", "cross-links", "No SPEC.md files found")
         return
 
     found_any = False
@@ -502,12 +542,12 @@ def check_cross_links(project_root: Path) -> None:
             found_any = True
             target = project_root / dep_path
             if target.exists():
-                report("PASS", "cross-links", f"{rel}: {dep_path} exists")
+                report(results, "PASS", "cross-links", f"{rel}: {dep_path} exists")
             else:
-                report("FAIL", "cross-links", f"{rel}: {dep_path} not found")
+                report(results, "FAIL", "cross-links", f"{rel}: {dep_path} not found")
 
     if not found_any:
-        report("WARN", "cross-links", "No cross-link paths found in Dependencies tables")
+        report(results, "WARN", "cross-links", "No cross-link paths found in Dependencies tables")
 
 
 # ── Check: doc-stats ─────────────────────────────────────────────────
@@ -524,8 +564,16 @@ def _stat_total_test_count(project_root: Path, plugin_dir: Path | None) -> int:
         return 0
     try:
         result = subprocess.run(
-            ["uv", "run", "--project", str(plugin_dir or project_root),
-             "pytest", "--collect-only", "-q", str(test_dir)],
+            [
+                "uv",
+                "run",
+                "--project",
+                str(plugin_dir or project_root),
+                "pytest",
+                "--collect-only",
+                "-q",
+                str(test_dir),
+            ],
             capture_output=True,
             text=True,
             timeout=30,
@@ -556,14 +604,14 @@ def _stat_skill_count(project_root: Path, plugin_dir: Path | None) -> int:
     return len(list(skills_dir.rglob("SKILL.md")))
 
 
-STAT_CHECKS: dict[str, callable] = {
+STAT_CHECKS: dict[str, Callable[[Path, Path | None], int]] = {
     "total-test-count": _stat_total_test_count,
     "test-suite-count": _stat_test_suite_count,
     "skill-count": _stat_skill_count,
 }
 
 
-def _extract_stat_refs(tokens: list) -> list[tuple[str, int, str]]:
+def _extract_stat_refs(tokens: list[Any]) -> list[tuple[str, int, str]]:
     """Extract stat-check footnote references from parsed tokens.
 
     Returns list of (label, claimed_number, check_name) tuples.
@@ -620,7 +668,7 @@ def _find_plugin_for_file(filepath: Path, project_root: Path) -> Path | None:
         return None
 
 
-def check_doc_stats(project_root: Path) -> None:
+def check_doc_stats(results: Results, project_root: Path) -> None:
     """Validate stat-check footnotes in markdown files."""
     md_files = sorted(project_root.rglob("*.md"))
     # Exclude hidden dirs, node_modules, .venv
@@ -637,7 +685,7 @@ def check_doc_stats(project_root: Path) -> None:
     for md_file in md_files:
         try:
             tokens = parse_md(md_file)
-        except Exception:
+        except (OSError, UnicodeDecodeError):
             continue
 
         refs = _extract_stat_refs(tokens)
@@ -650,26 +698,32 @@ def check_doc_stats(project_root: Path) -> None:
 
         for label, claimed, check_name in refs:
             if check_name not in STAT_CHECKS:
-                report("FAIL", "doc-stats", f"{rel}: unknown stat-check '{check_name}' in [^{label}]")
+                report(
+                    results,
+                    "FAIL",
+                    "doc-stats",
+                    f"{rel}: unknown stat-check '{check_name}' in [^{label}]",
+                )
                 continue
 
             actual = STAT_CHECKS[check_name](project_root, plugin_dir)
             if claimed == actual:
-                report("PASS", "doc-stats", f"{rel}: [^{label}] {check_name} = {actual}")
+                report(results, "PASS", "doc-stats", f"{rel}: [^{label}] {check_name} = {actual}")
             else:
                 report(
-                    "FAIL",
+                    results,
+                    "WARN",
                     "doc-stats",
                     f"{rel}: [^{label}] {check_name} claims {claimed}, actual {actual}",
                 )
 
     if not found_any:
-        report("WARN", "doc-stats", "No stat-check footnotes found in any markdown files")
+        report(results, "WARN", "doc-stats", "No stat-check footnotes found in any markdown files")
 
 
 # ── Main ─────────────────────────────────────────────────────────────
 
-CHECKS = {
+CHECKS: dict[str, Callable[[Results, Path], None]] = {
     "inv-numbering": check_inv_numbering,
     "issue-tracking": check_issue_tracking,
     "skill-structure": check_skill_structure,
@@ -680,7 +734,7 @@ CHECKS = {
     "doc-stats": check_doc_stats,
 }
 
-ALL_CHECKS_ORDER = [
+ALL_CHECKS_ORDER: list[str] = [
     "inv-numbering",
     "skill-structure",
     "doc-structure",
@@ -706,8 +760,6 @@ def detect_project_root() -> Path:
 
 
 def main() -> None:
-    global failures, checks
-
     parser = argparse.ArgumentParser(
         prog="quality-gate",
         description="Structural validation for dev-workflow-toolkit projects",
@@ -722,18 +774,20 @@ def main() -> None:
     print(f"quality-gate: running structural checks against {project_root}")
     print()
 
+    results = Results()
+
     if args.check:
-        CHECKS[args.check](project_root)
+        CHECKS[args.check](results, project_root)
     else:
         for name in ALL_CHECKS_ORDER:
-            CHECKS[name](project_root)
+            CHECKS[name](results, project_root)
 
     print()
-    if failures == 0:
-        print(f"{GREEN}quality-gate: all {checks} checks passed{NC}")
+    if results.failures == 0:
+        print(f"{GREEN}quality-gate: all {results.checks} checks passed{NC}")
         sys.exit(0)
     else:
-        print(f"{RED}quality-gate: {failures} of {checks} checks failed{NC}")
+        print(f"{RED}quality-gate: {results.failures} of {results.checks} checks failed{NC}")
         sys.exit(1)
 
 

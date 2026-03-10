@@ -30,7 +30,7 @@ You MUST complete these steps in order:
 3. **Draft initial spec** — produce a first draft from code analysis alone
 4. **Interview developer** — ask about invariants, failure modes, and testing (one question at a time)
 5. **Finalize SPEC.md** — incorporate interview answers into the spec
-6. **Update subsystem map** — add entry to CLAUDE.md's Subsystem Map table
+6. **Update subsystem map** — create the Subsystem Map section in CLAUDE.md if it doesn't exist, then add entry
 7. **Update MANIFEST.md** — create `docs/specs/MANIFEST.md` if missing, then add entry
 
 ## The Process
@@ -221,7 +221,7 @@ or summarizing verbose sections.
 
 ### Step 6: Update Subsystem Map
 
-Add an entry to the `### Subsystem Map` table in `CLAUDE.md`:
+Create the `### Subsystem Map` section in `CLAUDE.md` if it doesn't exist, then add an entry:
 
 ```markdown
 | [Subsystem Name] | [path/to/directory] | [One-line purpose] |

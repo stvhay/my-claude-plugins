@@ -8,16 +8,17 @@ Replaces:
   - test-setup-rag.sh
 """
 
+import json
 import re
 from pathlib import Path
 
 import pytest
 import yaml
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _parse_frontmatter(path: Path) -> dict:
     """Return parsed YAML frontmatter from a Markdown file, or raise."""
@@ -32,15 +33,13 @@ def _parse_frontmatter(path: Path) -> dict:
 
 def _skill_dirs(skills_dir: Path) -> list[Path]:
     """Return all immediate subdirectories of skills/ that contain a SKILL.md."""
-    return sorted(
-        d for d in skills_dir.iterdir()
-        if d.is_dir() and (d / "SKILL.md").exists()
-    )
+    return sorted(d for d in skills_dir.iterdir() if d.is_dir() and (d / "SKILL.md").exists())
 
 
 # ---------------------------------------------------------------------------
 # validate-frontmatter.sh
 # ---------------------------------------------------------------------------
+
 
 class TestFrontmatterValidation:
     """Validates YAML frontmatter in all SKILL.md files."""
@@ -88,8 +87,7 @@ class TestFrontmatterValidation:
                 continue
             name = fm["name"]
             assert pattern.match(name), (
-                f"{skill_md.relative_to(skills_dir)}: "
-                f"name '{name}' must match ^[a-z0-9-]{{1,64}}$"
+                f"{skill_md.relative_to(skills_dir)}: name '{name}' must match ^[a-z0-9-]{{1,64}}$"
             )
 
 
@@ -168,9 +166,7 @@ class TestProjectInit:
         for yml_file in sorted(templates_dir.glob("*.yml")):
             text = yml_file.read_text()
             for field in ("name:", "description:", "body:"):
-                assert field in text, (
-                    f"{yml_file.name}: missing required field '{field}'"
-                )
+                assert field in text, f"{yml_file.name}: missing required field '{field}'"
 
     def test_markdown_templates_not_empty(self, templates_dir: Path):
         if not templates_dir.is_dir():
@@ -185,13 +181,14 @@ class TestProjectInit:
         assert project_init_skill.exists(), f"SKILL.md not found: {project_init_skill}"
         text = project_init_skill.read_text()
         assert "templates/" in text, (
-            f"skills/project-init/SKILL.md does not reference 'templates/' directory"
+            "skills/project-init/SKILL.md does not reference 'templates/' directory"
         )
 
 
 # ---------------------------------------------------------------------------
 # test-setup-rag.sh
 # ---------------------------------------------------------------------------
+
 
 class TestSetupRag:
     """Validates the setup-rag skill."""
@@ -204,7 +201,8 @@ class TestSetupRag:
         assert skill_file.exists(), f"setup-rag SKILL.md not found: {skill_file}"
 
     def test_contains_prerequisite_check(self, skill_file: Path):
-        assert skill_file.exists(), pytest.skip("skill file missing")
+        if not skill_file.exists():
+            pytest.skip("skill file missing")
         assert "which uv" in skill_file.read_text(), (
             "SKILL.md must contain 'which uv' prerequisite check"
         )
@@ -212,42 +210,66 @@ class TestSetupRag:
     def test_contains_mcp_servers(self, skill_file: Path):
         if not skill_file.exists():
             pytest.skip("skill file missing")
-        assert "mcpServers" in skill_file.read_text(), (
-            "SKILL.md must reference 'mcpServers'"
-        )
+        assert "mcpServers" in skill_file.read_text(), "SKILL.md must reference 'mcpServers'"
 
-    @pytest.mark.parametrize("artifact", [
-        "ragling init",
-        "ragling.json",
-        ".ragling",
-        "mcpServers.ragling",
-    ])
+    @pytest.mark.parametrize(
+        "artifact",
+        [
+            "ragling init",
+            "ragling.json",
+            ".ragling",
+            "mcpServers.ragling",
+        ],
+    )
     def test_contains_artifact(self, skill_file: Path, artifact: str):
         if not skill_file.exists():
             pytest.skip("skill file missing")
-        assert artifact in skill_file.read_text(), (
-            f"SKILL.md must reference artifact '{artifact}'"
-        )
+        assert artifact in skill_file.read_text(), f"SKILL.md must reference artifact '{artifact}'"
 
     def test_references_mcp_json(self, skill_file: Path):
         if not skill_file.exists():
             pytest.skip("skill file missing")
-        assert ".mcp.json" in skill_file.read_text(), (
-            "SKILL.md must reference '.mcp.json'"
-        )
+        assert ".mcp.json" in skill_file.read_text(), "SKILL.md must reference '.mcp.json'"
 
     def test_contains_gitignore(self, skill_file: Path):
         if not skill_file.exists():
             pytest.skip("skill file missing")
-        assert "gitignore" in skill_file.read_text(), (
-            "SKILL.md must mention 'gitignore'"
-        )
+        assert "gitignore" in skill_file.read_text(), "SKILL.md must mention 'gitignore'"
 
     def test_project_isolation(self, skill_file: Path):
         if not skill_file.exists():
             pytest.skip("skill file missing")
         text = skill_file.read_text()
         assert "project" in text, "SKILL.md must contain 'project'"
-        assert ("isolation" in text or "isolated" in text), (
+        assert "isolation" in text or "isolated" in text, (
             "SKILL.md must contain 'isolation' or 'isolated'"
         )
+
+
+# ---------------------------------------------------------------------------
+# Version consistency
+# ---------------------------------------------------------------------------
+
+
+class TestVersionConsistency:
+    """Validates that version numbers are consistent across plugin files."""
+
+    def test_plugin_json_and_pyproject_versions_match(self, plugin_root: Path):
+        plugin_json = json.loads((plugin_root / ".claude-plugin" / "plugin.json").read_text())
+        pyproject = (plugin_root / "pyproject.toml").read_text()
+        # Extract version from pyproject.toml
+        match = re.search(r'^version\s*=\s*"([^"]+)"', pyproject, re.MULTILINE)
+        assert match, "pyproject.toml missing version field"
+        pyproject_version = match.group(1)
+        plugin_json_version = plugin_json["version"]
+        assert plugin_json_version == pyproject_version, (
+            f"plugin.json version ({plugin_json_version}) != "
+            f"pyproject.toml version ({pyproject_version})"
+        )
+
+    def test_changelog_has_section_for_current_version(self, plugin_root: Path):
+        plugin_json = json.loads((plugin_root / ".claude-plugin" / "plugin.json").read_text())
+        version = plugin_json["version"]
+        changelog = (plugin_root / "CHANGELOG.md").read_text()
+        heading = f"## v{version}"
+        assert heading in changelog, f"CHANGELOG.md missing section '{heading}' for current version"

@@ -72,14 +72,13 @@ the user is satisfied with the findings.
   (CLAUDE.md, memory, or skip)
 
 **For upstream skill improvements:**
-- Determine the target repo from the plugin manifest:
+- Determine the target repo for the plugin that needs improvement:
   ```bash
-  # Walk up from the skill that needs improvement to find plugin.json
-  # Parse the repo from marketplace.json or plugin metadata
-  # The source repo is typically in marketplace.json's plugin entry
-  cat "$(git rev-parse --show-toplevel)/.claude-plugin/marketplace.json" 2>/dev/null | grep -o '"repo"[^,]*'
+  # The plugin source repo — check plugin cache metadata if available,
+  # otherwise ask the user.
+  # Default for dev-workflow-toolkit: stvhay/my-claude-plugins
   ```
-- If the target repo cannot be determined, ask the user for it
+- If the source repo cannot be determined from metadata, ask the user for it
 - Draft an issue for each upstream improvement:
   ```
   Title: [skill-name]: [concise improvement description]
@@ -106,7 +105,7 @@ the user is satisfied with the findings.
   ```
   If the `feedback` label doesn't exist on the target repo, create it first:
   ```bash
-  if ! gh label list -R <source-repo> --search "feedback" | grep -q "^feedback"; then
+  if ! gh label list -R <source-repo> --search "feedback" | grep -qx "feedback"; then
     gh label create "feedback" --description "User feedback from retrospective" \
       -R <source-repo>
   fi

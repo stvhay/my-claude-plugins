@@ -19,9 +19,8 @@ Configuration goes in `.claude/settings.json`.
 
 ### CHANGELOG reading mechanism
 
-SPEC.md now instructs agents to read `CHANGELOG.md` on plugin install/upgrade
-and apply entries marked **ACTION**. The project-init skill also references
-this in its Post-Install section.
+SPEC.md and project-init now reference `CHANGELOG.md` for upgrade guidance.
+Agents should check the changelog when directed by these documents.
 
 ## v1.4.0
 

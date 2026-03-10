@@ -10,17 +10,15 @@ from pathlib import Path
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _skill_dirs(skills_dir: Path) -> list[tuple[str, Path]]:
     """Return (name, path) for each skill directory with a SKILL.md."""
     return sorted(
-        (d.name, d)
-        for d in skills_dir.iterdir()
-        if d.is_dir() and (d / "SKILL.md").exists()
+        (d.name, d) for d in skills_dir.iterdir() if d.is_dir() and (d / "SKILL.md").exists()
     )
 
 
@@ -41,6 +39,7 @@ def _extract_frontmatter_field(skill_file: Path, field: str) -> str | None:
 # ---------------------------------------------------------------------------
 # Skill loading
 # ---------------------------------------------------------------------------
+
 
 class TestSkillLoading:
     """Every skill directory must have a loadable SKILL.md with frontmatter."""
@@ -66,8 +65,14 @@ class TestSkillLoading:
 EXPECTED_DEPS = {
     "brainstorming": "using-git-worktrees|writing-plans|documentation-standards",
     "writing-plans": "executing-plans|subagent-driven-development",
-    "executing-plans": "test-driven-development|systematic-debugging|verification-before-completion|finishing-a-development-branch",
-    "subagent-driven-development": "test-driven-development|systematic-debugging|verification-before-completion|finishing-a-development-branch",
+    "executing-plans": (
+        "test-driven-development|systematic-debugging"
+        "|verification-before-completion|finishing-a-development-branch"
+    ),
+    "subagent-driven-development": (
+        "test-driven-development|systematic-debugging"
+        "|verification-before-completion|finishing-a-development-branch"
+    ),
     "verification-before-completion": "code-simplification",
     "requesting-code-review": "code-reviewer",
     "finishing-a-development-branch": "documentation-standards",
@@ -95,6 +100,7 @@ class TestDependencyResolution:
 # Template path resolution
 # ---------------------------------------------------------------------------
 
+
 class TestTemplatePaths:
     """project-init skill must reference and ship its templates."""
 
@@ -102,12 +108,15 @@ class TestTemplatePaths:
         skill_file = skills_dir / "project-init" / "SKILL.md"
         assert "templates/" in skill_file.read_text()
 
-    @pytest.mark.parametrize("template", [
-        "bug-report.yml",
-        "feature-request.yml",
-        "pull_request_template.md",
-        "CONTRIBUTING.md",
-    ])
+    @pytest.mark.parametrize(
+        "template",
+        [
+            "bug-report.yml",
+            "feature-request.yml",
+            "pull_request_template.md",
+            "CONTRIBUTING.md",
+        ],
+    )
     def test_template_exists(self, skills_dir: Path, template: str):
         path = skills_dir / "project-init" / "templates" / template
         assert path.exists(), f"Missing template: {template}"
@@ -117,13 +126,16 @@ class TestTemplatePaths:
 # Template substitution
 # ---------------------------------------------------------------------------
 
+
 class TestTemplateSubstitution:
     """Templates should be static (no substitution markers)."""
 
     def test_bug_report_is_static(self, skills_dir: Path):
         path = skills_dir / "project-init" / "templates" / "bug-report.yml"
         if path.exists():
-            assert "{{" not in path.read_text(), "Bug report template has unexpected substitution markers"
+            assert "{{" not in path.read_text(), (
+                "Bug report template has unexpected substitution markers"
+            )
 
     def test_contributing_is_valid(self, skills_dir: Path):
         path = skills_dir / "project-init" / "templates" / "CONTRIBUTING.md"
@@ -165,6 +177,7 @@ class TestReferenceFiles:
 # Trigger pattern uniqueness
 # ---------------------------------------------------------------------------
 
+
 class TestTriggerPatterns:
     """Skill descriptions should not have obvious trigger conflicts."""
 
@@ -191,15 +204,19 @@ class TestTriggerPatterns:
 # MCP configuration (setup-rag)
 # ---------------------------------------------------------------------------
 
+
 class TestMcpConfiguration:
     """setup-rag skill must include MCP configuration patterns."""
 
-    @pytest.mark.parametrize("term", [
-        "ragling init",
-        "mcpServers.ragling",
-        ".ragling",
-        "ragling.json",
-    ])
+    @pytest.mark.parametrize(
+        "term",
+        [
+            "ragling init",
+            "mcpServers.ragling",
+            ".ragling",
+            "ragling.json",
+        ],
+    )
     def test_mcp_config_includes(self, skills_dir: Path, term: str):
         skill_file = skills_dir / "setup-rag" / "SKILL.md"
         assert term in skill_file.read_text(), f"MCP config missing: {term}"

@@ -43,7 +43,12 @@ Templates are stored in `templates/` relative to this skill. They are generic an
 If the project uses the quality gate, offer to install a session-start hook
 that runs structural checks automatically when a Claude Code session begins.
 
-Create `.claude/settings.json` (or merge into existing):
+Resolve the quality gate path first:
+```bash
+QUALITY_GATE="$(cd "${CLAUDE_SKILL_DIR}/../.." && pwd)/scripts/quality-gate.sh"
+```
+
+Then create `.claude/settings.json` (or merge into existing), using the resolved absolute path:
 
 ```json
 {
@@ -53,7 +58,7 @@ Create `.claude/settings.json` (or merge into existing):
         "hooks": [
           {
             "type": "command",
-            "command": "<plugin-root>/scripts/quality-gate.sh --path ."
+            "command": "/absolute/path/to/scripts/quality-gate.sh --path ."
           }
         ]
       }
@@ -61,6 +66,8 @@ Create `.claude/settings.json` (or merge into existing):
   }
 }
 ```
+
+Replace `/absolute/path/to/scripts/quality-gate.sh` with the value of `$QUALITY_GATE` resolved above.
 
 > Note: `.claude/settings.json` is a project-level file. If the project
 > gitignores `.claude/`, the hook is local-only. Otherwise commit it.

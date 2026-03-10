@@ -94,9 +94,8 @@ Do NOT allow the branch to proceed to option presentation, PR creation, or merge
    - Pull the "Documentation Updates" section drafted during brainstorming
    - Check whether each drafted update was implemented
 
-5. **Read current tracked docs:**
-   - `README.md`, `docs/ARCHITECTURE.md`, `docs/DESIGN.md`
-   - Relevant `SPEC.md` files for modified subsystems
+5. **Read the tracked docs identified in Step 3:**
+   - Include relevant `SPEC.md` files for modified subsystems
 
 6. **Evaluate completeness:**
    - Do tracked docs reflect the decisions and changes in this branch?
@@ -106,12 +105,10 @@ Do NOT allow the branch to proceed to option presentation, PR creation, or merge
    - Has any SPEC.md grown beyond recommended length? (Flag for decomposition)
 
 7. **Run structural checks:**
-   Run the quality gate script from this plugin's root directory (the parent
-   of the `skills/` directory containing this file):
 
    ```bash
-   <plugin-root>/scripts/quality-gate.sh --check inv-numbering --path "$(git rev-parse --show-toplevel)"
-   <plugin-root>/scripts/quality-gate.sh --check doc-structure --path "$(git rev-parse --show-toplevel)"
+   ${CLAUDE_SKILL_DIR}/../../scripts/quality-gate.sh --check inv-numbering --path "$(git rev-parse --show-toplevel)"
+   ${CLAUDE_SKILL_DIR}/../../scripts/quality-gate.sh --check doc-structure --path "$(git rev-parse --show-toplevel)"
    ```
 
    Include structural check results alongside documentation gap analysis.
@@ -176,8 +173,8 @@ body containing a `stat-check:` directive pointing to a named check:
 
 | Check name | What it counts |
 |---|---|
-| `total-test-count` | Sum of `Tests: N` output from `tests/test-*.sh` scripts |
-| `test-suite-count` | Number of `tests/test-*.sh` files |
+| `total-test-count` | Total number of tests collected by the test runner |
+| `test-suite-count` | Number of test modules |
 | `skill-count` | Number of `SKILL.md` files under `skills/` |
 
 ### When to add stat-check footnotes
@@ -192,7 +189,7 @@ The quality gate's `doc-stats` check parses all markdown files for stat-check
 footnotes and validates each claimed number against the actual count. Run:
 
 ```bash
-<plugin-root>/scripts/quality-gate.sh --check doc-stats --path "$(git rev-parse --show-toplevel)"
+${CLAUDE_SKILL_DIR}/../../scripts/quality-gate.sh --check doc-stats --path "$(git rev-parse --show-toplevel)"
 ```
 
 ## What Doesn't Trigger the Gate

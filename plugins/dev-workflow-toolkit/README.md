@@ -86,7 +86,7 @@ dispatching-parallel-agents (standalone)
 
 **\* External dependency:** ux-design-agent is in the ux-toolkit plugin
 
-**Terminal states:** Skills that don't invoke others: `receiving-code-review`, `code-simplification`, `retrospective`
+**Terminal states:** Skills that don't invoke others: `test-driven-development`, `systematic-debugging`, `using-git-worktrees`, `documentation-standards`, `code-simplification`, `retrospective`, `receiving-code-review`
 
 ## Testing
 
@@ -96,7 +96,7 @@ cd plugins/dev-workflow-toolkit
 ./tests/run-all.sh
 ```
 
-**84 tests**[^stat-test-count] across 3 modules[^stat-suite-count]:
+**86 tests**[^stat-test-count] across 3 modules[^stat-suite-count]:
 - Structure — frontmatter validation, SPEC.md checks, project-init templates, setup-rag config
 - Integration — skill loading, dependency resolution, trigger patterns, reference files
 - Quality gate — smoke tests, negative fixtures, doc-stats validation

@@ -9,16 +9,18 @@ from pathlib import Path
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture(scope="session")
 def qg(plugin_root: Path) -> str:
     """Path to the quality-gate.sh script."""
     path = plugin_root / "scripts" / "quality-gate.sh"
-    assert path.exists() and path.stat().st_mode & 0o111, "quality-gate.sh missing or not executable"
+    assert path.exists() and path.stat().st_mode & 0o111, (
+        "quality-gate.sh missing or not executable"
+    )
     return str(path)
 
 
@@ -68,12 +70,7 @@ def fixture_dir(tmp_path: Path, repo_root: Path) -> Path:
 
     # Valid SKILL.md
     (skills / "SKILL.md").write_text(
-        "---\n"
-        "name: test-skill\n"
-        'description: "A test skill"\n'
-        "---\n\n"
-        "# Test Skill\n\n"
-        "Does things.\n"
+        '---\nname: test-skill\ndescription: "A test skill"\n---\n\n# Test Skill\n\nDoes things.\n'
     )
 
     return d
@@ -83,20 +80,24 @@ def fixture_dir(tmp_path: Path, repo_root: Path) -> Path:
 # Smoke tests (against real repo)
 # ---------------------------------------------------------------------------
 
+
 class TestSmokeChecks:
     """Run individual checks against the real repo to verify they pass."""
 
     def test_script_executable(self, qg: str):
         """quality-gate.sh exists and is executable (verified by fixture)."""
 
-    @pytest.mark.parametrize("check", [
-        "inv-numbering",
-        "skill-structure",
-        "doc-structure",
-        "vsa-coverage",
-        "cross-links",
-        "tool-health",
-    ])
+    @pytest.mark.parametrize(
+        "check",
+        [
+            "inv-numbering",
+            "skill-structure",
+            "doc-structure",
+            "vsa-coverage",
+            "cross-links",
+            "tool-health",
+        ],
+    )
     def test_individual_check_passes(self, qg: str, repo_root: Path, check: str):
         result = run_qg(qg, "--check", check, "--path", str(repo_root))
         assert result.returncode == 0, f"{check} failed:\n{result.stdout}\n{result.stderr}"
@@ -105,7 +106,9 @@ class TestSmokeChecks:
         result = run_qg(qg, "--check", "issue-tracking", "--path", str(repo_root))
         # On main branch, warnings are OK but hard failures are not
         if result.returncode != 0:
-            assert "✗" not in result.stdout, f"issue-tracking has unexpected failures:\n{result.stdout}"
+            assert "✗" not in result.stdout, (
+                f"issue-tracking has unexpected failures:\n{result.stdout}"
+            )
 
     def test_all_checks_together(self, qg: str, repo_root: Path):
         result = run_qg(qg, "--path", str(repo_root))
@@ -125,6 +128,7 @@ class TestSmokeChecks:
 # Argument validation
 # ---------------------------------------------------------------------------
 
+
 class TestArgValidation:
     def test_check_without_value(self, qg: str):
         result = run_qg(qg, "--check")
@@ -143,6 +147,7 @@ class TestArgValidation:
 # Fixture: valid project passes
 # ---------------------------------------------------------------------------
 
+
 class TestValidFixture:
     def test_valid_fixture_passes(self, qg: str, fixture_dir: Path):
         result = run_qg(qg, "--path", str(fixture_dir))
@@ -152,6 +157,7 @@ class TestValidFixture:
 # ---------------------------------------------------------------------------
 # inv-numbering: duplicate INV numbers
 # ---------------------------------------------------------------------------
+
 
 class TestInvNumberingDuplicates:
     def test_duplicate_inv_detected(self, qg: str, fixture_dir: Path):
@@ -210,15 +216,29 @@ class TestFailNumberingDuplicates:
 # inv-numbering: list formats (bold, plain, italic)
 # ---------------------------------------------------------------------------
 
+
 class TestListFormats:
-    @pytest.mark.parametrize("fmt,content", [
-        ("bold", "- **INV-1:** First invariant\n- **INV-2:** Second invariant\n\n"
-                 "## Failure Modes\n\n- **FAIL-1:** First failure\n"),
-        ("plain", "- INV-1: First invariant\n- INV-2: Second invariant\n\n"
-                  "## Failure Modes\n\n- FAIL-1: First failure\n"),
-        ("italic", "- *INV-1:* First invariant\n- *INV-2:* Second invariant\n\n"
-                   "## Failure Modes\n\n- *FAIL-1:* First failure\n"),
-    ], ids=["bold", "plain", "italic"])
+    @pytest.mark.parametrize(
+        "fmt,content",
+        [
+            (
+                "bold",
+                "- **INV-1:** First invariant\n- **INV-2:** Second invariant\n\n"
+                "## Failure Modes\n\n- **FAIL-1:** First failure\n",
+            ),
+            (
+                "plain",
+                "- INV-1: First invariant\n- INV-2: Second invariant\n\n"
+                "## Failure Modes\n\n- FAIL-1: First failure\n",
+            ),
+            (
+                "italic",
+                "- *INV-1:* First invariant\n- *INV-2:* Second invariant\n\n"
+                "## Failure Modes\n\n- *FAIL-1:* First failure\n",
+            ),
+        ],
+        ids=["bold", "plain", "italic"],
+    )
     def test_list_format_accepted(self, qg: str, fixture_dir: Path, fmt: str, content: str):
         spec = fixture_dir / "plugins" / "test-plugin" / "skills" / "SPEC.md"
         spec.write_text(f"# Spec\n\n## Invariants\n\n{content}")
@@ -230,6 +250,7 @@ class TestListFormats:
 # ---------------------------------------------------------------------------
 # inv-numbering: cross-references don't cause false positives
 # ---------------------------------------------------------------------------
+
 
 class TestCrossReferences:
     def test_no_false_positives(self, qg: str, fixture_dir: Path):
@@ -257,6 +278,7 @@ class TestCrossReferences:
 # ---------------------------------------------------------------------------
 # skill-structure: negative cases
 # ---------------------------------------------------------------------------
+
 
 class TestSkillStructureNegative:
     def test_missing_frontmatter(self, qg: str, fixture_dir: Path):
@@ -302,6 +324,7 @@ class TestSkillStructureNegative:
 # doc-structure: missing SPEC.md
 # ---------------------------------------------------------------------------
 
+
 class TestDocStructureNegative:
     def test_missing_spec(self, qg: str, fixture_dir: Path):
         spec = fixture_dir / "plugins" / "test-plugin" / "skills" / "SPEC.md"
@@ -315,6 +338,7 @@ class TestDocStructureNegative:
 # vsa-coverage: missing SPEC.md
 # ---------------------------------------------------------------------------
 
+
 class TestVsaCoverageNegative:
     def test_missing_spec(self, qg: str, fixture_dir: Path):
         spec = fixture_dir / "plugins" / "test-plugin" / "skills" / "SPEC.md"
@@ -327,6 +351,7 @@ class TestVsaCoverageNegative:
 # ---------------------------------------------------------------------------
 # doc-stats: stat-check footnotes
 # ---------------------------------------------------------------------------
+
 
 class TestDocStats:
     def test_valid_skill_count(self, qg: str, fixture_dir: Path):
@@ -344,7 +369,7 @@ class TestDocStats:
         assert "skill-count = 1" in result.stdout
 
     def test_wrong_skill_count(self, qg: str, fixture_dir: Path):
-        """Stat-check with wrong count fails."""
+        """Stat-check with wrong count warns but doesn't fail."""
         readme = fixture_dir / "plugins" / "test-plugin" / "README.md"
         readme.write_text(
             "# Test Plugin\n\n"
@@ -353,7 +378,7 @@ class TestDocStats:
             "[^stat-skill-count]: stat-check: skill-count\n"
         )
         result = run_qg(qg, "--check", "doc-stats", "--path", str(fixture_dir))
-        assert result.returncode != 0
+        assert result.returncode == 0, "Stat mismatch should warn, not fail"
         assert "claims 5, actual 1" in result.stdout
 
     def test_unknown_check_name(self, qg: str, fixture_dir: Path):
@@ -379,6 +404,7 @@ class TestDocStats:
 # ---------------------------------------------------------------------------
 # cross-links: SPEC.md dependency path validation
 # ---------------------------------------------------------------------------
+
 
 class TestCrossLinks:
     def test_valid_cross_link(self, qg: str, fixture_dir: Path):

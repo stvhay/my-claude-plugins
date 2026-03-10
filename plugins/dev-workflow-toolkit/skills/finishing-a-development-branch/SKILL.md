@@ -42,15 +42,14 @@ Cannot proceed with merge/PR until tests pass.
 
 Stop. Don't proceed to Step 2.
 
-**If tests pass:** Continue to Step 2.
+**If tests pass:** Continue to Step 1b.
 
-**After tests pass, run the quality gate:**
+### Step 1b: Quality Gate
 
-Run the quality gate script from this plugin's root directory (the parent of
-the `skills/` directory containing this file):
+Run the structural quality gate after tests pass:
 
 ```bash
-<plugin-root>/scripts/quality-gate.sh --path "$(git rev-parse --show-toplevel)"
+${CLAUDE_SKILL_DIR}/../../scripts/quality-gate.sh --path "$(git rev-parse --show-toplevel)"
 ```
 
 Quality gate failures in `inv-numbering`, `skill-structure`, and `doc-structure`
