@@ -56,9 +56,10 @@ You MUST create a task for each of these items and complete them in order:
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Consider subsystem boundaries** — does this fit in one subsystem or cross boundaries? If it crosses, note which SPEC.md files are relevant and flag that the plan should be split by subsystem. If a new subsystem boundary is identified that lacks a SPEC.md, recommend `/codify-subsystem` after implementation
 6. **Present design** — in sections scaled to their complexity, get user approval after each section
-7. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` (local working directory, not committed)
-8. **Evaluate UX design need** — if user-facing or agentic, recommend ux-design-agent
-9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+7. **Identify documentation impact** — invoke documentation-standards (draft mode) to draft updates to tracked project docs
+8. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` (local working directory, not committed), include documentation updates section
+9. **Evaluate UX design need** — if user-facing or agentic, recommend ux-design-agent
+10. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
 
@@ -109,13 +110,15 @@ digraph brainstorming {
     "Consider subsystem boundaries" -> "Present design sections";
     "Present design sections" -> "User approves design?";
     "User approves design?" -> "Present design sections" [label="no, revise"];
-    "User approves design?" -> "Write design doc" [label="yes"];
 
     // Finalization
+    "Draft doc updates" [shape=box];
     "Write design doc" [shape=box];
     "UX design needed?" [shape=diamond];
     "Invoke ux-design-agent" [shape=box];
     "Invoke writing-plans skill" [shape=doublecircle];
+    "User approves design?" -> "Draft doc updates" [label="yes"];
+    "Draft doc updates" -> "Write design doc";
     "Write design doc" -> "UX design needed?";
     "UX design needed?" -> "Invoke ux-design-agent" [label="yes"];
     "UX design needed?" -> "Invoke writing-plans skill" [label="no"];
@@ -123,7 +126,7 @@ digraph brainstorming {
 }
 ```
 
-**The terminal state is invoking writing-plans.** The only intermediate skills you may invoke are using-git-worktrees (during pre-flight, if on main) and ux-design-agent (when UX design is needed). Do NOT invoke any other implementation skill.
+**The terminal state is invoking writing-plans.** The only intermediate skills you may invoke are using-git-worktrees (during pre-flight, if on main), documentation-standards (after design approval), and ux-design-agent (when UX design is needed). Do NOT invoke any other implementation skill.
 
 ## The Process
 
@@ -182,7 +185,14 @@ After validating the design direction, evaluate whether detailed UX design is ne
 
 ## After the Design
 
-**Documentation:**
+**Documentation impact:**
+- After user approves the design, invoke documentation-standards in draft mode
+- The skill reads existing tracked docs (`README.md`, `docs/ARCHITECTURE.md`, `docs/DESIGN.md`, relevant `SPEC.md` files)
+- It drafts updates for any docs that need to reflect the design's decisions
+- User approves, modifies, or defers each drafted update
+- Approved drafts are included in the design doc under a "Documentation Updates" section
+
+**Writing the design doc:**
 - Write the validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md` (local working directory, not committed)
 - Include this header at the top of the design doc:
   ```markdown
@@ -195,6 +205,7 @@ After validating the design direction, evaluate whether detailed UX design is ne
   ```
   If the issue check was skipped, use `**Issue:** None (exploratory)`.
   Get the branch name from `git branch --show-current`.
+- Include the "Documentation Updates" section from the documentation-standards draft
 - Use writing-clearly-and-concisely skill if available
 - Paste the design into the PR body when you open it
 
@@ -216,6 +227,7 @@ After validating the design direction, evaluate whether detailed UX design is ne
 
 **Invokes:**
 - **using-git-worktrees** — During pre-flight checks, if user is on `main`/`master` and wants a branch
+- **documentation-standards** — Draft mode, after design approval, before writing design doc
 
 **Called by:**
 - Directly via `/brainstorming`
