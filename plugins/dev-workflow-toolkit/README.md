@@ -10,6 +10,8 @@ Development workflow skills for Claude Code. Replaces [claude-gh-project-templat
 
 Select `dev-workflow-toolkit` from the plugin list.
 
+**Prerequisites:** [uv](https://docs.astral.sh/uv/) (for quality gate checks). Install: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+
 **Recommended companion:** Install `writing-toolkit` for the `writing-clearly-and-concisely` skill referenced by several workflow skills.
 
 ## Skills (17)
@@ -93,21 +95,19 @@ cd plugins/dev-workflow-toolkit
 ./tests/run-all.sh
 ```
 
-**72 tests** validate:
-- YAML frontmatter in all SKILL.md files (16 tests)
-- Template structure and content (10 tests)
-- RAG configuration generation logic (11 tests)
-- Skill invocation and dependency resolution (35 tests)
-- Template path resolution and substitution
-- MCP server configuration patterns
+**97 tests** across 4 suites:
+- Integration — frontmatter, skill structure, dependency resolution (39 tests)
+- Project init — template structure and content (10 tests)
+- Setup RAG — configuration generation logic (10 tests)
+- Quality gate — positive and negative structural validation (38 tests)
 
 See `tests/README.md` for details.
 
 ## Documentation
 
 - `docs/architecture/` — Design rationale and foundations
-- `docs/spec-template.md` — Template for subsystem specs
 - `docs/FIRST_RUN.md` — Project memory initialization
+- `scripts/quality-gate.sh` — Structural validation (requires uv)
 
 ## Attribution
 
