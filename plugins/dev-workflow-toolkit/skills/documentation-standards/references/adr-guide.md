@@ -1,6 +1,6 @@
 # Architecture Decision Records — Reference Guide
 
-Source: [joelparkerhenderson/architecture-decision-record](https://github.com/joelparkerhenderson/architecture-decision-record)
+_Distilled from [joelparkerhenderson/architecture-decision-record](https://github.com/joelparkerhenderson/architecture-decision-record) (CC-BY-NC-SA-4.0 for original author content) and general ADR literature. ADR templates (Nygard, MADR, Alexandrian) originate from their respective authors. This summary is original text describing established concepts._
 
 ## What Is an ADR?
 

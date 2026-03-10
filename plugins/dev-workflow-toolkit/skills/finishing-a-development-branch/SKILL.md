@@ -9,35 +9,13 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 Guide completion of development work by presenting clear options and handling chosen workflow.
 
-**Core principle:** Validate docs → Verify tests → Present options → Execute choice → Clean up.
+**Core principle:** Verify tests → Validate docs → Present options → Execute choice → Clean up.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
 ## The Process
 
-### Step 1: Validate Documentation
-
-<HARD-GATE>
-Do NOT proceed to test verification until documentation validation passes or the developer explicitly defers with a recorded reason.
-</HARD-GATE>
-
-Invoke documentation-standards in validate mode. The skill will:
-
-1. Detect the scope of changes on this branch
-2. Classify whether documentation updates are needed
-3. Read tracked docs and relevant SPEC.md files
-4. Compare against the branch's changes
-5. If gaps found — present them and block until resolved
-6. If no gaps — announce "Documentation gate: passed" and proceed
-
-**If the developer defers documentation:**
-- Require a reason
-- Record it for the PR body: `**Documentation deferred:** [reason]`
-- Proceed to Step 2 (Verify Tests)
-
-**If documentation gate passes:** Continue to Step 2.
-
-### Step 2: Verify Tests
+### Step 1: Verify Tests
 
 **Before presenting options, check CONTRIBUTING.md for the project's quality gate:**
 
@@ -62,9 +40,31 @@ Tests failing (<N> failures). Must fix before completing:
 Cannot proceed with merge/PR until tests pass.
 ```
 
-Stop. Don't proceed to Step 3.
+Stop. Don't proceed to Step 2.
 
-**If tests pass:** Continue to Step 3.
+**If tests pass:** Continue to Step 2.
+
+### Step 2: Validate Documentation
+
+<HARD-GATE>
+Do NOT proceed to option presentation, PR creation, or merge until documentation validation passes or the developer explicitly defers with a recorded reason.
+</HARD-GATE>
+
+Invoke documentation-standards in validate mode. The skill will:
+
+1. Detect the scope of changes on this branch
+2. Classify whether documentation updates are needed
+3. Read tracked docs and relevant SPEC.md files
+4. Compare against the branch's changes
+5. If gaps found — present them and block until resolved
+6. If no gaps — announce "Documentation gate: passed" and proceed
+
+**If the developer defers documentation:**
+- Require a reason
+- Record it for the PR body: `**Documentation deferred:** [reason]`
+- Proceed to Step 3 (Determine Base Branch)
+
+**If documentation gate passes:** Continue to Step 3.
 
 ### Step 3: Determine Base Branch
 
@@ -242,7 +242,7 @@ bd dolt push
 
 This ensures beads state is persisted and not stranded locally. Only close beads scoped to the current branch's work.
 
-> **Note:** Step 1 (Validate Documentation) and Step 2 (Verify Tests) run before options are presented. The table below covers Steps 5-7.
+> **Note:** Step 1 (Verify Tests) and Step 2 (Validate Documentation) run before options are presented. The table below covers Steps 5-7.
 
 ## Quick Reference
 
@@ -288,7 +288,7 @@ This ensures beads state is persisted and not stranded locally. Only close beads
 ## Integration
 
 **Invokes:**
-- **documentation-standards** — Validate mode, hard gate before test verification
+- **documentation-standards** — Validate mode, hard gate after test verification
 
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete

@@ -112,8 +112,8 @@ digraph brainstorming {
     "User approves design?" -> "Present design sections" [label="no, revise"];
 
     // Finalization
-    "Write design doc" [shape=box];
     "Draft doc updates" [shape=box];
+    "Write design doc" [shape=box];
     "UX design needed?" [shape=diamond];
     "Invoke ux-design-agent" [shape=box];
     "Invoke writing-plans skill" [shape=doublecircle];
@@ -126,7 +126,7 @@ digraph brainstorming {
 }
 ```
 
-**The terminal state is invoking writing-plans.** The only intermediate skills you may invoke are using-git-worktrees (during pre-flight, if on main) and ux-design-agent (when UX design is needed). Do NOT invoke any other implementation skill.
+**The terminal state is invoking writing-plans.** The only intermediate skills you may invoke are using-git-worktrees (during pre-flight, if on main), documentation-standards (after design approval), and ux-design-agent (when UX design is needed). Do NOT invoke any other implementation skill.
 
 ## The Process
 

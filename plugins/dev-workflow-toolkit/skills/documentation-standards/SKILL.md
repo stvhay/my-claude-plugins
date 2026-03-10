@@ -53,19 +53,23 @@ A "Documentation Updates" section added to the design doc listing:
 
 ## Mode: Validate (Called by Finishing-a-Development-Branch)
 
-Before tests run, finishing invokes this skill as a **hard gate** to verify tracked docs reflect the completed work.
+After tests pass, finishing invokes this skill as a **hard gate** to verify tracked docs reflect the completed work.
 
 <HARD-GATE>
-Do NOT allow the branch to proceed to test verification, PR creation, or merge until documentation validation passes or the developer explicitly defers with a recorded reason.
+Do NOT allow the branch to proceed to option presentation, PR creation, or merge until documentation validation passes or the developer explicitly defers with a recorded reason.
 </HARD-GATE>
 
 ### Process
 
 1. **Detect scope of changes:**
    ```bash
+   # Determine base branch (same pattern as finishing Step 3)
+   base=$(git merge-base HEAD main 2>/dev/null && echo main || \
+          git merge-base HEAD master 2>/dev/null && echo master)
+
    # What changed on this branch?
-   git diff $(git merge-base HEAD main)...HEAD --stat
-   git diff $(git merge-base HEAD main)...HEAD --name-only
+   git diff $(git merge-base HEAD $base)...HEAD --stat
+   git diff $(git merge-base HEAD $base)...HEAD --name-only
    ```
 
 2. **Classify the change:**
@@ -113,7 +117,7 @@ Do NOT allow the branch to proceed to test verification, PR creation, or merge u
 
 9. **If no gaps — pass:**
    ```
-   Documentation gate: all tracked docs are current. Proceeding to tests.
+   Documentation gate: all tracked docs are current. Proceeding.
    ```
 
 ## What Counts as a Gap
@@ -139,7 +143,7 @@ Do NOT allow the branch to proceed to test verification, PR creation, or merge u
 
 **Called by:**
 - **brainstorming** — Draft mode, after design approval
-- **finishing-a-development-branch** — Validate mode, as hard gate before tests
+- **finishing-a-development-branch** — Validate mode, as hard gate after tests
 
 **References:**
 - `references/project-docs.md` — Documentation structure standard
