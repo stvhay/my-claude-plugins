@@ -236,11 +236,11 @@ bd list --status=in_progress --json  # Review unclosed work
 # If unsure which beads belong to this branch, ask the user before closing.
 bd close <id> --reason "Branch completed"
 
-# Push beads data to remote
-bd dolt push
+# Push beads data to remote (if configured)
+bd dolt push 2>/dev/null || echo "Beads remote not configured — data persisted locally."
 ```
 
-This ensures beads state is persisted and not stranded locally. Only close beads scoped to the current branch's work.
+Only close beads scoped to the current branch's work. If no Dolt remote is configured, beads data is still persisted in the local database.
 
 > **Note:** Step 1 (Verify Tests) and Step 2 (Validate Documentation) run before options are presented. The table below covers Steps 5-7.
 

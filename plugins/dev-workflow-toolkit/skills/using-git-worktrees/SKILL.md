@@ -204,6 +204,26 @@ Tests passing (47 tests, 0 failures)
 Ready to implement auth feature
 ```
 
+## CWD Persistence
+
+**After creating a worktree and `cd`-ing into it, agents can lose track of their working directory.** This causes the most common worktree confusion bugs.
+
+**Mitigations:**
+- After `cd "$path"`, immediately verify with `pwd` and `git branch --show-current`
+- If CWD becomes invalid (worktree removed while you're in it), the shell will error on most commands. Run `cd $(git worktree list | head -1 | awk '{print $1}')` to return to the main worktree
+- Skills that execute in worktrees (executing-plans, subagent-driven-development) should re-verify CWD at the start of each task/batch
+- Never remove a worktree that another agent or session is actively using
+
+**Recovery if CWD is lost:**
+```bash
+# List all worktrees to find valid paths
+git worktree list
+# Navigate to the correct one
+cd <worktree-path>
+# Verify
+git branch --show-current && pwd
+```
+
 ## Red Flags
 
 **Never:**

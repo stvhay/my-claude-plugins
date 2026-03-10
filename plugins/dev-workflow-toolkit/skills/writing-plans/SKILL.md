@@ -150,18 +150,20 @@ Mark each task's dependencies explicitly. Independent tasks can be dispatched to
 
 After saving the plan, convert it to beads issues for cross-session tracking:
 
-**Run `/plan-to-beads docs/plans/<filename>.md`** — This creates:
-- A beads epic for the plan
-- Task issues for each plan task
-- Dependencies between tasks matching the plan's dependency structure
+```bash
+# Create beads issues from the plan markdown
+bd create -f docs/plans/<filename>.md
+```
 
-This replaces TodoWrite — tasks persist across sessions and track dependencies automatically.
+This creates task issues from the plan's markdown structure. Dependencies between tasks are preserved.
+
+**If `bd` is unavailable or `bd create -f` fails:** Skip beads conversion — plans work without it. The plan file itself is the source of truth.
 
 ## Execution Handoff
 
-After saving the plan and converting to beads, offer execution choice:
+After saving the plan and converting to beads (if available), offer execution choice:
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Beads epic created. Execution options:**
+**"Plan complete and saved to `docs/plans/<filename>.md`. Execution options:**
 
 **1. Subagent-Driven (this session)** — I orchestrate fresh subagents per task, independent tasks run in parallel, review between tasks
 
