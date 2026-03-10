@@ -1,6 +1,6 @@
 ---
 name: setup-rag
-description: Configure local-rag for project-isolated RAG indexing. Sets up .mcp.json with auto-indexing and per-project vector DB. Use when setting up RAG, enabling RAG, or indexing a repo.
+description: Configure ragling for project-isolated RAG indexing. Sets up .mcp.json with auto-indexing and per-project vector DB. Use when setting up RAG, enabling RAG, or indexing a repo.
 ---
 
 # Setup RAG
@@ -18,11 +18,11 @@ Configure [ragling](https://github.com/aihaysteve/local-rag) as an MCP server fo
 Verify each prerequisite. If any are missing, report what's needed and **stop** — do not attempt installation.
 
 ```bash
-# Check uv
-which uv 2>/dev/null || echo "MISSING: uv — install with: brew install uv"
+# Check uv (https://docs.astral.sh/uv/getting-started/installation/)
+which uv 2>/dev/null || echo "MISSING: uv — see https://docs.astral.sh/uv/getting-started/installation/"
 
-# Check ollama
-which ollama 2>/dev/null || echo "MISSING: ollama — install with: brew install ollama"
+# Check ollama (https://ollama.com/download)
+which ollama 2>/dev/null || echo "MISSING: ollama — see https://ollama.com/download"
 
 # Check ollama is running
 ollama list 2>/dev/null || echo "MISSING: ollama is not running — start with: ollama serve"
@@ -31,7 +31,7 @@ ollama list 2>/dev/null || echo "MISSING: ollama is not running — start with: 
 ollama list 2>/dev/null | grep -q bge-m3 || echo "MISSING: bge-m3 model — pull with: ollama pull bge-m3"
 ```
 
-If anything is missing, report all missing prerequisites together with install commands, then stop.
+If anything is missing, report all missing prerequisites together with install links, then stop.
 
 ### 2. Clone or Update Ragling
 
@@ -49,22 +49,26 @@ fi
 
 ### 3. Initialize Ragling
 
-Run init from the project root. This generates `ragling.json` (with watch pointing at the project directory) and `.mcp.json` (with the MCP server configuration using absolute paths).
+Run init from the project root. This generates `ragling.json` and updates `.mcp.json`.
 
 ```bash
 cd "$PROJECT_ROOT" && uv run --directory .ragling ragling init
 ```
 
+`ragling init` produces:
+- **`ragling.json`** — watch configuration mapping the project name to `.` (the project directory)
+- **`.mcp.json`** — merges a `ragling` entry into `mcpServers`, preserving any existing MCP server configurations. Only the `mcpServers.ragling` key is written; other entries are left untouched.
+
 ### 4. Update .gitignore
 
-Ensure these entries are in `.gitignore` — all contain absolute paths or reproducible state:
+Ensure these entries are in `.gitignore` — the clone is reproducible and config contains absolute paths:
 
 ```
 .ragling/
 ragling.json
 ```
 
-**Do not gitignore `.mcp.json`** — it may contain other MCP server configurations the user wants to track. Instead, note that `ragling init` adds ragling-specific entries with absolute paths. The user can decide whether to gitignore `.mcp.json` themselves.
+**Do not gitignore `.mcp.json`** — it may contain other MCP server configurations the user wants to track. The ragling entry will contain absolute paths, so the user can decide whether to gitignore `.mcp.json` themselves.
 
 ### 5. Verify Setup
 
@@ -95,6 +99,14 @@ When the MCP server starts (`ragling serve`):
 
 No manual indexing or hooks needed — serve handles everything.
 
+## Troubleshooting
+
+- **`rag_search` tool not available** — restart Claude Code after setup so the MCP server starts. Check `.mcp.json` has a `mcpServers.ragling` entry.
+- **`ragling init` fails** — ensure `uv` can resolve dependencies: run `uv run --directory .ragling ragling --help` to test. If the `.ragling/` clone is corrupt, delete it and re-run step 2.
+- **Ollama connection errors** — verify `ollama serve` is running and `ollama list` shows `bge-m3`. Ragling needs ollama for embeddings.
+- **Search returns stale results** — the file watcher has a 2-second debounce. For large batch changes, wait a few seconds and retry. If indexing seems stuck, restart the Claude Code session to trigger a fresh startup sync.
+- **Cleanup** — to remove ragling from a project, delete `.ragling/`, `ragling.json`, and the `mcpServers.ragling` entry from `.mcp.json`. Remove the `.gitignore` entries.
+
 ## When to Use
 
 - Setting up a new project for RAG-powered search
@@ -103,6 +115,6 @@ No manual indexing or hooks needed — serve handles everything.
 ## Key Principles
 
 - **Project isolation** — ragling cloned per-project in `.ragling/`, vector DB isolated per group
-- **Check, don't install** — report missing prerequisites with install commands, don't run them
-- **Never overwrite** — if `.mcp.json` exists, `ragling init` merges into it
+- **Check, don't install** — report missing prerequisites with install links, don't run them
+- **Merge, not overwrite** — `ragling init` merges into existing `.mcp.json`, preserving other MCP server entries
 - **Gitignore safety** — `.ragling/` and `ragling.json` are always gitignored
