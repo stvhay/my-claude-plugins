@@ -17,10 +17,17 @@ Guide completion of development work by presenting clear options and handling ch
 
 ### Step 1: Verify Tests
 
-**Before presenting options, verify tests pass:**
+**Before presenting options, check CONTRIBUTING.md for the project's quality gate:**
 
 ```bash
-# Run project's test suite
+# Check for project-specific quality gate
+grep -A5 -i "quality gate\|quality check\|ci check" CONTRIBUTING.md 2>/dev/null
+```
+
+If CONTRIBUTING.md specifies a quality gate command, run that. Otherwise fall back to auto-detection:
+
+```bash
+# Fallback: run project's test suite
 npm test / cargo test / pytest / go test ./...
 ```
 
@@ -92,13 +99,21 @@ Then: Cleanup worktree (Step 5)
 # Push branch
 git push -u origin <feature-branch>
 
+# Check CONTRIBUTING.md for PR target repo
+grep -i "\-R \|pr.*target\|target.*repo" CONTRIBUTING.md 2>/dev/null
+# If a -R flag is specified (e.g., -R org/repo), use it with gh pr create
+
 # Gather beads context for PR body
 bd list --status=closed --json   # Closed tasks for summary
 bd list --status=open --json     # Remaining open tasks
 bd list --type=feature --json    # Find feature issue with external-ref
+
+# Check for design doc and plan to include in PR body
+# Convention: *-design.md (from brainstorming), *-plan.md (from writing-plans)
+ls docs/plans/*-design.md docs/plans/*-plan.md 2>/dev/null
 ```
 
-Build the PR body with beads context:
+Build the PR body with beads context. If a design doc or plan exists, include it in a collapsible block:
 
 ```bash
 gh pr create --title "<title>" --body "$(cat <<'EOF'
@@ -112,6 +127,12 @@ gh pr create --title "<title>" --body "$(cat <<'EOF'
 
 ## Test Plan
 - [ ] <verification steps>
+
+<details><summary>Implementation Plan</summary>
+
+<paste plan file contents here, if one exists>
+
+</details>
 
 Closes #<N>
 EOF
@@ -168,10 +189,36 @@ git worktree list | grep $(git branch --show-current)
 
 If yes:
 ```bash
-git worktree remove <worktree-path>
+# Use bd worktree remove if .beads/ exists (handles redirect cleanup)
+if [ -d .beads ]; then
+  bd worktree remove <worktree-name>
+else
+  git worktree remove <worktree-path>
+fi
 ```
 
 **For Option 3:** Keep worktree.
+
+### Step 6: Beads Sync
+
+**After executing any option**, if a `.beads/` directory exists:
+
+```bash
+# Find the beads feature/epic linked to this branch's GitHub issue
+bd list --status=in_progress --json  # Review unclosed work
+
+# Only close beads that belong to THIS branch:
+# 1. The feature/epic whose external-ref matches the branch's GH issue (e.g., gh-<N>)
+# 2. Tasks that are children of that feature/epic
+# Do NOT close unrelated in-progress beads — they may belong to other branches.
+# If unsure which beads belong to this branch, ask the user before closing.
+bd close <id> --reason "Branch completed"
+
+# Push beads data to remote
+bd dolt push
+```
+
+This ensures beads state is persisted and not stranded locally. Only close beads scoped to the current branch's work.
 
 ## Quick Reference
 

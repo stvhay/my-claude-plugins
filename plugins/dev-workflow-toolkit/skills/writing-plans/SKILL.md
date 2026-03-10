@@ -15,7 +15,7 @@ DRY. YAGNI. TDD. Frequent commits.
 
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
-**Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
+**Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>-plan.md`
 
 ## Task Sizing
 
@@ -44,6 +44,10 @@ Size tasks to the work, not to an arbitrary count. A plan may have 2 tasks or 6 
 ```markdown
 # [Feature Name] Implementation Plan
 
+**Issue:** #<number> — <title>
+**Beads:** <beads-id>
+**Design:** docs/plans/YYYY-MM-DD-<topic>-design.md
+
 > **For Claude:** Execute this plan using subagent-driven-development (same session) or executing-plans (separate session / teammate).
 
 **Goal:** [One sentence describing what this builds]
@@ -61,6 +65,8 @@ Size tasks to the work, not to an arbitrary count. A plan may have 2 tasks or 6 
 
 ---
 ```
+
+The **Issue**, **Beads**, and **Design** fields carry context from the brainstorming phase. Populate them from the design doc header. If brainstorming was skipped, use `Issue: None` and `Beads: None`.
 
 ## Task Structure
 
