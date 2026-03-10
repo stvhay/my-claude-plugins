@@ -36,7 +36,7 @@ When a spec grows too large, it's telling you the subsystem has too many respons
 
 ## Implementation in This Template
 
-See [`docs/spec-template.md`](../spec-template.md) for the format and [`/codify-subsystem`](../../.claude/skills/codify-subsystem/SKILL.md) skill for interactive creation.
+See the `/codify-subsystem` skill for interactive creation (the spec template is inlined in the skill).
 
 ## Sources
 
