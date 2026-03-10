@@ -13,6 +13,24 @@ Load plan, review critically, execute tasks in batches, report for review betwee
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
+## Worktree Guard
+
+**Before starting, verify you are NOT on main/master:**
+
+```bash
+branch=$(git branch --show-current)
+if [ "$branch" = "main" ] || [ "$branch" = "master" ]; then
+  echo "ERROR: On $branch — must be in a worktree/feature branch."
+  echo "Run /using-git-worktrees first."
+  exit 1
+fi
+echo "Verified: on branch $branch in $(pwd)"
+```
+
+**If CWD is invalid** (e.g., worktree was removed): Navigate back to the project root or worktree path before proceeding. Run `git worktree list` to find valid worktree paths.
+
+**Re-verify CWD at the start of each batch** — agents can lose track of their working directory between batches.
+
 ## The Process
 
 ### Step 1: Load and Review Plan
@@ -20,7 +38,7 @@ Load plan, review critically, execute tasks in batches, report for review betwee
 2. Review critically — identify questions or concerns
 3. Note acceptance criteria from plan header
 4. If concerns: Raise them before starting
-5. If clear: Run `bd ready --json` to see available beads tasks. If no beads tasks exist, run `/plan-to-beads` on the plan file to create them. Proceed.
+5. If clear: Run `bd ready --json` to see available beads tasks. If no beads tasks exist, run `bd create -f <plan-file>` to create them. If `bd` is unavailable, proceed without beads tracking.
 
 ### Step 2: Execute Batch
 **Default: First 3 tasks**

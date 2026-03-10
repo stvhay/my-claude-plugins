@@ -150,37 +150,21 @@ Mark each task's dependencies explicitly. Independent tasks can be dispatched to
 
 After saving the plan, convert it to beads issues for cross-session tracking:
 
-**Run `/plan-to-beads docs/plans/<filename>.md`** — This creates:
-- A beads epic for the plan
-- Task issues for each plan task
-- Dependencies between tasks matching the plan's dependency structure
+```bash
+# Create beads issues from the plan markdown
+bd create -f docs/plans/<filename>.md
+```
 
-This replaces TodoWrite — tasks persist across sessions and track dependencies automatically.
+This creates task issues from the plan's markdown structure. Dependencies between tasks are preserved.
+
+**If `bd` is unavailable or `bd create -f` fails:** Skip beads conversion — plans work without it. The plan file itself is the source of truth.
 
 ## Execution Handoff
 
-After saving the plan and converting to beads, offer execution choice:
+After saving the plan and converting to beads (if available), proceed directly to execution using subagent-driven-development. Do not ask the user to choose an execution approach.
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Beads epic created. Execution options:**
+**"Plan complete and saved to `docs/plans/<filename>.md`. Proceeding with subagent-driven execution."**
 
-**1. Subagent-Driven (this session)** — I orchestrate fresh subagents per task, independent tasks run in parallel, review between tasks
-
-**2. Agent Team** — Spawn a teammate to execute the plan autonomously, reports back when done
-
-**3. Separate Session** — Open new session with executing-plans, batch execution with checkpoints
-
-**Which approach?"**
-
-**If Subagent-Driven chosen:**
 - **REQUIRED SUB-SKILL:** Use subagent-driven-development
 - Stay in this session
 - Fresh subagent per task + two-stage review
-
-**If Agent Team chosen:**
-- Spawn teammate using Task tool with `team_name`
-- Teammate uses executing-plans to work through the plan
-- Reports back on completion
-
-**If Separate Session chosen:**
-- Guide them to open new session in worktree
-- **REQUIRED SUB-SKILL:** New session uses executing-plans

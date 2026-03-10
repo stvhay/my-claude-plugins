@@ -32,6 +32,24 @@ digraph when_to_use {
 
 **If tasks are tightly coupled** (shared files, shared state, ordering dependencies beyond explicit `Depends on:`), break them into smaller independent units or execute them serially within a single subagent.
 
+## Worktree Guard
+
+**Before starting, verify you are NOT on main/master:**
+
+```bash
+branch=$(git branch --show-current)
+if [ "$branch" = "main" ] || [ "$branch" = "master" ]; then
+  echo "ERROR: On $branch — must be in a worktree/feature branch."
+  echo "Run /using-git-worktrees first."
+  exit 1
+fi
+echo "Verified: on branch $branch in $(pwd)"
+```
+
+**If CWD is invalid** (e.g., worktree was removed): Navigate back to the project root or worktree path before proceeding. Run `git worktree list` to find valid worktree paths.
+
+**Re-verify CWD before each task dispatch** — agents can lose track of their working directory between tasks.
+
 ## The Process
 
 ```dot
@@ -83,7 +101,7 @@ digraph process {
 
 ### Step by step
 
-1. **Read plan.** Extract all tasks with full text. Run `bd ready --json` to verify beads tasks exist. If not, run `/plan-to-beads` on the plan file. Use `bd ready` to identify unblocked tasks for dispatch.
+1. **Read plan.** Extract all tasks with full text. Run `bd ready --json` to verify beads tasks exist. If not, run `bd create -f <plan-file>` to create them. If `bd` is unavailable, proceed without beads tracking. Use `bd ready` to identify unblocked tasks for dispatch.
 2. **Check task sizing.** Each task should fit ~50% of a subagent's context window. If a task looks too large, break it up before dispatching.
 3. **Load subsystem context.** For each task, find the nearest SPEC.md to the task's target files. If one exists, prepend its key sections (Purpose, Invariants, Failure Modes) to the task context when dispatching. For cross-cutting tasks: include the full spec for the primary subsystem and only the Public Interface section from adjacent subsystems. If a task needs >2 specs, it crosses too many boundaries — split it before dispatching.
 4. **Dispatch task.** Fresh subagent (via Task tool) with full task text and context. For independent tasks, dispatch in parallel. For dependent tasks, wait.
