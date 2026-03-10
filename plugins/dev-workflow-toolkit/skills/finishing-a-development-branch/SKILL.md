@@ -109,7 +109,8 @@ bd list --status=open --json     # Remaining open tasks
 bd list --type=feature --json    # Find feature issue with external-ref
 
 # Check for design doc and plan to include in PR body
-ls docs/plans/*-design.md docs/plans/*.md 2>/dev/null
+# Convention: *-design.md (from brainstorming), *-plan.md (from writing-plans)
+ls docs/plans/*-design.md docs/plans/*-plan.md 2>/dev/null
 ```
 
 Build the PR body with beads context. If a design doc or plan exists, include it in a collapsible block:
@@ -188,7 +189,12 @@ git worktree list | grep $(git branch --show-current)
 
 If yes:
 ```bash
-git worktree remove <worktree-path>
+# Use bd worktree remove if .beads/ exists (handles redirect cleanup)
+if [ -d .beads ]; then
+  bd worktree remove <worktree-name>
+else
+  git worktree remove <worktree-path>
+fi
 ```
 
 **For Option 3:** Keep worktree.
@@ -198,15 +204,21 @@ git worktree remove <worktree-path>
 **After executing any option**, if a `.beads/` directory exists:
 
 ```bash
-# Close any in-progress beads associated with this branch
-bd list --status=in_progress --json  # Check for unclosed work
-bd close <id> --reason "Branch completed"  # Close each
+# Find the beads feature/epic linked to this branch's GitHub issue
+bd list --status=in_progress --json  # Review unclosed work
+
+# Only close beads that belong to THIS branch:
+# 1. The feature/epic whose external-ref matches the branch's GH issue (e.g., gh-<N>)
+# 2. Tasks that are children of that feature/epic
+# Do NOT close unrelated in-progress beads — they may belong to other branches.
+# If unsure which beads belong to this branch, ask the user before closing.
+bd close <id> --reason "Branch completed"
 
 # Push beads data to remote
 bd dolt push
 ```
 
-This ensures beads state is persisted and not stranded locally.
+This ensures beads state is persisted and not stranded locally. Only close beads scoped to the current branch's work.
 
 ## Quick Reference
 

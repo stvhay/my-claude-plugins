@@ -57,7 +57,7 @@ done
 ```bash
 _beads_latest_version() {
   curl -fsSL https://api.github.com/repos/steveyegge/beads/releases/latest 2>/dev/null \
-    | grep -oP '"tag_name":\s*"v?\K[^"]+' | head -1
+    | sed -n 's/.*"tag_name":[[:space:]]*"v\{0,1\}\([^"]*\)".*/\1/p' | head -1
 }
 
 _beads_install() {
@@ -85,7 +85,7 @@ _beads_ensure() {
     local latest=$(_beads_latest_version)
     [[ -n "$latest" ]] && _beads_install "$latest"
   elif [[ ! -f "$stamp" ]] || [[ -n $(find "$stamp" -mtime +1 2>/dev/null) ]]; then
-    local current=$("$bin" --version 2>/dev/null | grep -oP '\d+\.\d+\.\d+' | head -1)
+    local current=$("$bin" --version 2>/dev/null | sed -n 's/.*\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*/\1/p' | head -1)
     local latest=$(_beads_latest_version)
     if [[ -n "$latest" && "$current" != "$latest" ]]; then
       echo "beads: $current -> $latest"
@@ -104,7 +104,7 @@ PATH_add "$HOME/.local/bin"
 ```bash
 _dolt_latest_version() {
   curl -fsSL https://api.github.com/repos/dolthub/dolt/releases/latest 2>/dev/null \
-    | grep -oP '"tag_name":\s*"v?\K[^"]+' | head -1
+    | sed -n 's/.*"tag_name":[[:space:]]*"v\{0,1\}\([^"]*\)".*/\1/p' | head -1
 }
 
 _dolt_install() {
@@ -130,7 +130,7 @@ _dolt_ensure() {
     local latest=$(_dolt_latest_version)
     [[ -n "$latest" ]] && _dolt_install "$latest"
   elif [[ ! -f "$stamp" ]] || [[ -n $(find "$stamp" -mtime +1 2>/dev/null) ]]; then
-    local current=$("$bin" version 2>/dev/null | grep -oP '\d+\.\d+\.\d+' | head -1)
+    local current=$("$bin" version 2>/dev/null | sed -n 's/.*\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*/\1/p' | head -1)
     local latest=$(_dolt_latest_version)
     if [[ -n "$latest" && "$current" != "$latest" ]]; then
       echo "dolt: $current -> $latest"
@@ -179,5 +179,5 @@ dolt version # Show dolt version
 
 Common issues:
 - **Daemon timeout ("took too long to start >5s")**: Upgrade beads to ≥ 0.59.0
-- **"database not found"**: Run `bd init --force --prefix <project>` then reimport
+- **"database not found"**: Run `bd init --force -p <project>` then reimport from JSONL if available (`bd init --from-jsonl`)
 - **Nix version lag**: Use the `.envrc.d/` approach above instead of nix packages
