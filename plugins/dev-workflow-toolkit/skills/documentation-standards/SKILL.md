@@ -106,14 +106,13 @@ Do NOT allow the branch to proceed to option presentation, PR creation, or merge
    - Has any SPEC.md grown beyond recommended length? (Flag for decomposition)
 
 7. **Run structural checks:**
-   ```bash
-   QG_SCRIPT="$(find ~/.claude/plugins/cache -path "*/dev-workflow-toolkit/*/scripts/quality-gate.sh" 2>/dev/null | head -1)"
+   Run `scripts/quality-gate.sh` from the dev-workflow-toolkit plugin directory:
 
-   if [ -n "$QG_SCRIPT" ] && [ -x "$QG_SCRIPT" ]; then
-       "$QG_SCRIPT" --check inv-numbering --path "$(git rev-parse --show-toplevel)"
-       "$QG_SCRIPT" --check doc-structure --path "$(git rev-parse --show-toplevel)"
-   fi
+   ```bash
+   scripts/quality-gate.sh --check inv-numbering --path "$(git rev-parse --show-toplevel)"
+   scripts/quality-gate.sh --check doc-structure --path "$(git rev-parse --show-toplevel)"
    ```
+
    Include structural check results alongside documentation gap analysis.
 
 8. **If gaps found — block and present:**

@@ -200,14 +200,14 @@ Flag it and move on.
 
 After SPEC.md invariant checks pass, run the structural quality gate:
 
-```bash
-# Find the quality gate script (ships with dev-workflow-toolkit plugin)
-QG_SCRIPT="$(find ~/.claude/plugins/cache -path "*/dev-workflow-toolkit/*/scripts/quality-gate.sh" 2>/dev/null | head -1)"
+Run `scripts/quality-gate.sh` from the dev-workflow-toolkit plugin directory:
 
-if [ -n "$QG_SCRIPT" ] && [ -x "$QG_SCRIPT" ]; then
-    "$QG_SCRIPT" --path "$(git rev-parse --show-toplevel)"
-fi
+```bash
+scripts/quality-gate.sh --path "$(git rev-parse --show-toplevel)"
 ```
+
+The script checks its own dependencies (uv, Python) and gives clear error
+messages if anything is missing.
 
 If the quality gate reports failures, include them in the verification output.
 Failures in `inv-numbering`, `skill-structure`, and `doc-structure` should block

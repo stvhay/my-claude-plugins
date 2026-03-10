@@ -291,6 +291,18 @@ def check_vsa_coverage(project_root: Path) -> None:
 
 
 def check_tool_health(project_root: Path) -> None:
+    # uv
+    if shutil.which("uv"):
+        try:
+            ver = subprocess.run(
+                ["uv", "--version"], capture_output=True, text=True, check=True
+            ).stdout.strip()
+            report("PASS", "tool-health", f"uv: {ver}")
+        except subprocess.CalledProcessError:
+            report("FAIL", "tool-health", "uv: error running uv --version")
+    else:
+        report("FAIL", "tool-health", "uv: not installed (required — curl -LsSf https://astral.sh/uv/install.sh | sh)")
+
     # git
     if shutil.which("git"):
         try:
