@@ -28,10 +28,10 @@ fi
 
 # Test 2: Skill contains prerequisite check
 tests=$((tests + 1))
-if grep -q "which local-rag" "$SKILL_FILE"; then
-    echo -e "${GREEN}✓${NC} Contains prerequisite check for local-rag"
+if grep -q "which uv" "$SKILL_FILE"; then
+    echo -e "${GREEN}✓${NC} Contains prerequisite check for uv"
 else
-    echo -e "${RED}✗${NC} Missing prerequisite check for local-rag"
+    echo -e "${RED}✗${NC} Missing prerequisite check for uv"
     failures=$((failures + 1))
 fi
 
@@ -44,20 +44,20 @@ else
     failures=$((failures + 1))
 fi
 
-# Test 4: Skill includes required environment variables
-required_env_vars=(
-    "LOCAL_RAG_PROJECT"
-    "LOCAL_RAG_DATA_DIR"
-    "LOCAL_RAG_WATCH"
-    "LOCAL_RAG_ROOT"
+# Test 4: Skill includes ragling configuration artifacts
+required_artifacts=(
+    "ragling init"
+    "ragling.json"
+    ".ragling"
+    "mcpServers.ragling"
 )
 
-for env_var in "${required_env_vars[@]}"; do
+for artifact in "${required_artifacts[@]}"; do
     tests=$((tests + 1))
-    if grep -q "$env_var" "$SKILL_FILE"; then
-        echo -e "${GREEN}✓${NC} Includes env var: $env_var"
+    if grep -q "$artifact" "$SKILL_FILE"; then
+        echo -e "${GREEN}✓${NC} Includes config artifact: $artifact"
     else
-        echo -e "${RED}✗${NC} Missing env var: $env_var"
+        echo -e "${RED}✗${NC} Missing config artifact: $artifact"
         failures=$((failures + 1))
     fi
 done
@@ -88,18 +88,6 @@ else
     echo -e "${RED}✗${NC} Missing project isolation concept"
     failures=$((failures + 1))
 fi
-
-# Test 8: Validate JSON structure in skill is valid
-tests=$((tests + 1))
-# Extract JSON block from skill and validate structure
-json_block=$(sed -n '/```json/,/```/p' "$SKILL_FILE" | sed '1d;$d' | head -20)
-if echo "$json_block" | grep -q "mcpServers" && echo "$json_block" | grep -q "local-rag"; then
-    echo -e "${GREEN}✓${NC} JSON configuration structure is valid"
-else
-    echo -e "${RED}✗${NC} JSON configuration structure invalid or missing"
-    failures=$((failures + 1))
-fi
-
 echo ""
 echo "Tests: $tests, Failures: $failures"
 

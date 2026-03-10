@@ -187,14 +187,14 @@ echo "Validating MCP configuration patterns..."
 setup_rag_skill="$SKILLS_DIR/setup-rag/SKILL.md"
 
 if [ -f "$setup_rag_skill" ]; then
-    # Check for required environment variables
-    required_vars=("LOCAL_RAG_PROJECT" "LOCAL_RAG_DATA_DIR" "LOCAL_RAG_WATCH" "LOCAL_RAG_ROOT")
+    # Check for ragling configuration artifacts
+    required_terms=("ragling init" "mcpServers.ragling" ".ragling" "ragling.json")
 
-    for var in "${required_vars[@]}"; do
-        if grep -q "$var" "$setup_rag_skill"; then
-            pass "MCP config includes: $var"
+    for term in "${required_terms[@]}"; do
+        if grep -q "$term" "$setup_rag_skill"; then
+            pass "MCP config includes: $term"
         else
-            fail "MCP config missing: $var"
+            fail "MCP config missing: $term"
         fi
     done
 
