@@ -26,7 +26,7 @@ If you haven't run the verification command in this message, you cannot claim it
 ```
 BEFORE claiming any status or expressing satisfaction:
 
-1. IDENTIFY: What command proves this claim?
+1. IDENTIFY: What command proves this claim? Check CONTRIBUTING.md for a project-specific quality gate command before guessing.
 2. RUN: Execute the FULL command (fresh, complete)
 3. READ: Full output, check exit code, count failures
 4. VERIFY: Does output confirm the claim?
@@ -143,13 +143,13 @@ This is non-negotiable.
 
 ## Integration with Code Simplification
 
-After verification passes, the code-simplification skill runs automatically:
+After verification passes, invoke the code-simplification skill:
 
 ```
-verify (this skill) → simplify → re-verify → complete
+verify (this skill) → invoke /code-simplification → re-verify → complete
 ```
 
-The simplification skill will:
+**Explicitly invoke** `/code-simplification` after step 6 passes. The simplification skill will:
 - Apply low-risk changes automatically
 - Flag structural changes for approval
 - Analyze failures for deeper issues

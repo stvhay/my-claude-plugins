@@ -46,6 +46,10 @@ Size tasks to the work, not to an arbitrary count. A plan may have 2 tasks or 6 
 
 > **For Claude:** Execute this plan using subagent-driven-development (same session) or executing-plans (separate session / teammate).
 
+**Issue:** #<number> — <title>
+**Beads:** <beads-id>
+**Design:** docs/plans/YYYY-MM-DD-<topic>-design.md
+
 **Goal:** [One sentence describing what this builds]
 
 **Architecture:** [2-3 sentences about approach]
@@ -61,6 +65,8 @@ Size tasks to the work, not to an arbitrary count. A plan may have 2 tasks or 6 
 
 ---
 ```
+
+The **Issue**, **Beads**, and **Design** fields carry context from the brainstorming phase. Populate them from the design doc header. If brainstorming was skipped, use `Issue: None` and `Beads: None`.
 
 ## Task Structure
 

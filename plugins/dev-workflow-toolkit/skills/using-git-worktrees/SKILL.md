@@ -82,6 +82,15 @@ project=$(basename "$(git rev-parse --show-toplevel)")
 
 ### 2. Create Worktree
 
+**If `.beads/` exists**, use `bd worktree` which auto-configures beads database redirects:
+
+```bash
+bd worktree create "$BRANCH_NAME" --path "$path"
+cd "$path"
+```
+
+**Otherwise**, use raw git:
+
 ```bash
 # Determine full path
 case $LOCATION in
@@ -213,5 +222,5 @@ Ready to implement auth feature
 - Any skill needing isolated workspace
 
 **Pairs with:**
-- **finishing-a-development-branch** - REQUIRED for cleanup after work complete
+- **finishing-a-development-branch** - REQUIRED for cleanup after work complete. Use `bd worktree remove` if beads is present.
 - **executing-plans** or **subagent-driven-development** - Work happens in this worktree

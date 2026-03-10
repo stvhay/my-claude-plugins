@@ -17,10 +17,17 @@ Guide completion of development work by presenting clear options and handling ch
 
 ### Step 1: Verify Tests
 
-**Before presenting options, verify tests pass:**
+**Before presenting options, check CONTRIBUTING.md for the project's quality gate:**
 
 ```bash
-# Run project's test suite
+# Check for project-specific quality gate
+grep -A5 -i "quality gate\|quality check\|ci check" CONTRIBUTING.md 2>/dev/null
+```
+
+If CONTRIBUTING.md specifies a quality gate command, run that. Otherwise fall back to auto-detection:
+
+```bash
+# Fallback: run project's test suite
 npm test / cargo test / pytest / go test ./...
 ```
 
@@ -92,13 +99,20 @@ Then: Cleanup worktree (Step 5)
 # Push branch
 git push -u origin <feature-branch>
 
+# Check CONTRIBUTING.md for PR target repo
+grep -i "\-R \|pr.*target\|target.*repo" CONTRIBUTING.md 2>/dev/null
+# If a -R flag is specified (e.g., -R org/repo), use it with gh pr create
+
 # Gather beads context for PR body
 bd list --status=closed --json   # Closed tasks for summary
 bd list --status=open --json     # Remaining open tasks
 bd list --type=feature --json    # Find feature issue with external-ref
+
+# Check for design doc and plan to include in PR body
+ls docs/plans/*-design.md docs/plans/*.md 2>/dev/null
 ```
 
-Build the PR body with beads context:
+Build the PR body with beads context. If a design doc or plan exists, include it in a collapsible block:
 
 ```bash
 gh pr create --title "<title>" --body "$(cat <<'EOF'
@@ -112,6 +126,12 @@ gh pr create --title "<title>" --body "$(cat <<'EOF'
 
 ## Test Plan
 - [ ] <verification steps>
+
+<details><summary>Implementation Plan</summary>
+
+<paste plan file contents here, if one exists>
+
+</details>
 
 Closes #<N>
 EOF
@@ -172,6 +192,21 @@ git worktree remove <worktree-path>
 ```
 
 **For Option 3:** Keep worktree.
+
+### Step 6: Beads Sync
+
+**After executing any option**, if a `.beads/` directory exists:
+
+```bash
+# Close any in-progress beads associated with this branch
+bd list --status=in_progress --json  # Check for unclosed work
+bd close <id> --reason "Branch completed"  # Close each
+
+# Push beads data to remote
+bd dolt push
+```
+
+This ensures beads state is persisted and not stranded locally.
 
 ## Quick Reference
 
