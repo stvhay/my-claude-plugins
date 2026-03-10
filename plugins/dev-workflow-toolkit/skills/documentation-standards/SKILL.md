@@ -23,6 +23,16 @@ After the user approves a design, brainstorming invokes this skill to identify w
    - `docs/DESIGN.md` (if exists)
    - Relevant `SPEC.md` files (walk up from affected directories)
 
+   **Path override:** If the project's `CLAUDE.md` contains a `## Tracked Documentation`
+   section listing doc paths, use those paths instead of the defaults above. Example:
+   ```markdown
+   ## Tracked Documentation
+   - docs/ARCHITECTURE.md
+   - docs/DESIGN.md
+   - README.md
+   ```
+   Default paths follow the uppercase convention from `docs/DESIGN.md`.
+
 2. **Compare against the approved design:**
    - What architectural decisions were made? Are they in ARCHITECTURE.md?
    - What design patterns or conventions were chosen? Are they in DESIGN.md?
@@ -77,15 +87,15 @@ Do NOT allow the branch to proceed to option presentation, PR creation, or merge
    - **Enforce gate** if changes include: new subsystems or components, modified public interfaces, new patterns or conventions, SPEC.md changes, anything the design doc flagged for documentation updates.
 
 3. **Check tracked docs exist:**
-   - If `docs/ARCHITECTURE.md` or `docs/DESIGN.md` don't exist and the changes warrant them, warn and recommend creating them.
+   - Check `CLAUDE.md` for a `## Tracked Documentation` section. If present, use those paths. Otherwise default to `docs/ARCHITECTURE.md` and `docs/DESIGN.md` (uppercase, per project convention).
+   - If tracked docs don't exist and the changes warrant them, warn and recommend creating them.
 
 4. **Read the design doc** (if one exists in `docs/plans/`):
    - Pull the "Documentation Updates" section drafted during brainstorming
    - Check whether each drafted update was implemented
 
-5. **Read current tracked docs:**
-   - `README.md`, `docs/ARCHITECTURE.md`, `docs/DESIGN.md`
-   - Relevant `SPEC.md` files for modified subsystems
+5. **Read the tracked docs identified in Step 3:**
+   - Include relevant `SPEC.md` files for modified subsystems
 
 6. **Evaluate completeness:**
    - Do tracked docs reflect the decisions and changes in this branch?
@@ -94,7 +104,16 @@ Do NOT allow the branch to proceed to option presentation, PR creation, or merge
    - Are modified subsystem behaviors reflected in SPEC.md?
    - Has any SPEC.md grown beyond recommended length? (Flag for decomposition)
 
-7. **If gaps found — block and present:**
+7. **Run structural checks:**
+
+   ```bash
+   ${CLAUDE_SKILL_DIR}/../../scripts/quality-gate.sh --check inv-numbering --path "$(git rev-parse --show-toplevel)"
+   ${CLAUDE_SKILL_DIR}/../../scripts/quality-gate.sh --check doc-structure --path "$(git rev-parse --show-toplevel)"
+   ```
+
+   Include structural check results alongside documentation gap analysis.
+
+8. **If gaps found — block and present:**
    ```
    Documentation gate: gaps found.
 
@@ -110,12 +129,12 @@ Do NOT allow the branch to proceed to option presentation, PR creation, or merge
    3. Defer documentation — reason required (recorded in PR body)
    ```
 
-8. **If option 3 (defer):**
+9. **If option 3 (defer):**
    - Require a reason
    - Record in PR body as: `**Documentation deferred:** [reason]`
    - Proceed past the gate
 
-9. **If no gaps — pass:**
+10. **If no gaps — pass:**
    ```
    Documentation gate: all tracked docs are current. Proceeding.
    ```
@@ -124,12 +143,54 @@ Do NOT allow the branch to proceed to option presentation, PR creation, or merge
 
 | Change Type | Expected Documentation |
 |-------------|----------------------|
-| New architectural decision | Section in `docs/ARCHITECTURE.md` |
-| New design pattern or convention | Section in `docs/DESIGN.md` |
+| New architectural decision | Section in `ARCHITECTURE.md` (path per project convention) |
+| New design pattern or convention | Section in `DESIGN.md` (path per project convention) |
 | Modified subsystem behavior | Updated `SPEC.md` (invariants, failure modes, interface) |
 | SPEC.md exceeds recommended length | Flag for subsystem decomposition |
 | Public interface change | Updated `README.md` |
 | New subsystem without SPEC.md | Recommend `/codify-subsystem` |
+| Stale statistics in docs | Add stat-check footnotes (see below) |
+
+## Stat-Check Footnotes
+
+When documentation includes numeric statistics (test counts, skill counts, component
+counts), use **stat-check footnotes** to enable machine validation via the quality gate.
+This prevents statistics from going stale as the project evolves.
+
+### Convention
+
+Place a markdown footnote reference immediately after the number, with the footnote
+body containing a `stat-check:` directive pointing to a named check:
+
+```markdown
+**110 tests**[^stat-test-count] across 4 suites[^stat-suite-count]:
+
+[^stat-test-count]: stat-check: total-test-count
+[^stat-suite-count]: stat-check: test-suite-count
+```
+
+### Available checks
+
+| Check name | What it counts |
+|---|---|
+| `total-test-count` | Total number of tests collected by the test runner |
+| `test-suite-count` | Number of test modules |
+| `skill-count` | Number of `SKILL.md` files under `skills/` |
+
+### When to add stat-check footnotes
+
+- Any numeric claim in README, SPEC.md, or ARCHITECTURE.md that could go stale
+- Test counts, component counts, check counts, invariant counts
+- Cross-reference counts (e.g., "6 checks" in a description of the quality gate)
+
+### Validation
+
+The quality gate's `doc-stats` check parses all markdown files for stat-check
+footnotes and validates each claimed number against the actual count. Run:
+
+```bash
+${CLAUDE_SKILL_DIR}/../../scripts/quality-gate.sh --check doc-stats --path "$(git rev-parse --show-toplevel)"
+```
 
 ## What Doesn't Trigger the Gate
 

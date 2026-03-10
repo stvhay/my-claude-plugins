@@ -30,8 +30,8 @@ You MUST complete these steps in order:
 3. **Draft initial spec** — produce a first draft from code analysis alone
 4. **Interview developer** — ask about invariants, failure modes, and testing (one question at a time)
 5. **Finalize SPEC.md** — incorporate interview answers into the spec
-6. **Update subsystem map** — add entry to CLAUDE.md's Subsystem Map table
-7. **Update MANIFEST.md** — add entry to `docs/specs/MANIFEST.md`
+6. **Update subsystem map** — create the Subsystem Map section in CLAUDE.md if it doesn't exist, then add entry
+7. **Update MANIFEST.md** — create `docs/specs/MANIFEST.md` if missing, then add entry
 
 ## The Process
 
@@ -39,6 +39,28 @@ You MUST complete these steps in order:
 
 Ask the user which directory to codify, or accept the path they provided.
 Confirm the directory exists and list its files.
+
+### Step 1b: Check for Parent SPEC.md
+
+Before drafting, walk up the directory tree from the target to check for an
+existing SPEC.md that may already cover this subsystem.
+
+```bash
+dir="<target-directory>"
+while [ "$dir" != "." ] && [ "$dir" != "/" ]; do
+    if [ -f "$dir/SPEC.md" ]; then
+        echo "Found SPEC.md at $dir/SPEC.md"
+        break
+    fi
+    dir=$(dirname "$dir")
+done
+```
+
+If a parent SPEC.md is found, ask: "A SPEC.md already exists at `<path>`. Should
+this subsystem get its own SPEC.md, or should it be documented in the parent?"
+
+If the user chooses the parent, update the parent SPEC.md instead and skip to
+Step 6 (Update Subsystem Map).
 
 ### Step 2: Analyze Code
 
@@ -51,8 +73,91 @@ Read all source files in the directory. Identify:
 
 ### Step 3: Draft Initial Spec
 
-Using the format from `docs/spec-template.md`, draft a SPEC.md from what the
-code analysis reveals. Mark sections where you're uncertain with `[NEEDS INPUT]`.
+Draft a SPEC.md from what the code analysis reveals using the following template.
+Mark sections where you're uncertain with `[NEEDS INPUT]`.
+
+**SPEC.md Template:**
+
+````markdown
+# [Subsystem Name]
+
+## Purpose
+
+[One paragraph: what this subsystem does and why it exists. Include the
+problem it solves and the key design decision that shaped it.]
+
+## Core Mechanism
+
+[2-3 sentences on the key design decisions that shaped this subsystem — *why*
+it works this way, not *what* it does (the code already shows that). Include
+the mental model an agent needs to modify this code correctly.]
+
+**Key files:**
+- `path/to/entry-point.py` — [role]
+- `path/to/core-logic.py` — [role]
+
+## Public Interface
+
+[What other subsystems depend on. Exports, APIs, events, shared types.
+An agent modifying this subsystem must not break these contracts.]
+
+| Export | Used By | Contract |
+|---|---|---|
+| | | |
+
+## Invariants
+
+[Things that must ALWAYS be true. These are the correctness pillars — an agent
+that violates any of these has introduced a bug. Each invariant gets an ID for
+test traceability.]
+
+| ID | Invariant | Enforcement | Why It Matters |
+|---|---|---|---|
+| INV-1 | | structural / reasoning-required | |
+
+**Enforcement classification:**
+- **structural** — enforced by type system, API design, or code structure; pattern-matchable and universally respected
+- **reasoning-required** — needs architectural understanding; model-tier dependent
+
+Prioritize converting reasoning-required invariants to structural via API design.
+
+## Failure Modes
+
+[Known ways this subsystem breaks and how to fix them. An agent encountering
+these symptoms should try the fix before investigating further. Each failure
+mode gets an ID for test traceability.]
+
+| ID | Symptom | Cause | Fix |
+|---|---|---|---|
+| FAIL-1 | | | |
+
+## Decision Framework
+
+[Situation-keyed recipes for reasoning-required invariants. Converts declarative
+rules into procedural guidance for agents that can follow patterns but cannot
+infer architectural constraints. One entry per reasoning-required invariant.]
+
+| Situation | Action | Invariant |
+|---|---|---|
+| | | INV-N |
+
+## Testing
+
+**Traceability:** Test names encode the spec item ID (`test_invN_description`,
+`test_failN_description`). Items verified by other means should be noted here
+(e.g., "INV-1, INV-5: enforced by `tsc --noEmit`", "FAIL-2: operational —
+not unit-testable"). See CLAUDE.md Testing Convention.
+
+## Dependencies
+
+[What this subsystem depends on — other subsystems, external services,
+libraries. An agent working here should load these SPEC.md files too if
+making changes that cross boundaries.]
+
+| Dependency | Type | SPEC.md Path |
+|---|---|---|
+| | internal/external | |
+````
 
 Present the draft to the developer.
 
@@ -116,7 +221,7 @@ or summarizing verbose sections.
 
 ### Step 6: Update Subsystem Map
 
-Add an entry to the `### Subsystem Map` table in `CLAUDE.md`:
+Create the `### Subsystem Map` section in `CLAUDE.md` if it doesn't exist, then add an entry:
 
 ```markdown
 | [Subsystem Name] | [path/to/directory] | [One-line purpose] |
@@ -124,14 +229,25 @@ Add an entry to the `### Subsystem Map` table in `CLAUDE.md`:
 
 ### Step 7: Update Manifest
 
-Add an entry to the `## Index` table in `docs/specs/MANIFEST.md`:
+If `docs/specs/MANIFEST.md` does not exist, create it:
+
+```markdown
+# Subsystem Specifications
+
+## Index
+
+| Subsystem | SPEC.md Path | Summary |
+|-----------|-------------|---------|
+```
+
+Then add an entry to the `## Index` table:
 
 ```markdown
 | [Subsystem Name] | [path/to/SPEC.md] | [One-line summary] |
 ```
 
-If the spec covers cross-cutting concerns, also add to the
-`## Cross-Cutting Concerns` table.
+If the spec covers cross-cutting concerns, add a `## Cross-Cutting Concerns`
+section (or append to it if it exists).
 
 ## Key Principles
 

@@ -196,6 +196,25 @@ After checking invariants, assess whether the SPEC.md is still current:
 A stale spec is better than no spec — don't block completion on staleness alone.
 Flag it and move on.
 
+> **Intentional redundancy:** This quality gate check may also run during
+> finishing-a-development-branch. Running it in both places is intentional —
+> this skill validates current state, finishing validates branch readiness.
+
+### Quality Gate Check
+
+After SPEC.md invariant checks pass, run the structural quality gate:
+
+```bash
+${CLAUDE_SKILL_DIR}/../../scripts/quality-gate.sh --path "$(git rev-parse --show-toplevel)"
+```
+
+The script checks its own dependencies (uv, Python) and gives clear error
+messages if anything is missing.
+
+If the quality gate reports failures, include them in the verification output.
+Failures in `inv-numbering`, `skill-structure`, and `doc-structure` must block
+completion. Failures in `tool-health` and `issue-tracking` are warnings only.
+
 ```
 SPEC.md invariant check:
 - [path/to/SPEC.md]

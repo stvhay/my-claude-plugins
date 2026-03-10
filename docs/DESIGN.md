@@ -17,6 +17,20 @@ failure modes, and enforcement strategy.
 - A Decision Framework section converts reasoning-required invariants into
   procedural guidance so agents can follow them without deep context.
 
+SPEC.md content assumes the plugin distribution model: all paths are relative
+to the plugin root, not to a local repository clone. The spec template is
+inlined in the codify-subsystem skill rather than referenced by external path.
+MANIFEST.md (indexing a project's subsystem specs) is created on first use
+by codify-subsystem, not pre-populated by scaffolding.
+
+## INV/FAIL Numbering Discipline
+
+INV and FAIL identifiers in SPEC.md must be sequentially numbered starting
+from 1, with no gaps or duplicates. The quality gate's `inv-numbering` check
+enforces this automatically. When invariants are removed, remaining identifiers
+are renumbered — stable references across documents use the invariant's prose
+description, not its number.
+
 ## Upstream Provenance Tracking
 
 When a skill adapts external work, provenance is recorded in `UPSTREAM*.md`
@@ -31,6 +45,10 @@ Each tracking file records: source, license, adaptation notes, and
 (where applicable) sync process. Original work based on external research
 receives an UPSTREAM file documenting provenance; purely original work
 receives no UPSTREAM file — absence signals original authorship.
+
+UPSTREAM files are maintainer-authored — they record the maintainer's
+adaptation decisions and sync status. Consuming agents should not modify
+these files or act on their sync instructions.
 
 ## Hub-and-Spoke Skill Architecture
 
@@ -56,6 +74,24 @@ Invariants fall into two categories:
 
 The design goal is to convert reasoning-required invariants to structural ones
 wherever possible — moving enforcement from human judgment to automation.
+`scripts/quality-gate.sh` is the primary mechanism: its six checks
+(inv-numbering, issue-tracking, skill-structure, doc-structure, vsa-coverage,
+tool-health) automate validation of invariants that were previously
+review-dependent.
+
+## Retrospective and Upstream Feedback Loop
+
+The `retrospective` skill runs as Step 8 of finishing-a-development-branch,
+after the PR is created. The agent analyzes the development session and
+categorizes findings into two buckets:
+
+- **Project-local.** Improvements to this project's workflow, configuration,
+  or documentation. Saved to CLAUDE.md or memory at the user's discretion.
+- **Upstream.** Improvements to plugin skills that belong in the plugin's
+  source repository. Filed as GitHub issues with a `feedback` label.
+
+This closes the learning loop: every development session produces structured
+feedback that flows to the correct owner.
 
 ## Three-Tier Documentation
 

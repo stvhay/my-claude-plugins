@@ -10,9 +10,11 @@ Development workflow skills for Claude Code. Replaces [claude-gh-project-templat
 
 Select `dev-workflow-toolkit` from the plugin list.
 
+**Prerequisites:** [uv](https://docs.astral.sh/uv/) (for quality gate checks). Install: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+
 **Recommended companion:** Install `writing-toolkit` for the `writing-clearly-and-concisely` skill referenced by several workflow skills.
 
-## Skills (16)
+## Skills (18)[^stat-skill-count]
 
 ### Workflow
 
@@ -34,6 +36,7 @@ Select `dev-workflow-toolkit` from the plugin list.
 | `systematic-debugging` | Structured debugging with root-cause tracing |
 | `code-simplification` | Post-verification code cleanup pipeline |
 | `verification-before-completion` | Pre-completion verification gates |
+| `documentation-standards` | Validate and draft project documentation updates |
 
 ### Code Review
 
@@ -49,6 +52,7 @@ Select `dev-workflow-toolkit` from the plugin list.
 | `using-git-worktrees` | Create isolated workspaces |
 | `finishing-a-development-branch` | Branch completion — merge, PR, or cleanup |
 | `codify-subsystem` | Encode subsystem knowledge as SPEC.md |
+| `retrospective` | Post-completion session analysis and upstream feedback |
 
 ## Skill Dependencies
 
@@ -57,14 +61,19 @@ Skills invoke other skills to create workflow orchestration. This prevents circu
 ```
 brainstorming (entry)
   └─> using-git-worktrees (pre-flight, if on main)
+  └─> documentation-standards (draft mode, after design approval)
   └─> ux-design-agent* (optional, for user-facing/agentic designs)
   └─> writing-plans (terminal state)
        └─> executing-plans OR subagent-driven-development
             └─> test-driven-development (during implementation)
             └─> systematic-debugging (when bugs occur)
             └─> verification-before-completion (before completion)
+                 └─> quality-gate.sh (structural checks)
                  └─> code-simplification (after verification passes)
             └─> finishing-a-development-branch (after implementation)
+                 └─> documentation-standards (validate mode, hard gate)
+                 └─> quality-gate.sh (structural checks)
+                 └─> retrospective (after PR, non-blocking)
 
 requesting-code-review (parallel workflow)
   └─> code-reviewer agent (separate invocation)
@@ -77,7 +86,7 @@ dispatching-parallel-agents (standalone)
 
 **\* External dependency:** ux-design-agent is in the ux-toolkit plugin
 
-**Terminal states:** Skills that don't invoke others: `receiving-code-review`, `code-simplification`, `verification-before-completion`, `finishing-a-development-branch`
+**Terminal states:** Skills that don't invoke others: `test-driven-development`, `systematic-debugging`, `using-git-worktrees`, `documentation-standards`, `code-simplification`, `retrospective`, `receiving-code-review`
 
 ## Testing
 
@@ -87,21 +96,18 @@ cd plugins/dev-workflow-toolkit
 ./tests/run-all.sh
 ```
 
-**72 tests** validate:
-- YAML frontmatter in all SKILL.md files (16 tests)
-- Template structure and content (10 tests)
-- RAG configuration generation logic (11 tests)
-- Skill invocation and dependency resolution (35 tests)
-- Template path resolution and substitution
-- MCP server configuration patterns
+**86 tests**[^stat-test-count] across 3 modules[^stat-suite-count]:
+- Structure — frontmatter validation, SPEC.md checks, project-init templates, setup-rag config
+- Integration — skill loading, dependency resolution, trigger patterns, reference files
+- Quality gate — smoke tests, negative fixtures, doc-stats validation
 
 See `tests/README.md` for details.
 
 ## Documentation
 
 - `docs/architecture/` — Design rationale and foundations
-- `docs/spec-template.md` — Template for subsystem specs
 - `docs/FIRST_RUN.md` — Project memory initialization
+- `scripts/quality-gate.sh` — Structural validation (requires uv)
 
 ## Attribution
 
@@ -111,3 +117,7 @@ See `tests/README.md` for details.
 ## License
 
 Apache-2.0
+
+[^stat-skill-count]: stat-check: skill-count
+[^stat-test-count]: stat-check: total-test-count
+[^stat-suite-count]: stat-check: test-suite-count

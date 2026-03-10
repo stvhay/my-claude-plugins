@@ -42,7 +42,19 @@ Cannot proceed with merge/PR until tests pass.
 
 Stop. Don't proceed to Step 2.
 
-**If tests pass:** Continue to Step 2.
+**If tests pass:** Continue to Step 1b.
+
+### Step 1b: Quality Gate
+
+Run the structural quality gate after tests pass:
+
+```bash
+${CLAUDE_SKILL_DIR}/../../scripts/quality-gate.sh --path "$(git rev-parse --show-toplevel)"
+```
+
+Quality gate failures in `inv-numbering`, `skill-structure`, and `doc-structure`
+must be resolved before proceeding. `tool-health` and `issue-tracking` warnings
+can proceed with a note in the PR body.
 
 ### Step 2: Validate Documentation
 
@@ -231,6 +243,14 @@ bd dolt push 2>/dev/null || echo "Beads remote not configured — data persisted
 
 Only close beads scoped to the current branch's work. If no Dolt remote is configured, beads data is still persisted in the local database.
 
+### Step 8: Retrospective
+
+**After all other steps complete,** invoke the retrospective skill.
+
+This step is non-blocking — if the user declines, skip it. The retrospective
+analyzes the session, categorizes findings as project-local or upstream skill
+improvements, and files GitHub issues for upstream items once the user approves.
+
 > **Note:** Step 1 (Verify Tests) and Step 2 (Validate Documentation) run before options are presented. The table below covers Steps 5-7.
 
 ## Quick Reference
@@ -278,6 +298,7 @@ Only close beads scoped to the current branch's work. If no Dolt remote is confi
 
 **Invokes:**
 - **documentation-standards** — Validate mode, hard gate after test verification
+- **retrospective** — Step 8, non-blocking session analysis after PR creation
 
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete

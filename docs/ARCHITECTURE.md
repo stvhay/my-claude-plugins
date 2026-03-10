@@ -42,7 +42,7 @@ Three composition patterns recur across plugins:
 
 2. **Pipeline.** Skills execute in sequence where the output of one feeds the
    next. The dev-workflow-toolkit pipeline: brainstorming, writing-plans,
-   executing-plans, finishing-a-development-branch.
+   executing-plans, finishing-a-development-branch, retrospective.
 
 3. **Cross-cutting technique.** Skills that any other skill may invoke for a
    specific concern: trust-calibration, ux-writing,
@@ -58,10 +58,34 @@ reference — no shared code, no imports.
 modification. This preserves the option to split the mono-repo later without
 a rewrite.
 
+## Quality Gate Automation
+
+`scripts/quality-gate.sh` ships inside dev-workflow-toolkit and runs six
+structural checks against any project using the plugin:
+
+1. **inv-numbering** — INV/FAIL identifiers in SPEC.md are sequentially
+   numbered with no gaps or duplicates.
+2. **issue-tracking** — Branch has a linked GitHub issue and beads tracking.
+3. **skill-structure** — Each skill directory contains a SKILL.md with valid
+   YAML frontmatter and a `name` matching the directory.
+4. **doc-structure** — Required documents (SPEC.md, README.md) exist at their
+   canonical paths.
+5. **vsa-coverage** — Every plugin's skills directory has a SPEC.md.
+6. **tool-health** — Required tools (uv, git) and optional tools (gh, bd) are
+   installed and working.
+
+The script is invoked by verification-before-completion (pre-merge gate),
+finishing-a-development-branch (pre-PR gate), and documentation-standards
+(on-demand audit). This converts several reasoning-required invariants into
+structural ones enforced by automation.
+
 ## Documentation Structure
 
 This document (`docs/ARCHITECTURE.md`) and its companion `docs/DESIGN.md`
 form the project-level tracked documentation tier. They are synthesized from
 plugin-level `skills/SPEC.md` files and updated when structural decisions
-change. See [DESIGN.md](DESIGN.md) for the three-tier documentation model
-and conventions like SPEC.md contracts and upstream provenance tracking.
+change. SPEC.md files define invariants for the plugin distribution model —
+all paths and references assume remote installation, not local clones.
+`scripts/quality-gate.sh` validates structural invariants automatically.
+See [DESIGN.md](DESIGN.md) for the three-tier documentation model, writing
+conventions, and patterns like SPEC.md contracts and upstream provenance.
