@@ -29,3 +29,13 @@ def skills_dir(plugin_root: Path) -> Path:
 @pytest.fixture(scope="session")
 def skill_mds(skills_dir: Path) -> list[Path]:
     return sorted(skills_dir.rglob("SKILL.md"))
+
+
+@pytest.fixture(scope="session")
+def plugins_dir(repo_root: Path) -> Path:
+    return repo_root / "plugins"
+
+
+@pytest.fixture(scope="session")
+def all_plugin_dirs(plugins_dir: Path) -> list[Path]:
+    return sorted(d for d in plugins_dir.iterdir() if d.is_dir())
