@@ -77,7 +77,7 @@ the user is satisfied with the findings.
   # Walk up from the skill that needs improvement to find plugin.json
   # Parse the repo from marketplace.json or plugin metadata
   # The source repo is typically in marketplace.json's plugin entry
-  cat .claude-plugin/marketplace.json 2>/dev/null | grep -o '"repo"[^,]*'
+  cat "$(git rev-parse --show-toplevel)/.claude-plugin/marketplace.json" 2>/dev/null | grep -o '"repo"[^,]*'
   ```
 - If the target repo cannot be determined, ask the user for it
 - Draft an issue for each upstream improvement:
@@ -106,9 +106,12 @@ the user is satisfied with the findings.
   ```
   If the `feedback` label doesn't exist on the target repo, create it first:
   ```bash
-  gh label create "feedback" --description "User feedback from retrospective" \
-    -R <source-repo> 2>/dev/null || true
+  if ! gh label list -R <source-repo> --search "feedback" | grep -q "^feedback"; then
+    gh label create "feedback" --description "User feedback from retrospective" \
+      -R <source-repo>
+  fi
   ```
+  If label creation fails due to permissions, omit the `--label` flag and note it in the issue body instead.
 
 ### Step 5: Complete
 
