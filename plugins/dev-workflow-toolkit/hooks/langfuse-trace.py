@@ -346,7 +346,12 @@ def handle_session_end(client, hook_input):
             totals["cache_read"] += usage.get("cache_read_input_tokens", 0)
             totals["cache_create"] += usage.get("cache_creation_input_tokens", 0)
 
-    with propagate_attributes(
+    # Use observation-level metadata (supports int values) instead of
+    # propagate_attributes metadata (requires string values per SDK validation)
+    obs = client.start_observation(
+        trace_context={"trace_id": trace_id},
+        name="session-summary",
+        as_type="span",
         metadata={
             "total_input_tokens": totals["input"],
             "total_output_tokens": totals["output"],
@@ -355,13 +360,8 @@ def handle_session_end(client, hook_input):
             "total_api_calls": len(state.get("sent_request_ids", [])),
             "reason": hook_input.get("reason", "unknown"),
         },
-    ):
-        obs = client.start_observation(
-            trace_context={"trace_id": trace_id},
-            name="session-summary",
-            as_type="span",
-        )
-        obs.end()
+    )
+    obs.end()
 
     # Clean up state file
     state_path = get_state_path(session_id)
