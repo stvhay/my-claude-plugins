@@ -42,7 +42,10 @@ Three composition patterns recur across plugins:
 
 2. **Pipeline.** Skills execute in sequence where the output of one feeds the
    next. The dev-workflow-toolkit pipeline: brainstorming, writing-plans,
-   executing-plans, finishing-a-development-branch, retrospective.
+   executing-plans, finishing-a-development-branch, retrospective. The
+   thinking-toolkit pipeline: ideate/first-principles → heilmeier-catechism
+   → brainstorming (evaluative assessment bridging divergent thinking and
+   design commitment).
 
 3. **Cross-cutting technique.** Skills that any other skill may invoke for a
    specific concern: trust-calibration, ux-writing,
