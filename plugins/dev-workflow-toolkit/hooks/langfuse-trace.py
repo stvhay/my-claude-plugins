@@ -456,21 +456,14 @@ def check_health():
 
 
 def main():
-    # Hard timeout to avoid being killed by Claude Code's hook timeout
+    # Hard timeout — this runs as a background process but still shouldn't hang
     signal.alarm(HOOK_TIMEOUT_SECONDS)
 
     hook_input = json.loads(sys.stdin.read())
     event = hook_input.get("hook_event_name", "")
     session_id = hook_input.get("session_id", "")
 
-    # On SessionStart, run fast health check (output goes to agent context)
-    if event == "SessionStart":
-        msg = check_health()
-        if msg:
-            print(msg)
-        if not is_configured():
-            sys.exit(0)
-    elif not is_configured():
+    if not is_configured():
         sys.exit(0)
 
     client = Langfuse()
