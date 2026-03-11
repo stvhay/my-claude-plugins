@@ -19,6 +19,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 # Route SDK/OTel warnings to stderr so the shell wrapper can detect failures
@@ -397,67 +398,29 @@ def get_sentinel_path():
     return get_cache_dir() / "error-flag"
 
 
+MAX_ERROR_FILES = 50
+
+
 def record_error(event, session_id, error):
-    """Write a per-call error file and touch the sentinel."""
-    import time
+    """Write a per-call error file and touch the sentinel.
+
+    Keeps at most MAX_ERROR_FILES error logs, removing oldest when exceeded.
+    """
+    session_id = session_id or ""
     errors_dir = get_errors_dir()
-    ts = time.strftime("%Y%m%d-%H%M%S")
+    ts = f"{time.strftime('%Y%m%d-%H%M%S')}_{time.monotonic_ns()}"
     filename = f"{ts}_{event}_{session_id[:8]}.log"
     (errors_dir / filename).write_text(f"{event}: {error}\n")
     get_sentinel_path().touch()
+    # Rotate: keep only the newest MAX_ERROR_FILES
+    try:
+        files = sorted(errors_dir.iterdir())
+        for old in files[:-MAX_ERROR_FILES]:
+            old.unlink(missing_ok=True)
+    except OSError:
+        pass
     # Also log to stderr (captured by shell wrapper)
     print(f"langfuse-hook error: {error}", file=sys.stderr)
-
-
-def check_health():
-    """Fast health check for SessionStart. Returns a message or None.
-
-    Checks: sentinel exists → env vars set → venv ready.
-    """
-    cache_dir = get_cache_dir()
-
-    # Fast path: no sentinel, no problems reported
-    sentinel = get_sentinel_path()
-    has_errors = sentinel.exists()
-
-    # Check env vars (cheap — just dict lookups)
-    missing = [
-        k for k in ("LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY", "LANGFUSE_HOST")
-        if not os.environ.get(k)
-    ]
-    if missing:
-        return (
-            f"langfuse-hook: missing env vars: {', '.join(missing)}. "
-            "Set these in your shell profile or .env to enable tracing."
-        )
-
-    # Check venv
-    venv_dir = os.environ.get("LANGFUSE_HOOK_VENV",
-                              str(cache_dir / "venv"))
-    python = Path(venv_dir) / "bin" / "python3"
-    if not python.exists():
-        return (
-            "langfuse-hook: venv not ready. "
-            "It will auto-bootstrap on next hook invocation."
-        )
-
-    # Check error sentinel
-    if has_errors:
-        errors_dir = cache_dir / "errors"
-        try:
-            error_files = sorted(errors_dir.iterdir())
-            count = len(error_files)
-            latest = error_files[-1].read_text().strip() if error_files else ""
-            return (
-                f"langfuse-hook: {count} error(s) logged. "
-                f"Latest: {latest}\n"
-                f"Error dir: {errors_dir}\n"
-                f"Clear with: rm {sentinel}"
-            )
-        except OSError:
-            return f"langfuse-hook: errors detected. Check {cache_dir / 'errors'}/"
-
-    return None
 
 
 def main():
