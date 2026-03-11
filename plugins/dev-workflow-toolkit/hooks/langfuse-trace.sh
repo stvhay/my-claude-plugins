@@ -11,5 +11,6 @@ PYTHON="$REPO_ROOT/.venv/bin/python3"
 # Read stdin once (hook input JSON)
 INPUT="$(cat)"
 
-# Never block Claude Code
-echo "$INPUT" | "$PYTHON" "$HOOK_DIR/langfuse-trace.py" 2>/dev/null || true
+# Log errors for debugging but never block Claude Code
+LOG="/tmp/langfuse-hook-$(id -u)-errors.log"
+echo "$INPUT" | "$PYTHON" "$HOOK_DIR/langfuse-trace.py" 2>>"$LOG" || true

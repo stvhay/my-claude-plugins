@@ -16,6 +16,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 from langfuse import Langfuse, propagate_attributes
@@ -103,8 +104,16 @@ def extract_text_output(content_blocks):
 # -- State management (track which requestIds have been shipped) --
 
 
+def get_state_dir():
+    """Get a user-private directory for hook state files."""
+    state_dir = Path(tempfile.gettempdir()) / f"langfuse-hook-{os.getuid()}"
+    if not state_dir.exists():
+        state_dir.mkdir(mode=0o700)
+    return state_dir
+
+
 def get_state_path(session_id):
-    return Path(f"/tmp/langfuse-hook-{session_id}.json")
+    return get_state_dir() / f"{session_id}.json"
 
 
 def load_state(session_id):
@@ -122,6 +131,11 @@ def save_state(session_id, state):
 
 
 # -- Trace context --
+
+
+def build_tags(*values):
+    """Build a tag list, filtering out empty/falsy values."""
+    return [v for v in values if v]
 
 
 def get_trace_context(session_id):
@@ -216,8 +230,8 @@ def handle_session_start(client, hook_input):
 
     with propagate_attributes(
         trace_name=f"claude-code-{source}",
-        session_id=ctx["git_branch"] or "no-branch",
-        tags=[ctx["source_project"], model, ctx["git_branch"] or "no-branch"],
+        session_id=ctx["git_branch"] or session_id,
+        tags=build_tags(ctx["source_project"], model, ctx["git_branch"]),
         metadata={
             "source_project": ctx["source_project"],
             "model": model,
@@ -255,8 +269,8 @@ def handle_post_tool_use(client, hook_input):
     if not state.get("trace_id"):
         with propagate_attributes(
             trace_name="claude-code-session",
-            session_id=ctx["git_branch"] or "no-branch",
-            tags=[ctx["source_project"], ctx["git_branch"] or "no-branch"],
+            session_id=ctx["git_branch"] or session_id,
+            tags=build_tags(ctx["source_project"], ctx["git_branch"]),
             metadata={
                 "source_project": ctx["source_project"],
                 "git_branch": ctx["git_branch"],
@@ -297,7 +311,7 @@ def handle_subagent_stop(client, hook_input):
         metadata={"agent_id": agent_id, "agent_type": agent_type},
     )
 
-    parent_span_id = format(agent_span._span.context.span_id, "016x")
+    parent_span_id = agent_span.id
 
     sent_ids = ship_transcript_data(
         client, trace_id, agent_transcript, sent_ids,
@@ -314,25 +328,23 @@ def handle_session_end(client, hook_input):
     session_id = hook_input.get("session_id", "")
     transcript_path = hook_input.get("transcript_path", "")
 
-    # Ship any remaining data
+    # Ship any remaining data from main transcript
     if transcript_path:
         handle_post_tool_use(client, hook_input)
 
+    # Re-load state once (handle_post_tool_use already saved it)
     state = load_state(session_id)
     trace_id = state.get("trace_id") or Langfuse.create_trace_id(seed=session_id)
 
-    # Compute totals and update trace metadata
-    assistant_msgs = []
-    if transcript_path:
-        assistant_msgs = read_transcript_messages(transcript_path, "assistant")
-
+    # Compute totals from main transcript only (subagent transcripts are separate)
     totals = {"input": 0, "output": 0, "cache_read": 0, "cache_create": 0}
-    for msg in assistant_msgs:
-        usage = msg.get("message", {}).get("usage", {})
-        totals["input"] += usage.get("input_tokens", 0)
-        totals["output"] += usage.get("output_tokens", 0)
-        totals["cache_read"] += usage.get("cache_read_input_tokens", 0)
-        totals["cache_create"] += usage.get("cache_creation_input_tokens", 0)
+    if transcript_path:
+        for msg in read_transcript_messages(transcript_path, "assistant"):
+            usage = msg.get("message", {}).get("usage", {})
+            totals["input"] += usage.get("input_tokens", 0)
+            totals["output"] += usage.get("output_tokens", 0)
+            totals["cache_read"] += usage.get("cache_read_input_tokens", 0)
+            totals["cache_create"] += usage.get("cache_creation_input_tokens", 0)
 
     with propagate_attributes(
         metadata={
@@ -340,7 +352,7 @@ def handle_session_end(client, hook_input):
             "total_output_tokens": totals["output"],
             "total_cache_read_tokens": totals["cache_read"],
             "total_cache_creation_tokens": totals["cache_create"],
-            "total_api_calls": len(assistant_msgs),
+            "total_api_calls": len(state.get("sent_request_ids", [])),
             "reason": hook_input.get("reason", "unknown"),
         },
     ):
