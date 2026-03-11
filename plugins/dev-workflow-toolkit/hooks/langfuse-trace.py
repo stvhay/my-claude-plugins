@@ -20,6 +20,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Route SDK/OTel warnings to stderr so the shell wrapper can detect failures
@@ -160,20 +161,75 @@ def get_trace_context(session_id):
 # -- Shipping observations --
 
 
+def parse_timestamp(ts_str):
+    """Parse an ISO 8601 timestamp string to a datetime object."""
+    if not ts_str:
+        return None
+    try:
+        # Handle "2026-03-11T12:43:40.155Z" format
+        return datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+    except (ValueError, AttributeError):
+        return None
+
+
+def extract_user_input(content):
+    """Extract text from a user message's content (string or content blocks)."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        texts = []
+        for block in content:
+            if isinstance(block, dict):
+                if block.get("type") == "text":
+                    texts.append(block.get("text", ""))
+                elif block.get("type") == "tool_result":
+                    # Skip tool results — they're tracked as tool observations
+                    continue
+        return "\n".join(texts) if texts else None
+    return None
+
+
+def read_all_messages(transcript_path):
+    """Read all messages from a transcript JSONL file in order."""
+    messages = []
+    path = Path(transcript_path)
+    if not path.exists():
+        return messages
+    with open(path) as f:
+        for line in f:
+            try:
+                obj = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if obj.get("type") in ("user", "assistant"):
+                messages.append(obj)
+    return messages
+
+
 def ship_transcript_data(client, trace_id, transcript_path, sent_ids,
                          parent_span_id=None):
     """Ship new generations and tool observations from a transcript.
 
     Returns the updated set of sent request IDs.
     """
-    assistant_msgs = read_transcript_messages(transcript_path, "assistant")
+    all_msgs = read_all_messages(transcript_path)
     tool_results = get_tool_results(transcript_path)
 
     trace_ctx = {"trace_id": trace_id}
     if parent_span_id:
         trace_ctx["parent_span_id"] = parent_span_id
 
-    for msg in assistant_msgs:
+    # Track preceding user message for each assistant message
+    last_user_input = None
+    last_user_ts = None
+    for msg in all_msgs:
+        if msg.get("type") == "user":
+            user_content = msg.get("message", {}).get("content", "")
+            last_user_input = extract_user_input(user_content)
+            last_user_ts = parse_timestamp(msg.get("timestamp"))
+            continue
+
+        # Assistant message
         request_id = msg.get("requestId")
         if not request_id or request_id in sent_ids:
             continue
@@ -181,16 +237,18 @@ def ship_transcript_data(client, trace_id, transcript_path, sent_ids,
         api_msg = msg.get("message", {})
         usage = api_msg.get("usage", {})
         content_blocks = api_msg.get("content", [])
+        assistant_ts = parse_timestamp(msg.get("timestamp"))
 
-        # Ship generation
-        gen = client.start_observation(
-            trace_context=trace_ctx,
-            name="llm-call",
-            as_type="generation",
-            model=api_msg.get("model", "unknown"),
-            usage_details=extract_usage(usage),
-            output=extract_text_output(content_blocks),
-            metadata={
+        # Ship generation with user input, assistant output, and timing
+        gen_kwargs = {
+            "trace_context": trace_ctx,
+            "name": "llm-call",
+            "as_type": "generation",
+            "model": api_msg.get("model", "unknown"),
+            "usage_details": extract_usage(usage),
+            "input": last_user_input,
+            "output": extract_text_output(content_blocks),
+            "metadata": {
                 "request_id": request_id,
                 "stop_reason": api_msg.get("stop_reason"),
                 "service_tier": usage.get("service_tier"),
@@ -198,7 +256,14 @@ def ship_transcript_data(client, trace_id, transcript_path, sent_ids,
                     "cache_creation_input_tokens", 0
                 ),
             },
-        )
+        }
+        # Use user message timestamp as start, assistant timestamp as end
+        if last_user_ts:
+            gen_kwargs["start_time"] = last_user_ts
+        if assistant_ts:
+            gen_kwargs["end_time"] = assistant_ts
+
+        gen = client.start_observation(**gen_kwargs)
         gen.end()
 
         # Ship tool calls
@@ -238,12 +303,15 @@ def handle_session_start(client, hook_input):
     with propagate_attributes(
         trace_name=f"claude-code-{source}",
         session_id=ctx["git_branch"] or session_id,
-        tags=build_tags(ctx["source_project"], model, ctx["git_branch"]),
+        tags=build_tags(ctx["source_project"], model, ctx["git_branch"],
+                        hook_input.get("permission_mode", "")),
         metadata={
             "source_project": ctx["source_project"],
             "model": model,
             "git_branch": ctx["git_branch"],
             "source": source,
+            "cwd": hook_input.get("cwd", ""),
+            "permission_mode": hook_input.get("permission_mode", ""),
             "claude_version": hook_input.get("version", ""),
         },
     ):
@@ -277,10 +345,13 @@ def handle_post_tool_use(client, hook_input):
         with propagate_attributes(
             trace_name="claude-code-session",
             session_id=ctx["git_branch"] or session_id,
-            tags=build_tags(ctx["source_project"], ctx["git_branch"]),
+            tags=build_tags(ctx["source_project"], ctx["git_branch"],
+                            hook_input.get("permission_mode", "")),
             metadata={
                 "source_project": ctx["source_project"],
                 "git_branch": ctx["git_branch"],
+                "cwd": hook_input.get("cwd", ""),
+                "permission_mode": hook_input.get("permission_mode", ""),
             },
         ):
             obs = client.start_observation(
@@ -311,11 +382,17 @@ def handle_subagent_stop(client, hook_input):
     sent_ids = set(state.get("sent_request_ids", []))
 
     # Create parent agent span
+    last_message = hook_input.get("last_assistant_message", "")
     agent_span = client.start_observation(
         trace_context={"trace_id": trace_id},
         name=f"subagent-{agent_type}",
         as_type="agent",
-        metadata={"agent_id": agent_id, "agent_type": agent_type},
+        output=last_message or None,
+        metadata={
+            "agent_id": agent_id,
+            "agent_type": agent_type,
+            "stop_hook_active": hook_input.get("stop_hook_active", False),
+        },
     )
 
     sent_ids = ship_transcript_data(
@@ -353,6 +430,9 @@ def handle_session_end(client, hook_input):
 
     # Use observation-level metadata (supports int values) instead of
     # propagate_attributes metadata (requires string values per SDK validation)
+    total_input = totals["input"] + totals["cache_read"] + totals["cache_create"]
+    cache_hit_rate = (totals["cache_read"] / total_input) if total_input > 0 else 0.0
+
     obs = client.start_observation(
         trace_context={"trace_id": trace_id},
         name="session-summary",
@@ -362,8 +442,11 @@ def handle_session_end(client, hook_input):
             "total_output_tokens": totals["output"],
             "total_cache_read_tokens": totals["cache_read"],
             "total_cache_creation_tokens": totals["cache_create"],
+            "cache_hit_rate": round(cache_hit_rate, 3),
             "total_api_calls": len(state.get("sent_request_ids", [])),
             "reason": hook_input.get("reason", "unknown"),
+            "cwd": hook_input.get("cwd", ""),
+            "permission_mode": hook_input.get("permission_mode", ""),
         },
     )
     obs.end()
