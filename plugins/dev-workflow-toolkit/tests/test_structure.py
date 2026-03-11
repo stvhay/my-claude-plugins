@@ -342,7 +342,11 @@ PLUGINS_WITH_UPSTREAM = {
     "writing-toolkit": ["UPSTREAM-strunk.md"],
     "multi-agent-toolkit": ["UPSTREAM-council.md"],
     "redteam": ["UPSTREAM-redteam.md"],
-    "thinking-toolkit": ["UPSTREAM-first-principles.md"],
+    "thinking-toolkit": [
+        "UPSTREAM-first-principles.md",
+        "UPSTREAM-heilmeier-catechism.md",
+        "UPSTREAM-arpa-h-hidden-questions.md",
+    ],
 }
 
 
