@@ -3,6 +3,11 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.6.4
+
+Fix: auto-bootstrap venv in background on first run. Skips current
+invocation but venv is ready for the next hook call.
+
 ## v1.6.3
 
 Fix: add 8-second SIGALRM timeout to Python hook to prevent Claude Code
