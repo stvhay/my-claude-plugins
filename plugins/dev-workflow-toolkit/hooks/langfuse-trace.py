@@ -16,14 +16,9 @@ import json
 import os
 import subprocess
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
-from base64 import b64encode
-from urllib.request import Request, urlopen
-from urllib.error import URLError
-
-from langfuse import Langfuse
+from langfuse import Langfuse, propagate_attributes
 
 
 def is_configured():
@@ -126,75 +121,22 @@ def save_state(session_id, state):
     get_state_path(session_id).write_text(json.dumps(state))
 
 
-# -- Trace-level updates via ingestion (SDK pattern) --
+# -- Trace context --
 
 
-def update_trace(trace_id, **kwargs):
-    """Update trace attributes via the ingestion API (upsert).
-
-    Uses raw HTTP to avoid SDK internal API instability.
-    SDK handles observations; this handles trace-level metadata.
-    """
-    host = os.environ["LANGFUSE_HOST"].rstrip("/")
-    creds = b64encode(
-        f"{os.environ['LANGFUSE_PUBLIC_KEY']}:{os.environ['LANGFUSE_SECRET_KEY']}".encode()
-    ).decode()
-
-    # Map python snake_case to API camelCase
-    body = {"id": trace_id}
-    key_map = {"session_id": "sessionId", "user_id": "userId"}
-    for k, v in kwargs.items():
-        body[key_map.get(k, k)] = v
-
-    payload = json.dumps({"batch": [{
-        "id": Langfuse.create_trace_id(),
-        "type": "trace-create",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "body": body,
-    }]}).encode()
-
-    req = Request(
-        f"{host}/api/public/ingestion",
-        data=payload,
-        headers={"Content-Type": "application/json", "Authorization": f"Basic {creds}"},
-        method="POST",
-    )
-    try:
-        with urlopen(req, timeout=5):
-            pass
-    except (URLError, TimeoutError):
-        pass  # non-critical, trace data will still arrive via observations
-
-
-# -- Hook handlers --
-
-
-def handle_session_start(client, hook_input):
-    """Create a Langfuse trace for this session."""
-    session_id = hook_input.get("session_id", "")
-    model = hook_input.get("model", "unknown")
-    source = hook_input.get("source", "startup")
+def get_trace_context(session_id):
+    """Build trace_id and propagate_attributes kwargs for a session."""
+    trace_id = Langfuse.create_trace_id(seed=session_id)
     git_branch = get_git_branch()
     source_project = get_source_project()
-    trace_id = Langfuse.create_trace_id(seed=session_id)
+    return {
+        "trace_id": trace_id,
+        "git_branch": git_branch,
+        "source_project": source_project,
+    }
 
-    update_trace(
-        trace_id,
-        name=f"claude-code-{source}",
-        session_id=git_branch or "no-branch",
-        tags=[source_project, model, git_branch or "no-branch"],
-        metadata={
-            "source_project": source_project,
-            "model": model,
-            "git_branch": git_branch,
-            "source": source,
-            "claude_version": hook_input.get("version", ""),
-        },
-    )
 
-    state = load_state(session_id)
-    state["trace_id"] = trace_id
-    save_state(session_id, state)
+# -- Shipping observations --
 
 
 def ship_transcript_data(client, trace_id, transcript_path, sent_ids,
@@ -262,6 +204,41 @@ def ship_transcript_data(client, trace_id, transcript_path, sent_ids,
     return sent_ids
 
 
+# -- Hook handlers --
+
+
+def handle_session_start(client, hook_input):
+    """Create a Langfuse trace for this session."""
+    session_id = hook_input.get("session_id", "")
+    model = hook_input.get("model", "unknown")
+    source = hook_input.get("source", "startup")
+    ctx = get_trace_context(session_id)
+
+    with propagate_attributes(
+        trace_name=f"claude-code-{source}",
+        session_id=ctx["git_branch"] or "no-branch",
+        tags=[ctx["source_project"], model, ctx["git_branch"] or "no-branch"],
+        metadata={
+            "source_project": ctx["source_project"],
+            "model": model,
+            "git_branch": ctx["git_branch"],
+            "source": source,
+            "claude_version": hook_input.get("version", ""),
+        },
+    ):
+        # Create a root span to establish the trace
+        obs = client.start_observation(
+            trace_context={"trace_id": ctx["trace_id"]},
+            name=f"claude-code-{source}",
+            as_type="span",
+        )
+        obs.end()
+
+    state = load_state(session_id)
+    state["trace_id"] = ctx["trace_id"]
+    save_state(session_id, state)
+
+
 def handle_post_tool_use(client, hook_input):
     """Ship new generations and tool observations since last hook call."""
     session_id = hook_input.get("session_id", "")
@@ -270,21 +247,27 @@ def handle_post_tool_use(client, hook_input):
         return
 
     state = load_state(session_id)
-    trace_id = state.get("trace_id") or Langfuse.create_trace_id(seed=session_id)
+    ctx = get_trace_context(session_id)
+    trace_id = state.get("trace_id") or ctx["trace_id"]
     sent_ids = set(state.get("sent_request_ids", []))
 
     # Ensure trace exists if SessionStart didn't fire
     if not state.get("trace_id"):
-        git_branch = get_git_branch()
-        source_project = get_source_project()
-        update_trace(
-            client,
-            trace_id,
-            name="claude-code-session",
-            session_id=git_branch or "no-branch",
-            tags=[source_project, git_branch or "no-branch"],
-            metadata={"source_project": source_project, "git_branch": git_branch},
-        )
+        with propagate_attributes(
+            trace_name="claude-code-session",
+            session_id=ctx["git_branch"] or "no-branch",
+            tags=[ctx["source_project"], ctx["git_branch"] or "no-branch"],
+            metadata={
+                "source_project": ctx["source_project"],
+                "git_branch": ctx["git_branch"],
+            },
+        ):
+            obs = client.start_observation(
+                trace_context={"trace_id": trace_id},
+                name="claude-code-session",
+                as_type="span",
+            )
+            obs.end()
         state["trace_id"] = trace_id
 
     sent_ids = ship_transcript_data(client, trace_id, transcript_path, sent_ids)
@@ -314,7 +297,6 @@ def handle_subagent_stop(client, hook_input):
         metadata={"agent_id": agent_id, "agent_type": agent_type},
     )
 
-    # Get the OTEL span ID to use as parent for nested observations
     parent_span_id = format(agent_span._span.context.span_id, "016x")
 
     sent_ids = ship_transcript_data(
@@ -339,7 +321,7 @@ def handle_session_end(client, hook_input):
     state = load_state(session_id)
     trace_id = state.get("trace_id") or Langfuse.create_trace_id(seed=session_id)
 
-    # Compute totals for trace metadata
+    # Compute totals and update trace metadata
     assistant_msgs = []
     if transcript_path:
         assistant_msgs = read_transcript_messages(transcript_path, "assistant")
@@ -352,8 +334,7 @@ def handle_session_end(client, hook_input):
         totals["cache_read"] += usage.get("cache_read_input_tokens", 0)
         totals["cache_create"] += usage.get("cache_creation_input_tokens", 0)
 
-    update_trace(
-        trace_id,
+    with propagate_attributes(
         metadata={
             "total_input_tokens": totals["input"],
             "total_output_tokens": totals["output"],
@@ -362,7 +343,13 @@ def handle_session_end(client, hook_input):
             "total_api_calls": len(assistant_msgs),
             "reason": hook_input.get("reason", "unknown"),
         },
-    )
+    ):
+        obs = client.start_observation(
+            trace_context={"trace_id": trace_id},
+            name="session-summary",
+            as_type="span",
+        )
+        obs.end()
 
     # Clean up state file
     state_path = get_state_path(session_id)
