@@ -2,12 +2,8 @@
 
 import importlib.util
 import json
-import os
-import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 # Import the module from its hyphenated filename
 _spec = importlib.util.spec_from_file_location(
@@ -38,11 +34,6 @@ handle_session_end = _mod.handle_session_end
 
 
 # -- Fixtures --
-
-
-@pytest.fixture
-def transcript_dir(tmp_path):
-    return tmp_path
 
 
 def write_transcript(path, messages):
@@ -191,8 +182,8 @@ class TestExtractTextOutput:
 
 
 class TestReadTranscriptMessages:
-    def test_reads_assistant_messages(self, transcript_dir):
-        path = transcript_dir / "transcript.jsonl"
+    def test_reads_assistant_messages(self, tmp_path):
+        path = tmp_path / "transcript.jsonl"
         write_transcript(path, [
             make_assistant_msg("req1"),
             make_user_msg(),
@@ -202,8 +193,8 @@ class TestReadTranscriptMessages:
         assert len(msgs) == 2
         assert msgs[0]["requestId"] == "req1"
 
-    def test_reads_user_messages(self, transcript_dir):
-        path = transcript_dir / "transcript.jsonl"
+    def test_reads_user_messages(self, tmp_path):
+        path = tmp_path / "transcript.jsonl"
         write_transcript(path, [
             make_assistant_msg("req1"),
             make_user_msg([make_tool_result("t1")]),
@@ -214,16 +205,16 @@ class TestReadTranscriptMessages:
     def test_missing_file(self):
         assert read_transcript_messages("/nonexistent/path.jsonl") == []
 
-    def test_malformed_json(self, transcript_dir):
-        path = transcript_dir / "transcript.jsonl"
+    def test_malformed_json(self, tmp_path):
+        path = tmp_path / "transcript.jsonl"
         path.write_text('{"type":"assistant"}\n{bad json}\n{"type":"assistant"}\n')
         msgs = read_transcript_messages(str(path), "assistant")
         assert len(msgs) == 2
 
 
 class TestGetToolResults:
-    def test_indexes_by_tool_use_id(self, transcript_dir):
-        path = transcript_dir / "transcript.jsonl"
+    def test_indexes_by_tool_use_id(self, tmp_path):
+        path = tmp_path / "transcript.jsonl"
         write_transcript(path, [
             make_user_msg([
                 make_tool_result("t1", "output1"),
@@ -268,8 +259,8 @@ class TestStateManagement:
 
 
 class TestShipTranscriptData:
-    def test_ships_new_generations_and_tools(self, transcript_dir):
-        path = transcript_dir / "transcript.jsonl"
+    def test_ships_new_generations_and_tools(self, tmp_path):
+        path = tmp_path / "transcript.jsonl"
         tool = make_tool_use("t1", "Bash", {"command": "ls"})
         write_transcript(path, [
             make_assistant_msg("req1", tool_uses=[tool]),
@@ -290,16 +281,16 @@ class TestShipTranscriptData:
         assert calls[1].kwargs["as_type"] == "tool"
         assert calls[1].kwargs["name"] == "Bash"
 
-    def test_skips_already_sent(self, transcript_dir):
-        path = transcript_dir / "transcript.jsonl"
+    def test_skips_already_sent(self, tmp_path):
+        path = tmp_path / "transcript.jsonl"
         write_transcript(path, [make_assistant_msg("req1")])
 
         client = MagicMock()
         sent = ship_transcript_data(client, "trace123", str(path), {"req1"})
         assert client.start_observation.call_count == 0
 
-    def test_passes_parent_span_id(self, transcript_dir):
-        path = transcript_dir / "transcript.jsonl"
+    def test_passes_parent_span_id(self, tmp_path):
+        path = tmp_path / "transcript.jsonl"
         write_transcript(path, [make_assistant_msg("req1")])
 
         client = MagicMock()
@@ -312,8 +303,8 @@ class TestShipTranscriptData:
         call_kwargs = client.start_observation.call_args_list[0].kwargs
         assert call_kwargs["trace_context"]["parent_span_id"] == "parent456"
 
-    def test_marks_error_tools(self, transcript_dir):
-        path = transcript_dir / "transcript.jsonl"
+    def test_marks_error_tools(self, tmp_path):
+        path = tmp_path / "transcript.jsonl"
         tool = make_tool_use("t1", "Bash")
         write_transcript(path, [
             make_assistant_msg("req1", tool_uses=[tool]),
@@ -334,8 +325,8 @@ class TestShipTranscriptData:
 
 
 class TestHandleSubagentStop:
-    def test_uses_observation_id(self, transcript_dir):
-        path = transcript_dir / "transcript.jsonl"
+    def test_uses_observation_id(self, tmp_path):
+        path = tmp_path / "transcript.jsonl"
         write_transcript(path, [make_assistant_msg("req1")])
 
         client = MagicMock()
@@ -381,9 +372,9 @@ class TestHandleSessionEnd:
 
         assert not state_file.exists()
 
-    def test_totals_from_main_transcript_only(self, tmp_path, transcript_dir):
+    def test_totals_from_main_transcript_only(self, tmp_path):
         """Verify session-end totals come from main transcript, not subagent."""
-        main_path = transcript_dir / "main.jsonl"
+        main_path = tmp_path / "main.jsonl"
         write_transcript(main_path, [
             make_assistant_msg("req1", usage={
                 "input_tokens": 100, "output_tokens": 50,

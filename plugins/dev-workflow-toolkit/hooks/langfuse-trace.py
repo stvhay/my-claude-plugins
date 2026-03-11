@@ -311,11 +311,9 @@ def handle_subagent_stop(client, hook_input):
         metadata={"agent_id": agent_id, "agent_type": agent_type},
     )
 
-    parent_span_id = agent_span.id
-
     sent_ids = ship_transcript_data(
         client, trace_id, agent_transcript, sent_ids,
-        parent_span_id=parent_span_id,
+        parent_span_id=agent_span.id,
     )
     agent_span.end()
 
