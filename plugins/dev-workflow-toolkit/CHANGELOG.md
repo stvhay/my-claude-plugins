@@ -3,6 +3,11 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.6.1
+
+Fix: removed explicit hooks manifest reference that caused duplicate
+hooks error. The `hooks/hooks.json` file is auto-loaded by convention.
+
 ## v1.6.0
 
 ### Langfuse tracing hooks

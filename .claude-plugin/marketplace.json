@@ -61,7 +61,7 @@
     {
       "name": "dev-workflow-toolkit",
       "description": "Development workflow skills: brainstorming, planning, execution, debugging, testing, code review, and project scaffolding",
-      "version": "1.6.0",
+      "version": "1.6.1",
       "license": "Apache-2.0",
       "source": "./plugins/dev-workflow-toolkit"
     }
