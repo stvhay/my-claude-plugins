@@ -22,3 +22,11 @@ MEMORY.md
 *.db
 
 docs/plans
+
+# Machine-specific
+.mcp.json
+.issue
+
+# Ragling (reproducible clone + config with absolute paths)
+.ragling/
+ragling.json
