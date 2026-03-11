@@ -21,6 +21,7 @@
               uv
               python313
               ruff
+              nodejs_22
             ];
             shellHook = ''
               true

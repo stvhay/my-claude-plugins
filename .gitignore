@@ -6,6 +6,7 @@
 
 # Nix / direnv
 .direnv/
+.envrc.local.d/
 result
 
 # Worktrees
@@ -22,3 +23,15 @@ MEMORY.md
 *.db
 
 docs/plans
+
+# Machine-specific
+.mcp.json
+.issue
+
+# Ragling (reproducible clone + config with absolute paths)
+.ragling/
+ragling.json
+
+# Skills (installed locally per-machine)
+.agents/
+skills-lock.json
