@@ -54,6 +54,19 @@ Select `dev-workflow-toolkit` from the plugin list.
 | `codify-subsystem` | Encode subsystem knowledge as SPEC.md |
 | `retrospective` | Post-completion session analysis and upstream feedback |
 
+## Hooks
+
+The plugin registers hooks via `hooks/hooks.json` for Langfuse tracing:
+
+| Hook Event | What It Ships |
+|---|---|
+| `SessionStart` | Creates trace with name, session_id (git branch), tags |
+| `PostToolUse` / `PostToolUseFailure` | LLM generations (model, tokens, cost) + tool observations |
+| `SubagentStop` | Parent agent span with nested observations |
+| `SessionEnd` | Summary span with totals; cleans up state |
+
+**Setup:** Set `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_HOST`, and `LANGFUSE_SOURCE_PROJECT` env vars. The hook bootstraps its own venv at `~/.cache/langfuse-hook/venv/` on first run.
+
 ## Skill Dependencies
 
 Skills invoke other skills to create workflow orchestration. This prevents circular invocations:

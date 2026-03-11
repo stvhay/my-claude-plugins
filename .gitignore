@@ -6,6 +6,7 @@
 
 # Nix / direnv
 .direnv/
+.envrc.local.d/
 result
 
 # Worktrees
@@ -30,3 +31,7 @@ docs/plans
 # Ragling (reproducible clone + config with absolute paths)
 .ragling/
 ragling.json
+
+# Skills (installed locally per-machine)
+.agents/
+skills-lock.json
