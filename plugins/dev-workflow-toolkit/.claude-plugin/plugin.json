@@ -3,6 +3,5 @@
   "description": "Development workflow skills: brainstorming, planning, execution, debugging, testing, code review, project scaffolding, retrospective, and automated quality gates",
   "version": "1.6.0",
   "author": { "name": "stvhay" },
-  "license": "Apache-2.0",
-  "hooks": "./hooks/hooks.json"
+  "license": "Apache-2.0"
 }
