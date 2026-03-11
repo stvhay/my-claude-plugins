@@ -61,7 +61,7 @@ Plans and other working documents go under `.claude/` which is fully gitignored:
 
 ## Lessons Learned
 
-<!-- Add project-specific lessons as they arise. -->
+- **Always use `finishing-a-development-branch` before creating PRs.** Its documentation gate (Step 2) validates README.md, ARCHITECTURE.md, and DESIGN.md against the changes. Skipping it leads to stale docs that must be patched post-merge (see heilmeier-catechism PR #42).
 
 ## Contributing
 
