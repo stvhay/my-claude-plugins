@@ -3,6 +3,11 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.6.2
+
+Fix: hook no longer auto-bootstraps venv during SessionStart. Prevents
+blocking Claude Code if pip install hangs on slow networks.
+
 ## v1.6.1
 
 Fix: removed explicit hooks manifest reference that caused duplicate
