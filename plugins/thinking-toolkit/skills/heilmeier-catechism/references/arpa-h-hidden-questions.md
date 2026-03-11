@@ -82,17 +82,17 @@ Also address:
 
 *Considerations: Are the main technical and scientific risks identified and addressed? Are all other major types of risks (clinical, managerial, translational, economic, environmental) considered? Are risk likelihoods and severities estimated, and are there plans to manage or mitigate those risks?*
 
-## 6. How long will the program take?
+## 6. How much will the program cost?
 
-**Recommended practice: programs usually last 3-5 years.** Typical programs are phased (two or three phases) to break an aggressive mission into tractable pieces and allow for go/no-go gates where unsuccessful ideas/teams no longer continue. Consider what capabilities performers must achieve at each phase. (Often displayed in table format with HQ7 and/or HQ8.)
-
-*Considerations: Is the timeline aggressive but in the realm of the possible? Have you justified the schedule for all expected phases? What are the main drivers that might accelerate or decelerate this timeline?*
-
-## 7. How much will the program cost?
-
-**Break down costs by phase and significant task area.** Provide brief justification for the expenses. (Often displayed in table format with HQ6 and/or HQ8.)
+**Break down costs by phase and significant task area.** Provide brief justification for the expenses. (Often displayed in table format with HQ7 and/or HQ8.)
 
 *Considerations: Have you used the targeted number of projects or teams and approximate cost per project to justify the overall budget? Is the projected budget for each phase well-justified and realistic? Do you include a budget for independent verification and validation? Do the justifications reflect an understanding of actual costs? Have you included various scenarios reflecting different levels of program scope?*
+
+## 7. How long will the program take?
+
+**Recommended practice: programs usually last 3-5 years.** Typical programs are phased (two or three phases) to break an aggressive mission into tractable pieces and allow for go/no-go gates where unsuccessful ideas/teams no longer continue. Consider what capabilities performers must achieve at each phase. (Often displayed in table format with HQ6 and/or HQ8.)
+
+*Considerations: Is the timeline aggressive but in the realm of the possible? Have you justified the schedule for all expected phases? What are the main drivers that might accelerate or decelerate this timeline?*
 
 ## 8. What are the mid-term and final exams to check for success?
 

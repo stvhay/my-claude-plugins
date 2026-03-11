@@ -2,11 +2,9 @@
 name: heilmeier-catechism
 description: >
   Evaluate ambitious research or innovation initiatives using the Heilmeier
-  Catechism. Walks through H1 (aspiration) → H2 (state of art) → Enablers
-  (bridging the gap) pipeline. Use when: research planning, initiative
-  evaluation, feasibility study, state-of-the-art analysis, technology gap
-  analysis, moonshot evaluation, go/no-go assessment, or "is this idea
-  worth pursuing?"
+  Catechism. Use when: research planning, initiative evaluation, feasibility
+  study, state-of-the-art analysis, technology gap analysis, moonshot
+  evaluation, go/no-go assessment, or "is this idea worth pursuing?"
 ---
 
 # Heilmeier Catechism Research Initiative Skill
@@ -27,9 +25,9 @@ This skill extends the catechism with the **H1 to H2 to Enablers pipeline**: a s
 | Iterative refinement | This is a thinking tool, not a form to fill out. Each phase may reveal information that changes earlier phases. Loop back freely. |
 | Research-grounded | Every claim about the state of the art must cite actual sources. No "it is generally believed" or "experts agree" without naming the experts and the evidence. |
 
-## The Eight Questions
+## The Heilmeier Questions
 
-The canonical Heilmeier Catechism as used at DARPA:
+The canonical eight Heilmeier Catechism questions as used at DARPA:
 
 1. **What are you trying to do?** Articulate your objectives using absolutely no jargon.
 2. **How is it done today, and what are the limits of current practice?**
@@ -40,7 +38,7 @@ The canonical Heilmeier Catechism as used at DARPA:
 7. **How long will it take?**
 8. **What are the mid-term and final "exams" to check for success?**
 
-ARPA-H extends the catechism with two additional questions addressing broader impact:
+ARPA-H extends the catechism with two additional questions addressing broader impact (Q9-Q10):
 
 9. **How will you ensure equitable access and benefit?**
 10. **What are the risks of misperception or misuse?**
