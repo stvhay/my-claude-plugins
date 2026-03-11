@@ -41,14 +41,18 @@ if echo "$INPUT" | grep -q '"SessionStart"'; then
 fi
 
 # All Langfuse SDK work runs in background — never blocks Claude Code
-# Close inherited stdout/stderr so parent can exit immediately
-# Stderr from Python is captured; if non-empty, touch sentinel for next SessionStart
-(
+# Write input to temp file to avoid quoting issues in setsid subshell
+# setsid creates a new session so the process survives parent exit (SessionEnd)
+INPUTFILE=$(mktemp)
+echo "$INPUT" > "$INPUTFILE"
+
+setsid bash -c '
     ERRFILE=$(mktemp)
-    echo "$INPUT" | "$PYTHON" "$HOOK_DIR/langfuse-trace.py" >/dev/null 2>"$ERRFILE" || true
+    "$1" "$2" >/dev/null 2>"$ERRFILE" < "$3" || true
     if [ -s "$ERRFILE" ]; then
-        cat "$ERRFILE" >>"$LOG"
-        touch "$CACHE_DIR/error-flag"
+        cat "$ERRFILE" >> "$4"
+        touch "$5"
     fi
-    rm -f "$ERRFILE"
-) </dev/null >/dev/null 2>/dev/null &
+    rm -f "$ERRFILE" "$3"
+' _ "$PYTHON" "$HOOK_DIR/langfuse-trace.py" "$INPUTFILE" "$LOG" "$CACHE_DIR/error-flag" \
+  </dev/null >/dev/null 2>/dev/null &
