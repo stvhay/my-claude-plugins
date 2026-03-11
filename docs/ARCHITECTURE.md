@@ -82,6 +82,22 @@ finishing-a-development-branch (pre-PR gate), and documentation-standards
 (on-demand audit). This converts several reasoning-required invariants into
 structural ones enforced by automation.
 
+## Hook-Based Telemetry
+
+The dev-workflow-toolkit plugin registers Claude Code hooks for Langfuse
+tracing. A shell wrapper (`hooks/langfuse-trace.sh`) bootstraps a private
+Python venv at `~/.cache/langfuse-hook/venv/` and invokes the trace script
+on each hook event. State is tracked per-session in a user-private temp
+directory. Each hook invocation is a separate process — trace-level attributes
+(name, session_id, tags) are set once at SessionStart and applied trace-wide
+by the Langfuse server; per-observation OTel context does not persist across
+invocations.
+
+**Trade-offs.** A self-bootstrapping venv adds first-run latency (~5s) but
+eliminates dependency on the user's project environment. Shipping data on
+every PostToolUse adds per-tool overhead but ensures crash resilience — if a
+session exits abnormally, most data has already been shipped.
+
 ## Documentation Structure
 
 This document (`docs/ARCHITECTURE.md`) and its companion `docs/DESIGN.md`
