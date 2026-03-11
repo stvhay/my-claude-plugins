@@ -3,6 +3,33 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.8.0
+
+### Langfuse tracing: full data capture
+
+Generations now include user prompts as input (previously only assistant
+output was shipped). Timestamps from transcript JSONL are used for
+`start_time`/`end_time` on generation observations, giving real LLM
+latency in Langfuse. Session metadata now includes `cwd`,
+`permission_mode`, and `cache_hit_rate`. Subagent spans capture
+`last_assistant_message` as output.
+
+## v1.7.1
+
+Fix: use `setsid` to create a new process session so the background
+Langfuse process survives SessionEnd process group kill.
+
+## v1.7.0
+
+### Async hook execution and error reporting
+
+All Langfuse SDK work now runs fully backgrounded — hooks never block
+Claude Code. Sentinel-based error reporting writes per-call error files
+and touches `~/.cache/langfuse-hook/error-flag`; the SessionStart health
+check is a single file-exists test with zero cost on the happy path.
+SDK delivery failures (silent by default) are detected via stderr
+capture with `logging.basicConfig(force=True)`.
+
 ## v1.6.6
 
 Use uv instead of python3 -m venv for bootstrap. Faster and avoids

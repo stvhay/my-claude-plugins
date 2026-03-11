@@ -14,6 +14,7 @@ _mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_mod)
 
 # Bind module-level functions
+parse_timestamp = _mod.parse_timestamp
 is_configured = _mod.is_configured
 get_source_project = _mod.get_source_project
 get_git_branch = _mod.get_git_branch
@@ -21,7 +22,9 @@ build_tags = _mod.build_tags
 record_error = _mod.record_error
 extract_usage = _mod.extract_usage
 extract_text_output = _mod.extract_text_output
+extract_user_input = _mod.extract_user_input
 read_transcript_messages = _mod.read_transcript_messages
+read_all_messages = _mod.read_all_messages
 get_tool_results = _mod.get_tool_results
 get_state_dir = _mod.get_state_dir
 get_state_path = _mod.get_state_path
@@ -133,6 +136,81 @@ class TestBuildTags:
 
     def test_all_present(self):
         assert build_tags("x", "y") == ["x", "y"]
+
+
+# -- parse_timestamp --
+
+
+class TestParseTimestamp:
+    def test_iso_with_z(self):
+        dt = parse_timestamp("2026-03-11T12:43:40.155Z")
+        assert dt is not None
+        assert dt.year == 2026
+        assert dt.month == 3
+        assert dt.second == 40
+
+    def test_none(self):
+        assert parse_timestamp(None) is None
+
+    def test_empty(self):
+        assert parse_timestamp("") is None
+
+    def test_invalid(self):
+        assert parse_timestamp("not-a-date") is None
+
+
+# -- extract_user_input --
+
+
+class TestExtractUserInput:
+    def test_string_content(self):
+        assert extract_user_input("hello world") == "hello world"
+
+    def test_text_blocks(self):
+        content = [
+            {"type": "text", "text": "What is this?"},
+            {"type": "text", "text": "Tell me more."},
+        ]
+        assert extract_user_input(content) == "What is this?\nTell me more."
+
+    def test_skips_tool_results(self):
+        content = [
+            {"type": "tool_result", "tool_use_id": "t1", "content": "ok"},
+            {"type": "text", "text": "Now do X"},
+        ]
+        assert extract_user_input(content) == "Now do X"
+
+    def test_only_tool_results_returns_none(self):
+        content = [
+            {"type": "tool_result", "tool_use_id": "t1", "content": "ok"},
+        ]
+        assert extract_user_input(content) is None
+
+    def test_empty_list(self):
+        assert extract_user_input([]) is None
+
+    def test_none(self):
+        assert extract_user_input(None) is None
+
+
+# -- read_all_messages --
+
+
+class TestReadAllMessages:
+    def test_reads_both_types_in_order(self, tmp_path):
+        path = tmp_path / "transcript.jsonl"
+        write_transcript(path, [
+            make_user_msg(),
+            make_assistant_msg("req1"),
+            make_user_msg([make_tool_result("t1")]),
+            make_assistant_msg("req2"),
+        ])
+        msgs = read_all_messages(str(path))
+        assert len(msgs) == 4
+        assert [m["type"] for m in msgs] == ["user", "assistant", "user", "assistant"]
+
+    def test_missing_file(self):
+        assert read_all_messages("/nonexistent/path.jsonl") == []
 
 
 # -- extract_usage --
@@ -282,6 +360,65 @@ class TestShipTranscriptData:
         assert calls[1].kwargs["as_type"] == "tool"
         assert calls[1].kwargs["name"] == "Bash"
 
+    def test_includes_user_input_on_generation(self, tmp_path):
+        path = tmp_path / "transcript.jsonl"
+        write_transcript(path, [
+            make_user_msg([{"type": "text", "text": "What is 2+2?"}]),
+            make_assistant_msg("req1", text="4"),
+        ])
+
+        client = MagicMock()
+        mock_obs = MagicMock()
+        client.start_observation.return_value = mock_obs
+
+        ship_transcript_data(client, "trace123", str(path), set())
+
+        gen_call = client.start_observation.call_args_list[0]
+        assert gen_call.kwargs["input"] == "What is 2+2?"
+        assert gen_call.kwargs["output"] == "4"
+
+    def test_ships_timestamps_on_generation(self, tmp_path):
+        """User timestamp → start_time, assistant timestamp → end_time."""
+        path = tmp_path / "transcript.jsonl"
+        msgs = [
+            {"type": "user", "timestamp": "2026-03-11T12:00:00.000Z",
+             "message": {"content": "hi"}},
+            {"type": "assistant", "requestId": "req1",
+             "timestamp": "2026-03-11T12:00:05.500Z",
+             "message": {"model": "claude-opus-4-6", "content": [{"type": "text", "text": "hello"}],
+                         "usage": {"input_tokens": 10, "output_tokens": 5},
+                         "stop_reason": "end_turn"}},
+        ]
+        write_transcript(path, msgs)
+
+        client = MagicMock()
+        mock_obs = MagicMock()
+        client.start_observation.return_value = mock_obs
+
+        ship_transcript_data(client, "trace123", str(path), set())
+
+        gen_call = client.start_observation.call_args_list[0]
+        assert gen_call.kwargs["start_time"].second == 0
+        assert gen_call.kwargs["end_time"].second == 5
+
+    def test_user_string_content_as_input(self, tmp_path):
+        """User messages with plain string content are captured."""
+        path = tmp_path / "transcript.jsonl"
+        msgs = [
+            {"type": "user", "message": {"content": "plain string prompt"}},
+            make_assistant_msg("req1", text="response"),
+        ]
+        write_transcript(path, msgs)
+
+        client = MagicMock()
+        mock_obs = MagicMock()
+        client.start_observation.return_value = mock_obs
+
+        ship_transcript_data(client, "trace123", str(path), set())
+
+        gen_call = client.start_observation.call_args_list[0]
+        assert gen_call.kwargs["input"] == "plain string prompt"
+
     def test_skips_already_sent(self, tmp_path):
         path = tmp_path / "transcript.jsonl"
         write_transcript(path, [make_assistant_msg("req1")])
@@ -349,6 +486,31 @@ class TestHandleSubagentStop:
         # The generation should use agent_obs.id as parent
         gen_call = client.start_observation.call_args_list[1]
         assert gen_call.kwargs["trace_context"]["parent_span_id"] == "abc123def456"
+
+    def test_ships_last_assistant_message(self, tmp_path):
+        path = tmp_path / "transcript.jsonl"
+        write_transcript(path, [make_assistant_msg("req1")])
+
+        client = MagicMock()
+        agent_obs = MagicMock()
+        agent_obs.id = "abc123"
+        gen_obs = MagicMock()
+        client.start_observation.side_effect = [agent_obs, gen_obs]
+
+        with patch.object(_mod, "load_state",
+                          return_value={"trace_id": "t1", "sent_request_ids": []}), \
+             patch.object(_mod, "save_state"):
+            handle_subagent_stop(client, {
+                "session_id": "sess1",
+                "agent_id": "a1",
+                "agent_type": "Explore",
+                "agent_transcript_path": str(path),
+                "last_assistant_message": "Found 3 files matching pattern.",
+            })
+
+        agent_call = client.start_observation.call_args_list[0]
+        assert agent_call.kwargs["output"] == "Found 3 files matching pattern."
+        assert agent_call.kwargs["metadata"]["stop_hook_active"] is False
 
 
 class TestHandleSessionEnd:
