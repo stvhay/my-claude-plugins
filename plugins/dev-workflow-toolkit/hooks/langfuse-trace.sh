@@ -44,4 +44,14 @@ if echo "$INPUT" | grep -q '"SessionStart"'; then
 fi
 
 # All Langfuse SDK work runs in background — never blocks Claude Code
-echo "$INPUT" | "$PYTHON" "$HOOK_DIR/langfuse-trace.py" 2>>"$LOG" &
+# Close inherited stdout/stderr so parent can exit immediately
+# Stderr from Python is captured; if non-empty, touch sentinel for next SessionStart
+(
+    ERRFILE=$(mktemp)
+    echo "$INPUT" | "$PYTHON" "$HOOK_DIR/langfuse-trace.py" >/dev/null 2>"$ERRFILE" || true
+    if [ -s "$ERRFILE" ]; then
+        cat "$ERRFILE" >>"$LOG"
+        touch "$CACHE_DIR/error-flag"
+    fi
+    rm -f "$ERRFILE"
+) </dev/null >/dev/null 2>/dev/null &

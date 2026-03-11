@@ -13,12 +13,17 @@ Custom:
 """
 
 import json
+import logging
 import os
 import signal
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+# Route SDK/OTel warnings to stderr so the shell wrapper can detect failures
+logging.basicConfig(level=logging.WARNING, stream=sys.stderr,
+                    format="%(levelname)s: %(message)s", force=True)
 
 from langfuse import Langfuse, propagate_attributes
 
