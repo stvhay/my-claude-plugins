@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/langfuse-trace.py"
+            "command": "uv run --project ${CLAUDE_PROJECT_DIR} python3 ${CLAUDE_PLUGIN_ROOT}/hooks/langfuse-trace.py"
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/langfuse-trace.py"
+            "command": "uv run --project ${CLAUDE_PROJECT_DIR} python3 ${CLAUDE_PLUGIN_ROOT}/hooks/langfuse-trace.py"
           }
         ]
       }
@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/langfuse-trace.py"
+            "command": "uv run --project ${CLAUDE_PROJECT_DIR} python3 ${CLAUDE_PLUGIN_ROOT}/hooks/langfuse-trace.py"
           }
         ]
       }
@@ -39,7 +39,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/langfuse-trace.py"
+            "command": "uv run --project ${CLAUDE_PROJECT_DIR} python3 ${CLAUDE_PLUGIN_ROOT}/hooks/langfuse-trace.py"
           }
         ]
       }
@@ -50,7 +50,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/langfuse-trace.py"
+            "command": "uv run --project ${CLAUDE_PROJECT_DIR} python3 ${CLAUDE_PLUGIN_ROOT}/hooks/langfuse-trace.py"
           }
         ]
       }

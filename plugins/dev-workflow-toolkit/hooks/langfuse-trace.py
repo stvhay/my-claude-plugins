@@ -1,77 +1,60 @@
 #!/usr/bin/env python3
 """Claude Code hook that ships session traces to Langfuse.
 
-Handles SessionStart, PostToolUse, and SessionEnd events.
-Reads transcript JSONL for token usage and model data.
-Uses the Langfuse batch ingestion API (no SDK dependencies).
+Handles SessionStart, PostToolUse, PostToolUseFailure, SubagentStop,
+and SessionEnd events. Reads transcript JSONL for token usage and model data.
 
-Required environment variables:
+Required environment variables (read automatically by SDK):
   LANGFUSE_PUBLIC_KEY
   LANGFUSE_SECRET_KEY
   LANGFUSE_HOST
+Custom:
   LANGFUSE_SOURCE_PROJECT  (identifies the source codebase)
 """
 
 import json
 import os
+import subprocess
 import sys
-import uuid
-from base64 import b64encode
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.request import Request, urlopen
-from urllib.error import URLError
+
+from langfuse import Langfuse
+from langfuse._client.client import TraceBody, _get_timestamp
 
 
-def get_env():
-    """Read required Langfuse environment variables. Returns None if not configured."""
-    host = os.environ.get("LANGFUSE_HOST")
-    public_key = os.environ.get("LANGFUSE_PUBLIC_KEY")
-    secret_key = os.environ.get("LANGFUSE_SECRET_KEY")
-    if not all([host, public_key, secret_key]):
-        return None
-    return {
-        "host": host.rstrip("/"),
-        "public_key": public_key,
-        "secret_key": secret_key,
-        "source_project": os.environ.get("LANGFUSE_SOURCE_PROJECT", "unknown"),
-    }
-
-
-def ingest(env, events):
-    """Send a batch of events to the Langfuse ingestion API."""
-    url = f"{env['host']}/api/public/ingestion"
-    credentials = b64encode(
-        f"{env['public_key']}:{env['secret_key']}".encode()
-    ).decode()
-    body = json.dumps({"batch": events}).encode()
-    req = Request(
-        url,
-        data=body,
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Basic {credentials}",
-        },
-        method="POST",
+def is_configured():
+    """Check if Langfuse environment variables are set."""
+    return all(
+        os.environ.get(k)
+        for k in ("LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY", "LANGFUSE_HOST")
     )
+
+
+def get_source_project():
+    return os.environ.get("LANGFUSE_SOURCE_PROJECT", "unknown")
+
+
+def get_git_branch():
     try:
-        with urlopen(req, timeout=5) as resp:
-            return json.loads(resp.read())
-    except (URLError, TimeoutError) as e:
-        print(f"langfuse-trace: ingestion failed: {e}", file=sys.stderr)
-        return None
+        return (
+            subprocess.check_output(
+                ["git", "branch", "--show-current"],
+                stderr=subprocess.DEVNULL,
+                timeout=2,
+            )
+            .decode()
+            .strip()
+        )
+    except (subprocess.SubprocessError, FileNotFoundError):
+        return ""
 
 
-def now_iso():
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+# -- Transcript parsing --
 
 
-def evt_id():
-    return str(uuid.uuid4())
-
-
-def read_transcript_assistant_messages(transcript_path):
-    """Read all assistant messages from a transcript JSONL file."""
+def read_transcript_messages(transcript_path, msg_type="assistant"):
+    """Read messages of a given type from a transcript JSONL file."""
     messages = []
     path = Path(transcript_path)
     if not path.exists():
@@ -82,135 +65,46 @@ def read_transcript_assistant_messages(transcript_path):
                 obj = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            if obj.get("type") == "assistant":
+            if obj.get("type") == msg_type:
                 messages.append(obj)
     return messages
 
 
-def make_generation_event(trace_id, assistant_msg):
-    """Create a Langfuse generation-create event from an assistant message."""
-    msg = assistant_msg.get("message", {})
-    usage = msg.get("usage", {})
-    request_id = assistant_msg.get("requestId", evt_id())
-    timestamp = assistant_msg.get("timestamp", now_iso())
+def get_tool_results(transcript_path):
+    """Index all tool_result blocks by tool_use_id."""
+    results = {}
+    for msg in read_transcript_messages(transcript_path, "user"):
+        content = msg.get("message", {}).get("content", [])
+        if not isinstance(content, list):
+            continue
+        for block in content:
+            if isinstance(block, dict) and block.get("type") == "tool_result":
+                results[block.get("tool_use_id")] = block
+    return results
 
-    # Build usage map for Langfuse
-    # Anthropic reports: input_tokens (non-cached), cache_read_input_tokens,
-    # cache_creation_input_tokens. Total input = sum of all three.
-    # Langfuse supports "input", "output", "inputCached" as usage types.
-    # We send total input (all tokens sent) and cache breakdown separately.
+
+def extract_usage(usage):
+    """Extract Langfuse usage_details from Anthropic usage dict."""
     input_tokens = usage.get("input_tokens", 0)
     cache_read = usage.get("cache_read_input_tokens", 0)
     cache_create = usage.get("cache_creation_input_tokens", 0)
     output_tokens = usage.get("output_tokens", 0)
-
-    langfuse_usage = {
+    return {
         "input": input_tokens + cache_read + cache_create,
         "output": output_tokens,
         "inputCached": cache_read,
     }
 
-    # Extract content for input/output
-    content_blocks = msg.get("content", [])
-    text_output = []
-    for block in content_blocks:
-        if block.get("type") == "text":
-            text_output.append(block.get("text", ""))
-        elif block.get("type") == "thinking":
-            pass  # skip thinking blocks for now
 
-    return {
-        "id": evt_id(),
-        "type": "generation-create",
-        "timestamp": timestamp,
-        "body": {
-            "id": request_id,
-            "traceId": trace_id,
-            "name": f"llm-call",
-            "model": msg.get("model", "unknown"),
-            "startTime": timestamp,
-            "endTime": timestamp,
-            "usage": langfuse_usage,
-            "output": "\n".join(text_output) if text_output else None,
-            "metadata": {
-                "stop_reason": msg.get("stop_reason"),
-                "service_tier": usage.get("service_tier"),
-                "cache_creation_input_tokens": usage.get(
-                    "cache_creation_input_tokens", 0
-                ),
-            },
-        },
-    }
+def extract_text_output(content_blocks):
+    """Extract text content from assistant message content blocks."""
+    texts = [b.get("text", "") for b in content_blocks if b.get("type") == "text"]
+    return "\n".join(texts) if texts else None
 
 
-def make_tool_events(trace_id, assistant_msg, tool_results):
-    """Create Langfuse span-create events for tool calls in an assistant message."""
-    events = []
-    msg = assistant_msg.get("message", {})
-    timestamp = assistant_msg.get("timestamp", now_iso())
-    content_blocks = msg.get("content", [])
-
-    for block in content_blocks:
-        if block.get("type") != "tool_use":
-            continue
-        tool_id = block.get("id", "")
-        tool_name = block.get("name", "unknown")
-        tool_input = block.get("input", {})
-
-        # Find matching tool result
-        result_content = None
-        is_error = False
-        for result in tool_results:
-            if result.get("tool_use_id") == tool_id:
-                result_content = result.get("content", "")
-                is_error = result.get("is_error", False)
-                break
-
-        events.append(
-            {
-                "id": evt_id(),
-                "type": "span-create",
-                "timestamp": timestamp,
-                "body": {
-                    "id": tool_id,
-                    "traceId": trace_id,
-                    "name": tool_name,
-                    "startTime": timestamp,
-                    "endTime": timestamp,
-                    "input": tool_input,
-                    "output": result_content,
-                    "metadata": {"is_error": is_error},
-                    "level": "ERROR" if is_error else "DEFAULT",
-                },
-            }
-        )
-    return events
+# -- State management (track which requestIds have been shipped) --
 
 
-def get_tool_results_from_transcript(transcript_path):
-    """Read all tool_result blocks from user messages in the transcript."""
-    results = []
-    path = Path(transcript_path)
-    if not path.exists():
-        return results
-    with open(path) as f:
-        for line in f:
-            try:
-                obj = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            if obj.get("type") != "user":
-                continue
-            content = obj.get("message", {}).get("content", [])
-            if not isinstance(content, list):
-                continue
-            for block in content:
-                if isinstance(block, dict) and block.get("type") == "tool_result":
-                    results.append(block)
-    return results
-
-
-# Track which request IDs we've already sent (via a state file)
 def get_state_path(session_id):
     return Path(f"/tmp/langfuse-hook-{session_id}.json")
 
@@ -226,224 +120,223 @@ def load_state(session_id):
 
 
 def save_state(session_id, state):
-    path = get_state_path(session_id)
-    path.write_text(json.dumps(state))
+    get_state_path(session_id).write_text(json.dumps(state))
 
 
-def handle_session_start(hook_input, env):
+# -- Trace-level updates via ingestion (SDK pattern) --
+
+
+def update_trace(client, trace_id, **kwargs):
+    """Update trace attributes via the SDK's ingestion queue."""
+    body = TraceBody(id=trace_id, **kwargs)
+    event = {
+        "id": Langfuse.create_trace_id(),
+        "type": "trace-create",
+        "timestamp": _get_timestamp(),
+        "body": body,
+    }
+    client._resources.add_trace_task(event)
+
+
+# -- Hook handlers --
+
+
+def handle_session_start(client, hook_input):
     """Create a Langfuse trace for this session."""
     session_id = hook_input.get("session_id", "")
     model = hook_input.get("model", "unknown")
     source = hook_input.get("source", "startup")
+    git_branch = get_git_branch()
+    source_project = get_source_project()
+    trace_id = Langfuse.create_trace_id(seed=session_id)
 
-    trace_id = session_id  # use session_id as trace_id for simplicity
-    git_branch = os.popen("git branch --show-current 2>/dev/null").read().strip()
+    update_trace(
+        client,
+        trace_id,
+        name=f"claude-code-{source}",
+        session_id=git_branch or "no-branch",
+        tags=[source_project, model, git_branch or "no-branch"],
+        metadata={
+            "source_project": source_project,
+            "model": model,
+            "git_branch": git_branch,
+            "source": source,
+            "claude_version": hook_input.get("version", ""),
+        },
+    )
 
-    events = [
-        {
-            "id": evt_id(),
-            "type": "trace-create",
-            "timestamp": now_iso(),
-            "body": {
-                "id": trace_id,
-                "name": f"claude-code-{source}",
-                "sessionId": git_branch or "no-branch",
-                "tags": [
-                    env["source_project"],
-                    model,
-                    git_branch or "no-branch",
-                ],
-                "metadata": {
-                    "source_project": env["source_project"],
-                    "model": model,
-                    "git_branch": git_branch,
-                    "source": source,
-                    "claude_version": hook_input.get("version", ""),
-                },
+    state = load_state(session_id)
+    state["trace_id"] = trace_id
+    save_state(session_id, state)
+
+
+def ship_transcript_data(client, trace_id, transcript_path, sent_ids,
+                         parent_span_id=None):
+    """Ship new generations and tool observations from a transcript.
+
+    Returns the updated set of sent request IDs.
+    """
+    assistant_msgs = read_transcript_messages(transcript_path, "assistant")
+    tool_results = get_tool_results(transcript_path)
+
+    trace_ctx = {"trace_id": trace_id}
+    if parent_span_id:
+        trace_ctx["parent_span_id"] = parent_span_id
+
+    for msg in assistant_msgs:
+        request_id = msg.get("requestId")
+        if not request_id or request_id in sent_ids:
+            continue
+
+        api_msg = msg.get("message", {})
+        usage = api_msg.get("usage", {})
+        content_blocks = api_msg.get("content", [])
+
+        # Ship generation
+        gen = client.start_observation(
+            trace_context=trace_ctx,
+            name="llm-call",
+            as_type="generation",
+            model=api_msg.get("model", "unknown"),
+            usage_details=extract_usage(usage),
+            output=extract_text_output(content_blocks),
+            metadata={
+                "request_id": request_id,
+                "stop_reason": api_msg.get("stop_reason"),
+                "service_tier": usage.get("service_tier"),
+                "cache_creation_input_tokens": usage.get(
+                    "cache_creation_input_tokens", 0
+                ),
             },
-        }
-    ]
+        )
+        gen.end()
 
-    result = ingest(env, events)
-    if result:
-        state = load_state(session_id)
-        state["trace_id"] = trace_id
-        save_state(session_id, state)
+        # Ship tool calls
+        for block in content_blocks:
+            if block.get("type") != "tool_use":
+                continue
+            tool_id = block.get("id", "")
+            result = tool_results.get(tool_id, {})
+            is_error = result.get("is_error", False)
+
+            tool_obs = client.start_observation(
+                trace_context=trace_ctx,
+                name=block.get("name", "unknown"),
+                as_type="tool",
+                input=block.get("input"),
+                output=result.get("content"),
+                level="ERROR" if is_error else "DEFAULT",
+                metadata={"tool_use_id": tool_id, "is_error": is_error},
+            )
+            tool_obs.end()
+
+        sent_ids.add(request_id)
+
+    return sent_ids
 
 
-def handle_post_tool_use(hook_input, env):
+def handle_post_tool_use(client, hook_input):
     """Ship new generations and tool observations since last hook call."""
     session_id = hook_input.get("session_id", "")
     transcript_path = hook_input.get("transcript_path", "")
-
     if not transcript_path:
         return
 
     state = load_state(session_id)
-    trace_id = state.get("trace_id") or session_id
+    trace_id = state.get("trace_id") or Langfuse.create_trace_id(seed=session_id)
     sent_ids = set(state.get("sent_request_ids", []))
 
-    # If trace wasn't created yet (e.g., SessionStart hook didn't fire), create it
+    # Ensure trace exists if SessionStart didn't fire
     if not state.get("trace_id"):
-        git_branch = os.popen("git branch --show-current 2>/dev/null").read().strip()
-        trace_event = {
-            "id": evt_id(),
-            "type": "trace-create",
-            "timestamp": now_iso(),
-            "body": {
-                "id": trace_id,
-                "name": "claude-code-session",
-                "sessionId": git_branch or "no-branch",
-                "tags": [env["source_project"], git_branch or "no-branch"],
-                "metadata": {
-                    "source_project": env["source_project"],
-                    "git_branch": git_branch,
-                },
-            },
-        }
-        ingest(env, [trace_event])
+        git_branch = get_git_branch()
+        source_project = get_source_project()
+        update_trace(
+            client,
+            trace_id,
+            name="claude-code-session",
+            session_id=git_branch or "no-branch",
+            tags=[source_project, git_branch or "no-branch"],
+            metadata={"source_project": source_project, "git_branch": git_branch},
+        )
         state["trace_id"] = trace_id
 
-    # Read transcript for new assistant messages
-    assistant_msgs = read_transcript_assistant_messages(transcript_path)
-    tool_results = get_tool_results_from_transcript(transcript_path)
-    events = []
+    sent_ids = ship_transcript_data(client, trace_id, transcript_path, sent_ids)
 
-    for msg in assistant_msgs:
-        request_id = msg.get("requestId")
-        if not request_id or request_id in sent_ids:
-            continue
-
-        # Generation event (token usage + model)
-        events.append(make_generation_event(trace_id, msg))
-
-        # Tool call spans
-        events.extend(make_tool_events(trace_id, msg, tool_results))
-
-        sent_ids.add(request_id)
-
-    if events:
-        result = ingest(env, events)
-        if result:
-            state["sent_request_ids"] = list(sent_ids)
-            save_state(session_id, state)
+    state["sent_request_ids"] = list(sent_ids)
+    save_state(session_id, state)
 
 
-def handle_subagent_stop(hook_input, env):
-    """Parse a subagent's transcript and ship its generations as nested observations."""
+def handle_subagent_stop(client, hook_input):
+    """Parse a subagent's transcript and ship nested observations."""
     session_id = hook_input.get("session_id", "")
     agent_id = hook_input.get("agent_id", "")
     agent_type = hook_input.get("agent_type", "unknown")
     agent_transcript = hook_input.get("agent_transcript_path", "")
-
     if not agent_transcript:
         return
 
     state = load_state(session_id)
-    trace_id = state.get("trace_id") or session_id
+    trace_id = state.get("trace_id") or Langfuse.create_trace_id(seed=session_id)
     sent_ids = set(state.get("sent_request_ids", []))
 
-    # Create a parent span for this subagent
-    agent_span_id = agent_id or evt_id()
-    events = [
-        {
-            "id": evt_id(),
-            "type": "span-create",
-            "timestamp": now_iso(),
-            "body": {
-                "id": agent_span_id,
-                "traceId": trace_id,
-                "name": f"subagent-{agent_type}",
-                "startTime": now_iso(),
-                "metadata": {
-                    "agent_id": agent_id,
-                    "agent_type": agent_type,
-                },
-            },
-        }
-    ]
+    # Create parent agent span
+    agent_span = client.start_observation(
+        trace_context={"trace_id": trace_id},
+        name=f"subagent-{agent_type}",
+        as_type="agent",
+        metadata={"agent_id": agent_id, "agent_type": agent_type},
+    )
 
-    # Parse subagent transcript for its generations
-    assistant_msgs = read_transcript_assistant_messages(agent_transcript)
-    tool_results = get_tool_results_from_transcript(agent_transcript)
+    # Get the OTEL span ID to use as parent for nested observations
+    parent_span_id = format(agent_span._span.context.span_id, "016x")
 
-    for msg in assistant_msgs:
-        request_id = msg.get("requestId")
-        if not request_id or request_id in sent_ids:
-            continue
+    sent_ids = ship_transcript_data(
+        client, trace_id, agent_transcript, sent_ids,
+        parent_span_id=parent_span_id,
+    )
+    agent_span.end()
 
-        gen_event = make_generation_event(trace_id, msg)
-        # Nest under the subagent span
-        gen_event["body"]["parentObservationId"] = agent_span_id
-        events.append(gen_event)
-
-        tool_events = make_tool_events(trace_id, msg, tool_results)
-        for te in tool_events:
-            te["body"]["parentObservationId"] = agent_span_id
-        events.extend(tool_events)
-
-        sent_ids.add(request_id)
-
-    if events:
-        result = ingest(env, events)
-        if result:
-            state["sent_request_ids"] = list(sent_ids)
-            save_state(session_id, state)
+    state["sent_request_ids"] = list(sent_ids)
+    save_state(session_id, state)
 
 
-def handle_session_end(hook_input, env):
+def handle_session_end(client, hook_input):
     """Finalize the trace with summary data."""
     session_id = hook_input.get("session_id", "")
     transcript_path = hook_input.get("transcript_path", "")
 
     # Ship any remaining data
     if transcript_path:
-        handle_post_tool_use(hook_input, env)
+        handle_post_tool_use(client, hook_input)
 
     state = load_state(session_id)
-    trace_id = state.get("trace_id") or session_id
+    trace_id = state.get("trace_id") or Langfuse.create_trace_id(seed=session_id)
 
-    # Update trace with final metadata
+    # Compute totals for trace metadata
     assistant_msgs = []
     if transcript_path:
-        assistant_msgs = read_transcript_assistant_messages(transcript_path)
+        assistant_msgs = read_transcript_messages(transcript_path, "assistant")
 
-    total_input = sum(
-        m.get("message", {}).get("usage", {}).get("input_tokens", 0)
-        for m in assistant_msgs
-    )
-    total_output = sum(
-        m.get("message", {}).get("usage", {}).get("output_tokens", 0)
-        for m in assistant_msgs
-    )
-    total_cache_read = sum(
-        m.get("message", {}).get("usage", {}).get("cache_read_input_tokens", 0)
-        for m in assistant_msgs
-    )
-    total_cache_create = sum(
-        m.get("message", {}).get("usage", {}).get("cache_creation_input_tokens", 0)
-        for m in assistant_msgs
-    )
+    totals = {"input": 0, "output": 0, "cache_read": 0, "cache_create": 0}
+    for msg in assistant_msgs:
+        usage = msg.get("message", {}).get("usage", {})
+        totals["input"] += usage.get("input_tokens", 0)
+        totals["output"] += usage.get("output_tokens", 0)
+        totals["cache_read"] += usage.get("cache_read_input_tokens", 0)
+        totals["cache_create"] += usage.get("cache_creation_input_tokens", 0)
 
-    events = [
-        {
-            "id": evt_id(),
-            "type": "trace-create",
-            "timestamp": now_iso(),
-            "body": {
-                "id": trace_id,
-                "metadata": {
-                    "total_input_tokens": total_input,
-                    "total_output_tokens": total_output,
-                    "total_cache_read_tokens": total_cache_read,
-                    "total_cache_creation_tokens": total_cache_create,
-                    "total_api_calls": len(assistant_msgs),
-                    "reason": hook_input.get("reason", "unknown"),
-                },
-            },
-        }
-    ]
-    ingest(env, events)
+    update_trace(
+        client,
+        trace_id,
+        metadata={
+            "total_input_tokens": totals["input"],
+            "total_output_tokens": totals["output"],
+            "total_cache_read_tokens": totals["cache_read"],
+            "total_cache_creation_tokens": totals["cache_create"],
+            "total_api_calls": len(assistant_msgs),
+            "reason": hook_input.get("reason", "unknown"),
+        },
+    )
 
     # Clean up state file
     state_path = get_state_path(session_id)
@@ -453,24 +346,25 @@ def handle_session_end(hook_input, env):
 
 def main():
     hook_input = json.loads(sys.stdin.read())
-    env = get_env()
-    if not env:
-        sys.exit(0)  # silently skip if not configured
 
+    if not is_configured():
+        sys.exit(0)
+
+    client = Langfuse()
     event = hook_input.get("hook_event_name", "")
 
-    if event == "SessionStart":
-        handle_session_start(hook_input, env)
-    elif event == "PostToolUse":
-        handle_post_tool_use(hook_input, env)
-    elif event in ("PostToolUseFailure",):
-        handle_post_tool_use(hook_input, env)
-    elif event == "SubagentStop":
-        handle_subagent_stop(hook_input, env)
-    elif event == "SessionEnd":
-        handle_session_end(hook_input, env)
+    try:
+        if event == "SessionStart":
+            handle_session_start(client, hook_input)
+        elif event in ("PostToolUse", "PostToolUseFailure"):
+            handle_post_tool_use(client, hook_input)
+        elif event == "SubagentStop":
+            handle_subagent_stop(client, hook_input)
+        elif event == "SessionEnd":
+            handle_session_end(client, hook_input)
+    finally:
+        client.flush()
 
-    # Always exit 0 — never block Claude Code
     sys.exit(0)
 
 

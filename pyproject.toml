@@ -1,0 +1,13 @@
+[project]
+name = "my-claude-plugins"
+version = "0.1.0"
+description = "Personal Claude Code plugin marketplace"
+requires-python = ">=3.13"
+dependencies = [
+    "langfuse>=3",
+]
+
+[dependency-groups]
+dev = [
+    "ruff",
+]
