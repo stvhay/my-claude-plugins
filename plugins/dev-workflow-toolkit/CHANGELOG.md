@@ -3,6 +3,10 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.6.5
+
+Fix: log bootstrap failures instead of failing silently.
+
 ## v1.6.4
 
 Fix: auto-bootstrap venv in background on first run. Skips current
