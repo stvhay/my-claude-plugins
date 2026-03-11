@@ -19,8 +19,11 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from base64 import b64encode
+from urllib.request import Request, urlopen
+from urllib.error import URLError
+
 from langfuse import Langfuse
-from langfuse._client.client import TraceBody, _get_timestamp
 
 
 def is_configured():
@@ -126,16 +129,41 @@ def save_state(session_id, state):
 # -- Trace-level updates via ingestion (SDK pattern) --
 
 
-def update_trace(client, trace_id, **kwargs):
-    """Update trace attributes via the SDK's ingestion queue."""
-    body = TraceBody(id=trace_id, **kwargs)
-    event = {
+def update_trace(trace_id, **kwargs):
+    """Update trace attributes via the ingestion API (upsert).
+
+    Uses raw HTTP to avoid SDK internal API instability.
+    SDK handles observations; this handles trace-level metadata.
+    """
+    host = os.environ["LANGFUSE_HOST"].rstrip("/")
+    creds = b64encode(
+        f"{os.environ['LANGFUSE_PUBLIC_KEY']}:{os.environ['LANGFUSE_SECRET_KEY']}".encode()
+    ).decode()
+
+    # Map python snake_case to API camelCase
+    body = {"id": trace_id}
+    key_map = {"session_id": "sessionId", "user_id": "userId"}
+    for k, v in kwargs.items():
+        body[key_map.get(k, k)] = v
+
+    payload = json.dumps({"batch": [{
         "id": Langfuse.create_trace_id(),
         "type": "trace-create",
-        "timestamp": _get_timestamp(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "body": body,
-    }
-    client._resources.add_trace_task(event)
+    }]}).encode()
+
+    req = Request(
+        f"{host}/api/public/ingestion",
+        data=payload,
+        headers={"Content-Type": "application/json", "Authorization": f"Basic {creds}"},
+        method="POST",
+    )
+    try:
+        with urlopen(req, timeout=5):
+            pass
+    except (URLError, TimeoutError):
+        pass  # non-critical, trace data will still arrive via observations
 
 
 # -- Hook handlers --
@@ -151,7 +179,6 @@ def handle_session_start(client, hook_input):
     trace_id = Langfuse.create_trace_id(seed=session_id)
 
     update_trace(
-        client,
         trace_id,
         name=f"claude-code-{source}",
         session_id=git_branch or "no-branch",
@@ -326,7 +353,6 @@ def handle_session_end(client, hook_input):
         totals["cache_create"] += usage.get("cache_creation_input_tokens", 0)
 
     update_trace(
-        client,
         trace_id,
         metadata={
             "total_input_tokens": totals["input"],
