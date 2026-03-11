@@ -19,7 +19,6 @@ get_source_project = _mod.get_source_project
 get_git_branch = _mod.get_git_branch
 build_tags = _mod.build_tags
 record_error = _mod.record_error
-get_sentinel_path = _mod.get_sentinel_path
 extract_usage = _mod.extract_usage
 extract_text_output = _mod.extract_text_output
 read_transcript_messages = _mod.read_transcript_messages

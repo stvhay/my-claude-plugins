@@ -38,9 +38,6 @@ if echo "$INPUT" | grep -q '"SessionStart"'; then
     if [ -z "${LANGFUSE_PUBLIC_KEY:-}" ] || [ -z "${LANGFUSE_SECRET_KEY:-}" ] || [ -z "${LANGFUSE_HOST:-}" ]; then
         echo "langfuse-hook: missing env vars. Set LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, LANGFUSE_HOST."
     fi
-    if [ ! -x "$PYTHON" ]; then
-        echo "langfuse-hook: venv not ready. Will auto-bootstrap on next invocation."
-    fi
 fi
 
 # All Langfuse SDK work runs in background — never blocks Claude Code

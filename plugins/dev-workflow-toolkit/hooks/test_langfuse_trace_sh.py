@@ -32,28 +32,16 @@ def clean_sentinel():
     errors_log.unlink(missing_ok=True)
 
 
-def run_hook(event_json, env_overrides=None, timeout=5, clean_env=False):
-    """Run the shell wrapper and capture stdout/stderr/exit code.
-
-    When clean_env=True, uses env -i to prevent profile env vars from
-    interfering (needed when testing with fake LANGFUSE_HOST).
-    """
-    env = {}
-    if clean_env:
-        # Minimal env — prevents profile-set LANGFUSE_* from interfering
-        env = {
-            "HOME": os.environ["HOME"],
-            "PATH": os.environ["PATH"],
-            "TMPDIR": os.environ.get("TMPDIR", "/tmp"),
-        }
-    else:
-        env = os.environ.copy()
-        env.pop("LANGFUSE_PUBLIC_KEY", None)
-        env.pop("LANGFUSE_SECRET_KEY", None)
-        env.pop("LANGFUSE_HOST", None)
+def run_hook(event_json, env_overrides=None, timeout=5):
+    """Run the shell wrapper with a clean env and capture stdout/stderr/exit code."""
+    env = {
+        "HOME": os.environ["HOME"],
+        "PATH": os.environ["PATH"],
+        "TMPDIR": os.environ.get("TMPDIR", "/tmp"),
+    }
     if env_overrides:
         env.update(env_overrides)
-    result = subprocess.run(
+    return subprocess.run(
         ["bash", HOOK_SH],
         input=event_json,
         capture_output=True,
@@ -61,7 +49,6 @@ def run_hook(event_json, env_overrides=None, timeout=5, clean_env=False):
         timeout=timeout,
         env=env,
     )
-    return result
 
 
 class TestHealthCheck:
@@ -70,7 +57,7 @@ class TestHealthCheck:
     def test_missing_env_vars_warns(self):
         result = run_hook(
             '{"hook_event_name":"SessionStart","session_id":"t1"}',
-            clean_env=True,
+
         )
         assert result.returncode == 0
         assert "missing env vars" in result.stdout
@@ -83,7 +70,7 @@ class TestHealthCheck:
                 "LANGFUSE_SECRET_KEY": "sk-test",
                 "LANGFUSE_HOST": "http://localhost",
             },
-            clean_env=True,
+
         )
         assert result.returncode == 0
         assert result.stdout == ""
@@ -115,7 +102,7 @@ class TestHealthCheck:
                 "LANGFUSE_HOST": "http://localhost",
                 "LANGFUSE_HOOK_VENV": str(cache_dir / "venv"),
             },
-            clean_env=True,
+
         )
         assert result.returncode == 0
         assert "1 error(s)" in result.stdout
@@ -136,7 +123,7 @@ class TestBackgrounding:
                 "LANGFUSE_SECRET_KEY": "sk-test",
                 "LANGFUSE_HOST": "http://localhost",
             },
-            clean_env=True,
+
         )
         elapsed = time.monotonic() - start
         assert result.returncode == 0
@@ -153,7 +140,7 @@ class TestBackgrounding:
                 "LANGFUSE_SECRET_KEY": "sk-test",
                 "LANGFUSE_HOST": "http://localhost",
             },
-            clean_env=True,
+
         )
         elapsed = time.monotonic() - start
         assert result.returncode == 0
@@ -169,7 +156,7 @@ class TestBackgrounding:
                 "LANGFUSE_SECRET_KEY": "sk-test",
                 "LANGFUSE_HOST": "http://localhost",
             },
-            clean_env=True,
+
         )
         assert result.stdout == ""
 
@@ -201,7 +188,7 @@ class TestSentinelOnSdkError:
                 "LANGFUSE_SECRET_KEY": "sk-test",
                 "LANGFUSE_HOST": "http://localhost:19999",
             },
-            clean_env=True,
+
         )
         # Background process needs time: SDK retries twice (~3-5s)
         for _ in range(15):
@@ -231,6 +218,6 @@ class TestBootstrap:
                 "LANGFUSE_SECRET_KEY": "sk-test",
                 "LANGFUSE_HOST": "http://localhost",
             },
-            clean_env=True,
+
         )
         assert result.returncode == 0
