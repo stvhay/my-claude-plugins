@@ -12,7 +12,7 @@ mkdir -p "$HOME/.cache/langfuse-hook"
 
 # Bootstrap venv in background on first run — skip this invocation
 if [ ! -x "$PYTHON" ]; then
-    (python3 -m venv "$VENV_DIR" && "$VENV_DIR/bin/pip" install --quiet langfuse >>"$HOME/.cache/langfuse-hook/bootstrap.log" 2>&1 || echo "Bootstrap failed at $(date)" >>"$HOME/.cache/langfuse-hook/bootstrap.log") &
+    (uv venv "$VENV_DIR" && uv pip install --python "$PYTHON" langfuse >>"$HOME/.cache/langfuse-hook/bootstrap.log" 2>&1 || echo "Bootstrap failed at $(date)" >>"$HOME/.cache/langfuse-hook/bootstrap.log") &
     exit 0
 fi
 

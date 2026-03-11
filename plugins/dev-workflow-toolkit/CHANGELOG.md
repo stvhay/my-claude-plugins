@@ -3,6 +3,11 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.6.6
+
+Use uv instead of python3 -m venv for bootstrap. Faster and avoids
+the python3-venv package dependency on Debian/Ubuntu.
+
 ## v1.6.5
 
 Fix: log bootstrap failures instead of failing silently.
