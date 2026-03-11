@@ -3,6 +3,11 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.6.3
+
+Fix: add 8-second SIGALRM timeout to Python hook to prevent Claude Code
+hook cancellation on SessionEnd.
+
 ## v1.6.2
 
 Fix: hook no longer auto-bootstraps venv during SessionStart. Prevents

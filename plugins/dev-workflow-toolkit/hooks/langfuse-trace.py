@@ -14,6 +14,7 @@ Custom:
 
 import json
 import os
+import signal
 import subprocess
 import sys
 import tempfile
@@ -367,7 +368,13 @@ def handle_session_end(client, hook_input):
         state_path.unlink()
 
 
+HOOK_TIMEOUT_SECONDS = 8
+
+
 def main():
+    # Hard timeout to avoid being killed by Claude Code's hook timeout
+    signal.alarm(HOOK_TIMEOUT_SECONDS)
+
     hook_input = json.loads(sys.stdin.read())
 
     if not is_configured():
