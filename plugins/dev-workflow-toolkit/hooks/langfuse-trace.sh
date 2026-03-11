@@ -19,6 +19,7 @@ fi
 # Read stdin once (hook input JSON)
 INPUT="$(cat)"
 
-# Log errors for debugging but never block Claude Code
+# Run hook: stdout passes through to Claude Code, stderr logged for debugging
+# Exit 0 always — never block Claude Code even on unexpected crashes
 LOG="$HOME/.cache/langfuse-hook/errors.log"
 echo "$INPUT" | "$PYTHON" "$HOOK_DIR/langfuse-trace.py" 2>>"$LOG" || true

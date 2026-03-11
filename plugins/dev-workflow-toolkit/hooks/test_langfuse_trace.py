@@ -18,6 +18,9 @@ is_configured = _mod.is_configured
 get_source_project = _mod.get_source_project
 get_git_branch = _mod.get_git_branch
 build_tags = _mod.build_tags
+record_error = _mod.record_error
+check_health = _mod.check_health
+get_sentinel_path = _mod.get_sentinel_path
 extract_usage = _mod.extract_usage
 extract_text_output = _mod.extract_text_output
 read_transcript_messages = _mod.read_transcript_messages
@@ -404,3 +407,86 @@ class TestHandleSessionEnd:
         # The summary span should have been created with propagate_attributes
         # containing totals from main transcript only (100 input, 50 output)
         assert client.start_observation.called
+
+
+# -- Error reporting tests --
+
+
+class TestRecordError:
+    def test_creates_error_file_and_sentinel(self, tmp_path):
+        with patch.object(_mod, "get_errors_dir", return_value=tmp_path), \
+             patch.object(_mod, "get_sentinel_path",
+                          return_value=tmp_path / "error-flag"):
+            record_error("PostToolUse", "sess12345678", "connection timeout")
+
+        # Sentinel touched
+        assert (tmp_path / "error-flag").exists()
+        # Error file created
+        error_files = [f for f in tmp_path.iterdir() if f.suffix == ".log"]
+        assert len(error_files) == 1
+        assert "connection timeout" in error_files[0].read_text()
+
+    def test_multiple_errors_create_multiple_files(self, tmp_path):
+        with patch.object(_mod, "get_errors_dir", return_value=tmp_path), \
+             patch.object(_mod, "get_sentinel_path",
+                          return_value=tmp_path / "error-flag"):
+            record_error("PostToolUse", "sess1234", "err1")
+            record_error("SessionEnd", "sess1234", "err2")
+
+        error_files = [f for f in tmp_path.iterdir() if f.suffix == ".log"]
+        assert len(error_files) == 2
+
+
+class TestCheckHealth:
+    def test_healthy_returns_none(self, tmp_path):
+        env = {
+            "LANGFUSE_PUBLIC_KEY": "pk-test",
+            "LANGFUSE_SECRET_KEY": "sk-test",
+            "LANGFUSE_HOST": "http://localhost",
+            "LANGFUSE_HOOK_VENV": str(tmp_path / "venv"),
+        }
+        # Create fake python binary
+        python = tmp_path / "venv" / "bin" / "python3"
+        python.parent.mkdir(parents=True)
+        python.touch()
+        python.chmod(0o755)
+
+        with patch.dict("os.environ", env, clear=False), \
+             patch.object(_mod, "get_cache_dir", return_value=tmp_path), \
+             patch.object(_mod, "get_sentinel_path",
+                          return_value=tmp_path / "error-flag"):
+            assert check_health() is None
+
+    def test_missing_env_vars(self):
+        with patch.dict("os.environ", {}, clear=True):
+            msg = check_health()
+        assert msg is not None
+        assert "missing env vars" in msg
+
+    def test_sentinel_present_reports_errors(self, tmp_path):
+        env = {
+            "LANGFUSE_PUBLIC_KEY": "pk-test",
+            "LANGFUSE_SECRET_KEY": "sk-test",
+            "LANGFUSE_HOST": "http://localhost",
+            "LANGFUSE_HOOK_VENV": str(tmp_path / "venv"),
+        }
+        python = tmp_path / "venv" / "bin" / "python3"
+        python.parent.mkdir(parents=True)
+        python.touch()
+        python.chmod(0o755)
+
+        # Create sentinel and error file
+        (tmp_path / "error-flag").touch()
+        errors_dir = tmp_path / "errors"
+        errors_dir.mkdir()
+        (errors_dir / "20260311-120000_PostToolUse_sess1234.log").write_text(
+            "PostToolUse: connection timeout\n"
+        )
+
+        with patch.dict("os.environ", env, clear=False), \
+             patch.object(_mod, "get_cache_dir", return_value=tmp_path), \
+             patch.object(_mod, "get_sentinel_path",
+                          return_value=tmp_path / "error-flag"):
+            msg = check_health()
+        assert "1 error(s)" in msg
+        assert "connection timeout" in msg

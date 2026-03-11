@@ -370,18 +370,110 @@ def handle_session_end(client, hook_input):
 
 HOOK_TIMEOUT_SECONDS = 8
 
+# -- Error reporting --
+#
+# Errors are written to individual files under ~/.cache/langfuse-hook/errors/
+# and a sentinel file (error-flag) is touched. On SessionStart the health
+# check is a single os.path.exists() on the sentinel — near-zero cost on
+# the happy path. The agent sees the message only when the sentinel exists.
+
+
+def get_cache_dir():
+    return Path.home() / ".cache" / "langfuse-hook"
+
+
+def get_errors_dir():
+    d = get_cache_dir() / "errors"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def get_sentinel_path():
+    return get_cache_dir() / "error-flag"
+
+
+def record_error(event, session_id, error):
+    """Write a per-call error file and touch the sentinel."""
+    import time
+    errors_dir = get_errors_dir()
+    ts = time.strftime("%Y%m%d-%H%M%S")
+    filename = f"{ts}_{event}_{session_id[:8]}.log"
+    (errors_dir / filename).write_text(f"{event}: {error}\n")
+    get_sentinel_path().touch()
+    # Also log to stderr (captured by shell wrapper)
+    print(f"langfuse-hook error: {error}", file=sys.stderr)
+
+
+def check_health():
+    """Fast health check for SessionStart. Returns a message or None.
+
+    Checks: sentinel exists → env vars set → venv ready.
+    """
+    cache_dir = get_cache_dir()
+
+    # Fast path: no sentinel, no problems reported
+    sentinel = get_sentinel_path()
+    has_errors = sentinel.exists()
+
+    # Check env vars (cheap — just dict lookups)
+    missing = [
+        k for k in ("LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY", "LANGFUSE_HOST")
+        if not os.environ.get(k)
+    ]
+    if missing:
+        return (
+            f"langfuse-hook: missing env vars: {', '.join(missing)}. "
+            "Set these in your shell profile or .env to enable tracing."
+        )
+
+    # Check venv
+    venv_dir = os.environ.get("LANGFUSE_HOOK_VENV",
+                              str(cache_dir / "venv"))
+    python = Path(venv_dir) / "bin" / "python3"
+    if not python.exists():
+        return (
+            "langfuse-hook: venv not ready. "
+            "It will auto-bootstrap on next hook invocation."
+        )
+
+    # Check error sentinel
+    if has_errors:
+        errors_dir = cache_dir / "errors"
+        try:
+            error_files = sorted(errors_dir.iterdir())
+            count = len(error_files)
+            latest = error_files[-1].read_text().strip() if error_files else ""
+            return (
+                f"langfuse-hook: {count} error(s) logged. "
+                f"Latest: {latest}\n"
+                f"Error dir: {errors_dir}\n"
+                f"Clear with: rm {sentinel}"
+            )
+        except OSError:
+            return f"langfuse-hook: errors detected. Check {cache_dir / 'errors'}/"
+
+    return None
+
 
 def main():
     # Hard timeout to avoid being killed by Claude Code's hook timeout
     signal.alarm(HOOK_TIMEOUT_SECONDS)
 
     hook_input = json.loads(sys.stdin.read())
+    event = hook_input.get("hook_event_name", "")
+    session_id = hook_input.get("session_id", "")
 
-    if not is_configured():
+    # On SessionStart, run fast health check (output goes to agent context)
+    if event == "SessionStart":
+        msg = check_health()
+        if msg:
+            print(msg)
+        if not is_configured():
+            sys.exit(0)
+    elif not is_configured():
         sys.exit(0)
 
     client = Langfuse()
-    event = hook_input.get("hook_event_name", "")
 
     try:
         if event == "SessionStart":
@@ -392,6 +484,8 @@ def main():
             handle_subagent_stop(client, hook_input)
         elif event == "SessionEnd":
             handle_session_end(client, hook_input)
+    except Exception as e:
+        record_error(event, session_id, e)
     finally:
         client.flush()
 
