@@ -3,6 +3,19 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.6.0
+
+### Langfuse tracing hooks
+
+Claude Code hooks now ship session traces to a self-hosted Langfuse instance.
+Captures LLM generations (model, token usage with cache breakdown, cost),
+tool observations, and subagent spans. The hook bootstraps its own private
+venv at `~/.cache/langfuse-hook/venv/` — no dependency on the user's project.
+
+**ACTION:** Set env vars `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`,
+`LANGFUSE_HOST`, and `LANGFUSE_SOURCE_PROJECT` to enable tracing. Create
+custom model definitions in Langfuse for Claude 4.x models for cost tracking.
+
 ## v1.5.0
 
 ### New check: cross-links
