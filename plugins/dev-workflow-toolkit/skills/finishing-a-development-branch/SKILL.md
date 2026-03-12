@@ -62,7 +62,7 @@ Run the check-review-documented validation:
 
 ```bash
 ${CLAUDE_SKILL_DIR}/../../scripts/check-review-documented.sh \
-  --issue "$(gh pr view --json body --jq '.body' 2>/dev/null | grep -oP '(?<=Closes #)\d+' || echo '')" \
+  --issue "$(gh pr view --json body --jq '.body' 2>/dev/null | grep -oE '(Closes|Fixes|Resolves) #[0-9]+' | grep -oE '[0-9]+' | head -1 || echo '')" \
   --beads-id "$(bd list --type=feature --json 2>/dev/null | jq -r '.[0].id // ""' || echo '')"
 ```
 
