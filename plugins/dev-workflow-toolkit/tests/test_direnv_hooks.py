@@ -1,6 +1,7 @@
 """Tests for direnv worktree hook scripts."""
 
 import os
+import stat
 import shutil
 import subprocess
 from pathlib import Path
@@ -210,3 +211,121 @@ class TestDirenvPostCheckout:
         # Verify direnv allow was NOT called
         calls = log_file.read_text()
         assert "allow" not in calls, f"'direnv allow' should not be called, got: {calls}"
+
+
+# --- ensure-direnv-hook.sh tests ---
+
+
+class TestEnsureDirenvHook:
+    """Tests for the SessionStart hook that installs the git post-checkout hook."""
+
+    def test_script_exists(self, hooks_dir: Path):
+        script = hooks_dir / "ensure-direnv-hook.sh"
+        assert script.exists(), "ensure-direnv-hook.sh must exist"
+
+    def test_script_is_executable(self, hooks_dir: Path):
+        script = hooks_dir / "ensure-direnv-hook.sh"
+        assert os.access(script, os.X_OK), "ensure-direnv-hook.sh must be executable"
+
+    def test_exits_cleanly_when_no_direnv(
+        self, hooks_dir: Path, tmp_path: Path, bash_path: str
+    ):
+        """Hook must exit 0 when direnv is not on PATH."""
+        env = {k: v for k, v in os.environ.items() if k != "PATH"}
+        env["PATH"] = str(tmp_path)  # empty PATH — no direnv
+        result = subprocess.run(
+            [bash_path, str(hooks_dir / "ensure-direnv-hook.sh")],
+            capture_output=True,
+            text=True,
+            env=env,
+            cwd=str(tmp_path),
+        )
+        assert result.returncode == 0
+
+    def test_exits_cleanly_when_no_envrc(self, hooks_dir: Path, tmp_path: Path):
+        """Hook must exit 0 when no .envrc in repo root."""
+        # Init a git repo without .envrc
+        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        result = subprocess.run(
+            [str(hooks_dir / "ensure-direnv-hook.sh")],
+            capture_output=True,
+            text=True,
+            cwd=str(tmp_path),
+        )
+        assert result.returncode == 0
+
+    def test_no_stdout_on_success(self, hooks_dir: Path, tmp_path: Path):
+        """Hook must be silent on success."""
+        result = subprocess.run(
+            [str(hooks_dir / "ensure-direnv-hook.sh")],
+            capture_output=True,
+            text=True,
+            cwd=str(tmp_path),
+        )
+        assert result.stdout == ""
+
+    def test_installs_post_checkout_hook(self, hooks_dir: Path, tmp_path: Path):
+        """Hook must install the post-checkout hook in a git repo with .envrc."""
+        # Set up a git repo with .envrc
+        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        (tmp_path / ".envrc").write_text("# test envrc\n")
+
+        result = subprocess.run(
+            [str(hooks_dir / "ensure-direnv-hook.sh")],
+            capture_output=True,
+            text=True,
+            cwd=str(tmp_path),
+        )
+        assert result.returncode == 0
+
+        hook_file = tmp_path / ".git" / "hooks" / "post-checkout"
+        assert hook_file.exists(), "post-checkout hook must be created"
+        assert os.access(hook_file, os.X_OK), "post-checkout hook must be executable"
+        assert "direnv-worktree-hook-start" in hook_file.read_text()
+
+    def test_idempotent_installation(self, hooks_dir: Path, tmp_path: Path):
+        """Running twice must not duplicate the hook block."""
+        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        (tmp_path / ".envrc").write_text("# test envrc\n")
+
+        # Run twice
+        for _ in range(2):
+            subprocess.run(
+                [str(hooks_dir / "ensure-direnv-hook.sh")],
+                capture_output=True,
+                text=True,
+                cwd=str(tmp_path),
+            )
+
+        hook_file = tmp_path / ".git" / "hooks" / "post-checkout"
+        content = hook_file.read_text()
+        assert content.count("direnv-worktree-hook-start") == 1, \
+            "Hook block must appear exactly once"
+
+    def test_preserves_existing_post_checkout(self, hooks_dir: Path, tmp_path: Path):
+        """Must append to existing post-checkout hooks, not replace."""
+        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        (tmp_path / ".envrc").write_text("# test envrc\n")
+
+        # Create existing post-checkout hook
+        hook_dir = tmp_path / ".git" / "hooks"
+        hook_dir.mkdir(parents=True, exist_ok=True)
+        hook_file = hook_dir / "post-checkout"
+        hook_file.write_text("#!/bin/sh\necho 'existing hook'\n")
+        hook_file.chmod(hook_file.stat().st_mode | stat.S_IEXEC)
+
+        subprocess.run(
+            [str(hooks_dir / "ensure-direnv-hook.sh")],
+            capture_output=True,
+            text=True,
+            cwd=str(tmp_path),
+        )
+
+        content = hook_file.read_text()
+        assert "existing hook" in content, "Existing hook content must be preserved"
+        assert "direnv-worktree-hook-start" in content, "Direnv block must be appended"
+
+    def test_has_shebang(self, hooks_dir: Path):
+        script = hooks_dir / "ensure-direnv-hook.sh"
+        first_line = script.read_text().splitlines()[0]
+        assert first_line.startswith("#!/"), "Script must have a shebang line"
