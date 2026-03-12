@@ -242,8 +242,17 @@ class TestEnsureDirenvHook:
         git_path = shutil.which("git")
         assert git_path, "git must be available"
         git_dir = str(Path(git_path).parent)
+        # Build PATH from mock-bin + git's directory only; avoid hardcoded paths
+        path_dirs = [str(mock_bin), git_dir]
+        # Deduplicate while preserving order
+        seen: set[str] = set()
+        unique_dirs = []
+        for d in path_dirs:
+            if d not in seen:
+                seen.add(d)
+                unique_dirs.append(d)
         env = {k: v for k, v in os.environ.items() if k != "PATH"}
-        env["PATH"] = f"{mock_bin}:{git_dir}:/usr/bin:/bin"
+        env["PATH"] = ":".join(unique_dirs)
         return env
 
     def test_script_exists(self, hooks_dir: Path):
