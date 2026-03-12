@@ -186,30 +186,19 @@ def parse_timestamp(ts_str):
 
 
 def extract_user_input(content):
-    """Extract text from a user message's content (string or content blocks).
-
-    Falls back to tool result summaries when no text blocks exist.
-    """
+    """Extract text from a user message's content (string or content blocks)."""
     if isinstance(content, str):
         return content
     if isinstance(content, list):
         texts = []
-        tool_summaries = []
         for block in content:
             if isinstance(block, dict):
                 if block.get("type") == "text":
                     texts.append(block.get("text", ""))
                 elif block.get("type") == "tool_result":
-                    tool_id = block.get("tool_use_id", "")
-                    raw = block.get("content", "")
-                    preview = str(raw)[:200] if raw else ""
-                    tool_summaries.append(
-                        f"[tool_result: {tool_id[:16]}] {preview}"
-                    )
-        if texts:
-            return "\n".join(texts)
-        if tool_summaries:
-            return "\n".join(tool_summaries)
+                    # Skip tool results — they're tracked as tool observations
+                    continue
+        return "\n".join(texts) if texts else None
     return None
 
 

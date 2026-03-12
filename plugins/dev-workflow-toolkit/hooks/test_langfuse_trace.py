@@ -180,21 +180,11 @@ class TestExtractUserInput:
         ]
         assert extract_user_input(content) == "Now do X"
 
-    def test_only_tool_results_returns_summary(self):
+    def test_only_tool_results_returns_none(self):
         content = [
             {"type": "tool_result", "tool_use_id": "t1", "content": "ok"},
         ]
-        result = extract_user_input(content)
-        assert result is not None
-        assert "tool_result" in result
-        assert "ok" in result
-
-    def test_tool_result_preview_truncated(self):
-        content = [
-            {"type": "tool_result", "tool_use_id": "t1", "content": "x" * 500},
-        ]
-        result = extract_user_input(content)
-        assert len(result) < 300  # 200 char preview + prefix
+        assert extract_user_input(content) is None
 
     def test_empty_list(self):
         assert extract_user_input([]) is None
@@ -657,3 +647,36 @@ class TestRecordError:
 
         error_files = list(errors_dir.iterdir())
         assert len(error_files) == 3
+
+
+class TestOtelStartTimeCanary:
+    """Canary tests for _otel_span._start_time workaround.
+
+    The Langfuse SDK v4 doesn't expose start_time on start_observation().
+    We work around this by setting the OTel span's _start_time directly.
+    These tests verify the attribute chain exists so SDK upgrades break CI
+    rather than silently shipping latency=0.
+
+    Remove when langfuse/langfuse#9404 adds start_time to start_observation().
+    """
+
+    def test_otel_span_has_settable_start_time(self):
+        """OTel SDK spans expose _start_time as a writable attribute."""
+        from opentelemetry.sdk.trace import TracerProvider
+
+        tracer = TracerProvider().get_tracer("canary")
+        span = tracer.start_span("test")
+        assert hasattr(span, "_start_time")
+        original = span._start_time
+        assert original > 0
+        span._start_time = 1234567890
+        assert span._start_time == 1234567890
+
+    def test_langfuse_wrapper_exposes_otel_span(self):
+        """LangfuseObservationWrapper stores the OTel span as _otel_span."""
+        from langfuse._client.span import LangfuseObservationWrapper
+        import inspect
+
+        assert "otel_span" in LangfuseObservationWrapper.__init__.__code__.co_varnames
+        src = inspect.getsource(LangfuseObservationWrapper.__init__)
+        assert "self._otel_span = otel_span" in src
