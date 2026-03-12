@@ -257,14 +257,16 @@ def ship_transcript_data(client, trace_id, transcript_path, sent_ids,
                 ),
             },
         }
-        # Use user message timestamp as start, assistant timestamp as end
+        # SDK v4 start_observation doesn't accept start_time/end_time.
+        # Store timestamps in metadata; pass end_time (as epoch ns) to .end().
         if last_user_ts:
-            gen_kwargs["start_time"] = last_user_ts
+            gen_kwargs["metadata"]["start_time"] = last_user_ts.isoformat()
         if assistant_ts:
-            gen_kwargs["end_time"] = assistant_ts
+            gen_kwargs["metadata"]["end_time"] = assistant_ts.isoformat()
 
         gen = client.start_observation(**gen_kwargs)
-        gen.end()
+        end_ns = int(assistant_ts.timestamp() * 1e9) if assistant_ts else None
+        gen.end(end_time=end_ns)
 
         # Ship tool calls
         for block in content_blocks:

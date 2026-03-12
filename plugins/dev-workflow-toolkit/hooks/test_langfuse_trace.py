@@ -378,7 +378,7 @@ class TestShipTranscriptData:
         assert gen_call.kwargs["output"] == "4"
 
     def test_ships_timestamps_on_generation(self, tmp_path):
-        """User timestamp → start_time, assistant timestamp → end_time."""
+        """User timestamp → metadata start_time, assistant timestamp → end() + metadata."""
         path = tmp_path / "transcript.jsonl"
         msgs = [
             {"type": "user", "timestamp": "2026-03-11T12:00:00.000Z",
@@ -398,8 +398,15 @@ class TestShipTranscriptData:
         ship_transcript_data(client, "trace123", str(path), set())
 
         gen_call = client.start_observation.call_args_list[0]
-        assert gen_call.kwargs["start_time"].second == 0
-        assert gen_call.kwargs["end_time"].second == 5
+        # SDK v4: timestamps stored in metadata, end_time passed to .end()
+        metadata = gen_call.kwargs["metadata"]
+        assert "2026-03-11T12:00:00" in metadata["start_time"]
+        assert "2026-03-11T12:00:05" in metadata["end_time"]
+        # end_time passed as nanoseconds to .end()
+        mock_obs.end.assert_called_once()
+        end_ns = mock_obs.end.call_args.kwargs.get("end_time")
+        assert end_ns is not None
+        assert end_ns > 0
 
     def test_user_string_content_as_input(self, tmp_path):
         """User messages with plain string content are captured."""
