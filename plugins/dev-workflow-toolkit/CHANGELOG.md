@@ -3,6 +3,13 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.8.1
+
+Fix: adapt Langfuse hook to SDK v4 `start_observation()` API. The
+`start_time`/`end_time` parameters were removed in Langfuse Python SDK
+v4.0.0. Timestamps are now stored in observation metadata and `end_time`
+is passed as epoch nanoseconds to `.end()`.
+
 ## v1.8.0
 
 ### Langfuse tracing: full data capture
