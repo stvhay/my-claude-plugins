@@ -261,26 +261,52 @@ class TestEntryPointIssueCreation:
             f"{skill} must pass --description to bd create"
         )
 
+    @pytest.mark.parametrize("skill", list(ENTRY_POINT_SKILLS.keys()))
+    def test_entry_point_handles_issue_creation_failure(self, skills_dir: Path, skill: str):
+        """FAIL-6: Entry-point skills must handle issue creation failure gracefully."""
+        skill_file = skills_dir / skill / "SKILL.md"
+        assert skill_file.exists(), f"Skill file not found: {skill}"
+        text = skill_file.read_text().lower()
+        assert any(phrase in text for phrase in [
+            "fail", "unavailable", "proceed without", "error",
+        ]), (
+            f"{skill} must document graceful handling when issue creation fails (FAIL-6)"
+        )
+
 
 # ---------------------------------------------------------------------------
 # Worktree auto-detection
 # ---------------------------------------------------------------------------
 
-WORKTREE_AWARE_SKILLS = [
-    "requesting-code-review",
+WORKTREE_CONFIRM_SKILLS = [
     "executing-plans",
     "subagent-driven-development",
 ]
 
 
 class TestWorktreeAutoDetection:
-    """Skills that operate on repos must auto-detect worktree context."""  # Tests INV-8
+    """Skills that operate on repos must auto-detect worktree context."""
 
-    @pytest.mark.parametrize("skill", WORKTREE_AWARE_SKILLS)
-    def test_skill_has_worktree_detection(self, skills_dir: Path, skill: str):
+    def test_review_has_pr_worktree_resolution(self, skills_dir: Path):
+        """INV-8a: requesting-code-review resolves PR branch to local worktree."""
+        skill_file = skills_dir / "requesting-code-review" / "SKILL.md"
+        text = skill_file.read_text()
+        assert "git worktree list" in text, (
+            "requesting-code-review must use git worktree list for PR-to-worktree resolution"
+        )
+        assert "gh pr view" in text, (
+            "requesting-code-review must use gh pr view to resolve PR branch"
+        )
+
+    @pytest.mark.parametrize("skill", WORKTREE_CONFIRM_SKILLS)
+    def test_execution_skill_confirms_worktree(self, skills_dir: Path, skill: str):
+        """INV-8b: execution skills confirm worktree context."""
         skill_file = skills_dir / skill / "SKILL.md"
         assert skill_file.exists(), f"Skill file not found: {skill}"
         text = skill_file.read_text()
-        assert "git rev-parse --show-toplevel" in text or ".claude/worktrees/" in text, (
-            f"{skill} must contain worktree auto-detection logic"
+        assert "git rev-parse --show-toplevel" in text, (
+            f"{skill} must contain git rev-parse --show-toplevel for worktree confirmation"
+        )
+        assert "git worktree list" in text, (
+            f"{skill} must use git worktree list for robust worktree detection"
         )
