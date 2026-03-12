@@ -25,17 +25,27 @@ Before exploring the project, verify the CONTRIBUTING.md workflow prerequisites.
 
 ### 1a. Issue Check
 
-Ask: "What are you working on? (One-line summary, or enter an existing issue number)"
+The user's initial message or `/brainstorming` arguments describe the work. Use this to determine or create the issue automatically — do not prompt the user for an issue number unless the description is too vague to search.
 
-Then ask: "Is this a feature, bug fix, or epic?" (default: feature)
+**Determine the issue type** from context — use `feature`, `bug`, or `epic` for `bd create --type=`. Map to GitHub labels: `feature`→`enhancement`, `bug`→`bug`, `epic`→`epic`. If the label doesn't exist on the repo, create it first with `gh label create "<label>" --description "<type> work"`.
 
-**Determine the issue type** — use `feature`, `bug`, or `epic` for `bd create --type=`. Map to GitHub labels: `feature`→`enhancement`, `bug`→`bug`, `epic`→`epic`. If the label doesn't exist on the repo, create it first with `gh label create "<label>" --description "<type> work"`.
+**Auto-create flow:**
 
-- **If new summary provided:** Run `gh issue create --title "<summary>" --body "Brainstorming in progress" --label "<gh-label>"` to create the GH issue. Capture the issue number. Then run `bd create --title="<summary>" --type=<type> --external-ref=gh-<N> --json` to create the beads issue linking to it.
-- **If existing issue number or URL provided:** Run `gh issue view <number> --json title,state` to verify it exists. Capture the title. Then run `bd create --title="<title>" --type=<type> --external-ref=gh-<N> --json` to create the beads issue. If the issue is **closed**, warn: "Issue #N is closed. Continue with this issue, pick a different one, or proceed without?" Handle accordingly.
-- **If 'none':** Warn: "CONTRIBUTING.md requires a GitHub issue. You can create one now or proceed without." If proceeding, ask for a one-line summary, then create a beads issue without an external-ref: `bd create --title="<summary>" --type=<type> --json`. Record `Issue: None (exploratory)`.
-- **If `bd` is unavailable or fails:** Proceed without beads tracking — the GitHub issue alone is sufficient for brainstorming.
-- **Record both:** Capture the GH issue number and beads ID (the `id` field from the `--json` response, e.g., `{"id": "beads-NNN", ...}`) for the design doc header.
+1. **If existing issue number or URL provided:** Run `gh issue view <number> --json title,state` to verify it exists. Capture the title. If the issue is **closed**, warn: "Issue #N is closed. Continue with this issue, pick a different one, or proceed without?" Handle accordingly.
+
+2. **If description provided (no issue number):**
+   - Extract 3-5 keywords from the description
+   - Run `gh issue list --search "<keywords>" --state open --json number,title --limit 5` to check for duplicates
+   - **If matches found:** Tell the user: "Found existing issue #N '<title>' which looks related — using that." Use the matched issue. If multiple matches, pick the best one and mention the others.
+   - **If no matches:** Tell the user: "No existing issues match — creating issue." Run `gh issue create --title "<summary>" --body "<one-paragraph description of the work>" --label "<gh-label>"` to create the GH issue.
+
+3. **If description is too vague to search:** Ask: "Can you give me a one-line summary of what you're working on?"
+
+4. **Create beads issue:** Run `bd create --title="<summary>" --type=<type> --description="<one-paragraph description>" --external-ref=gh-<N> --json` to create the beads issue. Always include `--description` to provide context for beads tracking.
+
+5. **If `bd` is unavailable or fails:** Proceed without beads tracking — the GitHub issue alone is sufficient for brainstorming.
+
+6. **Record both:** Capture the GH issue number and beads ID (the `id` field from the `--json` response, e.g., `{"id": "beads-NNN", ...}`) for the design doc header.
 
 ### 1b. Branch Check
 
@@ -65,20 +75,23 @@ You MUST create a task for each of these items and complete them in order:
 
 ```dot
 digraph brainstorming {
-    // Pre-flight: issue check
+    // Pre-flight: issue check (auto-create)
     "Pre-flight checks" [shape=box];
-    "Issue provided?" [shape=diamond];
+    "Issue number given?" [shape=diamond];
     "Verify issue exists" [shape=box];
-    "Warn: issue recommended" [shape=box];
-    "User proceeds?" [shape=diamond];
-    "END" [shape=doublecircle];
-    "Pre-flight checks" -> "Issue provided?";
-    "Issue provided?" -> "Verify issue exists" [label="yes"];
-    "Issue provided?" -> "Warn: issue recommended" [label="none"];
+    "Search for duplicates" [shape=box];
+    "Duplicate found?" [shape=diamond];
+    "Use existing issue" [shape=box];
+    "Create new issue" [shape=box];
+    "Pre-flight checks" -> "Issue number given?";
+    "Issue number given?" -> "Verify issue exists" [label="yes"];
+    "Issue number given?" -> "Search for duplicates" [label="no, description given"];
     "Verify issue exists" -> "On feature branch?";
-    "Warn: issue recommended" -> "User proceeds?";
-    "User proceeds?" -> "On feature branch?" [label="yes"];
-    "User proceeds?" -> "END" [label="no"];
+    "Search for duplicates" -> "Duplicate found?";
+    "Duplicate found?" -> "Use existing issue" [label="yes"];
+    "Duplicate found?" -> "Create new issue" [label="no"];
+    "Use existing issue" -> "On feature branch?";
+    "Create new issue" -> "On feature branch?";
 
     // Pre-flight: branch check
     "On feature branch?" [shape=diamond];
