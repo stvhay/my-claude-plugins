@@ -224,6 +224,37 @@ class TestDirenvPostCheckout:
 class TestEnsureDirenvHook:
     """Tests for the SessionStart hook that installs the git post-checkout hook."""
 
+    @pytest.fixture()
+    def env_with_mock_direnv(self, tmp_path: Path) -> dict:
+        """Provide an env dict with a mock direnv on PATH.
+
+        The ensure-direnv-hook.sh script exits early if ``command -v direnv``
+        fails (line 8).  In CI, direnv is not installed, so the script silently
+        exits 0 and the tests that expect filesystem mutations fail.  This
+        fixture creates a no-op ``direnv`` stub so the guard passes.
+        """
+        mock_bin = tmp_path / "mock-bin"
+        mock_bin.mkdir(exist_ok=True)
+        mock_direnv = mock_bin / "direnv"
+        mock_direnv.write_text("#!/bin/sh\nexit 0\n")
+        mock_direnv.chmod(0o755)
+
+        git_path = shutil.which("git")
+        assert git_path, "git must be available"
+        git_dir = str(Path(git_path).parent)
+        # Build PATH from mock-bin + git's directory only; avoid hardcoded paths
+        path_dirs = [str(mock_bin), git_dir]
+        # Deduplicate while preserving order
+        seen: set[str] = set()
+        unique_dirs = []
+        for d in path_dirs:
+            if d not in seen:
+                seen.add(d)
+                unique_dirs.append(d)
+        env = {k: v for k, v in os.environ.items() if k != "PATH"}
+        env["PATH"] = ":".join(unique_dirs)
+        return env
+
     def test_script_exists(self, hooks_dir: Path):
         script = hooks_dir / "ensure-direnv-hook.sh"
         assert script.exists(), "ensure-direnv-hook.sh must exist"
@@ -251,38 +282,56 @@ class TestEnsureDirenvHook:
         )
         assert result.returncode == 0
 
-    def test_exits_cleanly_when_no_envrc(self, hooks_dir: Path, tmp_path: Path):
+    def test_exits_cleanly_when_no_envrc(
+        self, hooks_dir: Path, tmp_path: Path, bash_path: str,
+        env_with_mock_direnv: dict,
+    ):
         """Hook must exit 0 when no .envrc in repo root."""
         # Init a git repo without .envrc
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True,
+            env=env_with_mock_direnv,
+        )
         result = subprocess.run(
-            [str(hooks_dir / "ensure-direnv-hook.sh")],
+            [bash_path, str(hooks_dir / "ensure-direnv-hook.sh")],
             capture_output=True,
             text=True,
+            env=env_with_mock_direnv,
             cwd=str(tmp_path),
         )
         assert result.returncode == 0
 
-    def test_no_stdout_on_success(self, hooks_dir: Path, tmp_path: Path):
+    def test_no_stdout_on_success(
+        self, hooks_dir: Path, tmp_path: Path, bash_path: str,
+        env_with_mock_direnv: dict,
+    ):
         """Hook must be silent on success."""
         result = subprocess.run(
-            [str(hooks_dir / "ensure-direnv-hook.sh")],
+            [bash_path, str(hooks_dir / "ensure-direnv-hook.sh")],
             capture_output=True,
             text=True,
+            env=env_with_mock_direnv,
             cwd=str(tmp_path),
         )
         assert result.stdout == ""
 
-    def test_installs_post_checkout_hook(self, hooks_dir: Path, tmp_path: Path):
+    def test_installs_post_checkout_hook(
+        self, hooks_dir: Path, tmp_path: Path, bash_path: str,
+        env_with_mock_direnv: dict,
+    ):
         """Hook must install the post-checkout hook in a git repo with .envrc."""
         # Set up a git repo with .envrc
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True,
+            env=env_with_mock_direnv,
+        )
         (tmp_path / ".envrc").write_text("# test envrc\n")
 
         result = subprocess.run(
-            [str(hooks_dir / "ensure-direnv-hook.sh")],
+            [bash_path, str(hooks_dir / "ensure-direnv-hook.sh")],
             capture_output=True,
             text=True,
+            env=env_with_mock_direnv,
             cwd=str(tmp_path),
         )
         assert result.returncode == 0
@@ -292,15 +341,22 @@ class TestEnsureDirenvHook:
         assert os.access(hook_file, os.X_OK), "post-checkout hook must be executable"
         assert "direnv-worktree-hook-start" in hook_file.read_text()
 
-    def test_writes_path_file(self, hooks_dir: Path, tmp_path: Path):
+    def test_writes_path_file(
+        self, hooks_dir: Path, tmp_path: Path, bash_path: str,
+        env_with_mock_direnv: dict,
+    ):
         """Hook must write the path to direnv-post-checkout.sh in a path file."""
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True,
+            env=env_with_mock_direnv,
+        )
         (tmp_path / ".envrc").write_text("# test envrc\n")
 
         subprocess.run(
-            [str(hooks_dir / "ensure-direnv-hook.sh")],
+            [bash_path, str(hooks_dir / "ensure-direnv-hook.sh")],
             capture_output=True,
             text=True,
+            env=env_with_mock_direnv,
             cwd=str(tmp_path),
         )
 
@@ -310,17 +366,24 @@ class TestEnsureDirenvHook:
         assert stored_path.endswith("direnv-post-checkout.sh")
         assert os.path.isfile(stored_path), "Stored path must point to an existing file"
 
-    def test_idempotent_installation(self, hooks_dir: Path, tmp_path: Path):
+    def test_idempotent_installation(
+        self, hooks_dir: Path, tmp_path: Path, bash_path: str,
+        env_with_mock_direnv: dict,
+    ):
         """Running twice must not duplicate the hook block."""
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True,
+            env=env_with_mock_direnv,
+        )
         (tmp_path / ".envrc").write_text("# test envrc\n")
 
         # Run twice
         for _ in range(2):
             subprocess.run(
-                [str(hooks_dir / "ensure-direnv-hook.sh")],
+                [bash_path, str(hooks_dir / "ensure-direnv-hook.sh")],
                 capture_output=True,
                 text=True,
+                env=env_with_mock_direnv,
                 cwd=str(tmp_path),
             )
 
@@ -329,9 +392,15 @@ class TestEnsureDirenvHook:
         assert content.count("direnv-worktree-hook-start") == 1, \
             "Hook block must appear exactly once"
 
-    def test_preserves_existing_post_checkout(self, hooks_dir: Path, tmp_path: Path):
+    def test_preserves_existing_post_checkout(
+        self, hooks_dir: Path, tmp_path: Path, bash_path: str,
+        env_with_mock_direnv: dict,
+    ):
         """Must append to existing post-checkout hooks, not replace."""
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True,
+            env=env_with_mock_direnv,
+        )
         (tmp_path / ".envrc").write_text("# test envrc\n")
 
         # Create existing post-checkout hook
@@ -342,9 +411,10 @@ class TestEnsureDirenvHook:
         hook_file.chmod(hook_file.stat().st_mode | stat.S_IEXEC)
 
         subprocess.run(
-            [str(hooks_dir / "ensure-direnv-hook.sh")],
+            [bash_path, str(hooks_dir / "ensure-direnv-hook.sh")],
             capture_output=True,
             text=True,
+            env=env_with_mock_direnv,
             cwd=str(tmp_path),
         )
 
@@ -353,11 +423,15 @@ class TestEnsureDirenvHook:
         assert "direnv-worktree-hook-start" in content, "Direnv block must be appended"
 
     def test_error_when_post_checkout_script_missing(
-        self, hooks_dir: Path, tmp_path: Path, bash_path: str
+        self, hooks_dir: Path, tmp_path: Path, bash_path: str,
+        env_with_mock_direnv: dict,
     ):
         """Hook must exit 1 with stderr when direnv-post-checkout.sh is not found."""
         # Set up a git repo with .envrc
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True,
+            env=env_with_mock_direnv,
+        )
         (tmp_path / ".envrc").write_text("# test envrc\n")
 
         # Create a fake hooks dir with only ensure-direnv-hook.sh (no post-checkout script)
@@ -371,23 +445,29 @@ class TestEnsureDirenvHook:
             [bash_path, str(fake_script)],
             capture_output=True,
             text=True,
+            env=env_with_mock_direnv,
             cwd=str(tmp_path),
         )
         assert result.returncode == 1, "Must exit 1 when post-checkout script is missing"
         assert "direnv-post-checkout.sh not found" in result.stderr
 
     def test_updates_path_file_when_stale(
-        self, hooks_dir: Path, tmp_path: Path
+        self, hooks_dir: Path, tmp_path: Path, bash_path: str,
+        env_with_mock_direnv: dict,
     ):
         """Hook must update the path file even when the hook block is already installed."""
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True,
+            env=env_with_mock_direnv,
+        )
         (tmp_path / ".envrc").write_text("# test envrc\n")
 
         # First install
         subprocess.run(
-            [str(hooks_dir / "ensure-direnv-hook.sh")],
+            [bash_path, str(hooks_dir / "ensure-direnv-hook.sh")],
             capture_output=True,
             text=True,
+            env=env_with_mock_direnv,
             cwd=str(tmp_path),
         )
 
@@ -399,9 +479,10 @@ class TestEnsureDirenvHook:
 
         # Run again — should update the path file
         result = subprocess.run(
-            [str(hooks_dir / "ensure-direnv-hook.sh")],
+            [bash_path, str(hooks_dir / "ensure-direnv-hook.sh")],
             capture_output=True,
             text=True,
+            env=env_with_mock_direnv,
             cwd=str(tmp_path),
         )
         assert result.returncode == 0
