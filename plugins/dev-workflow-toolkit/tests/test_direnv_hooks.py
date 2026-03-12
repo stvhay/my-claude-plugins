@@ -325,6 +325,72 @@ class TestEnsureDirenvHook:
         assert "existing hook" in content, "Existing hook content must be preserved"
         assert "direnv-worktree-hook-start" in content, "Direnv block must be appended"
 
+    def test_error_when_post_checkout_script_missing(
+        self, hooks_dir: Path, tmp_path: Path, bash_path: str
+    ):
+        """Hook must exit 1 with stderr when direnv-post-checkout.sh is not found."""
+        # Set up a git repo with .envrc
+        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        (tmp_path / ".envrc").write_text("# test envrc\n")
+
+        # Create a fake hooks dir with only ensure-direnv-hook.sh (no post-checkout script)
+        fake_hooks = tmp_path / "fake-hooks"
+        fake_hooks.mkdir()
+        fake_script = fake_hooks / "ensure-direnv-hook.sh"
+        # Copy the real script but into a directory without direnv-post-checkout.sh
+        shutil.copy2(str(hooks_dir / "ensure-direnv-hook.sh"), str(fake_script))
+
+        result = subprocess.run(
+            [bash_path, str(fake_script)],
+            capture_output=True,
+            text=True,
+            cwd=str(tmp_path),
+        )
+        assert result.returncode == 1, "Must exit 1 when post-checkout script is missing"
+        assert "direnv-post-checkout.sh not found" in result.stderr
+
+    def test_reinstalls_when_path_is_stale(
+        self, hooks_dir: Path, tmp_path: Path
+    ):
+        """Hook must reinstall if the embedded path to direnv-post-checkout.sh is stale."""
+        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        (tmp_path / ".envrc").write_text("# test envrc\n")
+
+        # First install
+        subprocess.run(
+            [str(hooks_dir / "ensure-direnv-hook.sh")],
+            capture_output=True,
+            text=True,
+            cwd=str(tmp_path),
+        )
+
+        hook_file = tmp_path / ".git" / "hooks" / "post-checkout"
+        assert hook_file.exists()
+
+        # Corrupt the installed path to simulate a stale reference
+        content = hook_file.read_text()
+        content = content.replace(
+            str(hooks_dir / "direnv-post-checkout.sh"),
+            "/nonexistent/path/direnv-post-checkout.sh",
+        )
+        hook_file.write_text(content)
+
+        # Run again — should detect stale path and reinstall
+        result = subprocess.run(
+            [str(hooks_dir / "ensure-direnv-hook.sh")],
+            capture_output=True,
+            text=True,
+            cwd=str(tmp_path),
+        )
+        assert result.returncode == 0
+
+        # Verify the block was reinstalled with the correct path
+        new_content = hook_file.read_text()
+        assert new_content.count("direnv-worktree-hook-start") == 1, \
+            "Hook block must appear exactly once after reinstall"
+        assert str(hooks_dir / "direnv-post-checkout.sh") in new_content, \
+            "Reinstalled block must contain the correct path"
+
     def test_has_shebang(self, hooks_dir: Path):
         script = hooks_dir / "ensure-direnv-hook.sh"
         first_line = script.read_text().splitlines()[0]
