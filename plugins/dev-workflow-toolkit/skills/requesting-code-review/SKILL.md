@@ -90,7 +90,7 @@ Use Task tool with code-reviewer type, fill template at `code-reviewer.md`
 
 When a PR exists (`PR_NUMBER` is set), the code-reviewer subagent posts findings as PR comments:
 
-- **Line-level comments** where applicable: `gh api repos/{owner}/{repo}/pulls/{PR_NUMBER}/comments` with `path`, `line`, and `body`
+- **Line-level comments** where applicable: `gh api repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/pulls/{PR_NUMBER}/comments` with `path`, `line`, and `body`
 - **General findings** as top-level PR comment: `gh pr comment {PR_NUMBER} --body "<findings>"`
 - **Summary:** Post a structured review summary:
   ```bash
