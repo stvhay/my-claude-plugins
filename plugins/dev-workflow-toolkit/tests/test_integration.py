@@ -224,3 +224,63 @@ class TestMcpConfiguration:
     def test_references_mcp_json(self, skills_dir: Path):
         skill_file = skills_dir / "setup-rag" / "SKILL.md"
         assert ".mcp.json" in skill_file.read_text()
+
+
+# ---------------------------------------------------------------------------
+# Issue auto-creation in entry-point skills
+# ---------------------------------------------------------------------------
+
+ENTRY_POINT_SKILLS = {
+    "brainstorming": "gh issue list --search",
+    "systematic-debugging": "gh issue list --search",
+}
+
+
+class TestEntryPointIssueCreation:
+    """Entry-point skills must auto-create issues with duplicate search."""  # Tests INV-7
+
+    @pytest.mark.parametrize(
+        "skill,pattern",
+        list(ENTRY_POINT_SKILLS.items()),
+        ids=list(ENTRY_POINT_SKILLS.keys()),
+    )
+    def test_entry_point_has_duplicate_search(self, skills_dir: Path, skill: str, pattern: str):
+        skill_file = skills_dir / skill / "SKILL.md"
+        assert skill_file.exists(), f"Skill file not found: {skill}"
+        text = skill_file.read_text()
+        assert pattern in text, (
+            f"{skill} must contain '{pattern}' for duplicate issue search"
+        )
+
+    @pytest.mark.parametrize("skill", list(ENTRY_POINT_SKILLS.keys()))
+    def test_entry_point_has_bd_description(self, skills_dir: Path, skill: str):
+        skill_file = skills_dir / skill / "SKILL.md"
+        assert skill_file.exists(), f"Skill file not found: {skill}"
+        text = skill_file.read_text()
+        assert "--description" in text, (
+            f"{skill} must pass --description to bd create"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Worktree auto-detection
+# ---------------------------------------------------------------------------
+
+WORKTREE_AWARE_SKILLS = [
+    "requesting-code-review",
+    "executing-plans",
+    "subagent-driven-development",
+]
+
+
+class TestWorktreeAutoDetection:
+    """Skills that operate on repos must auto-detect worktree context."""  # Tests INV-7
+
+    @pytest.mark.parametrize("skill", WORKTREE_AWARE_SKILLS)
+    def test_skill_has_worktree_detection(self, skills_dir: Path, skill: str):
+        skill_file = skills_dir / skill / "SKILL.md"
+        assert skill_file.exists(), f"Skill file not found: {skill}"
+        text = skill_file.read_text()
+        assert "git rev-parse --show-toplevel" in text or ".claude/worktrees/" in text, (
+            f"{skill} must contain worktree auto-detection logic"
+        )

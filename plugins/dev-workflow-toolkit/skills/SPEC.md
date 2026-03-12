@@ -67,6 +67,7 @@ Skills compose into a development workflow graph. The primary flow is:
 | INV-4 | Upstream provenance tracking (`UPSTREAM-*.md`) is maintainer-only; consuming agents must not modify these files | reasoning-required | UPSTREAM files in the plugin cache are read-only from the consuming project's perspective |
 | INV-5 | Skills that reference other skills use the skill name (not file path) in their Integration section | reasoning-required | Skill directories may move; names are the stable identifier |
 | INV-6 | Support files (prompts, templates, examples) live inside the skill's own directory | structural | Skills must be self-contained — an agent loads one directory |
+| INV-7 | Entry-point issue automation: Entry-point skills (brainstorming, systematic-debugging) auto-create GitHub issues with duplicate search via `gh issue list --search` and always pass `--description` to `bd create`. Skills that operate on repos (requesting-code-review, executing-plans, subagent-driven-development) auto-detect worktree context via `git rev-parse --show-toplevel`. | reasoning-required | Prevents duplicate issues and ensures worktree-aware operations work correctly |
 
 **Enforcement classification:**
 - **structural** — enforced by test suite, gitignore structure, or directory convention; pattern-matchable
@@ -81,6 +82,7 @@ Skills compose into a development workflow graph. The primary flow is:
 | FAIL-3 | Skill changes lost after git operations | For project-local skills: missing gitignore entry | Ensure project-local skill directories have appropriate gitignore entries; plugin-distributed skills are unaffected |
 | FAIL-4 | Upstream sync clobbers local customizations | Skill marked "identical" in UPSTREAM tracking but has local changes | Maintainer action: update status to "diverged" with notes on what differs in the plugin source repo |
 | FAIL-5 | Skill references broken after rename | Cross-references use file paths instead of skill names | Update references to use `/skill-name` form |
+| FAIL-6 | Silent issue creation skipped | Entry-point skill fails to create issue (network error, auth failure) without informing the user | Surface the error, proceed without issue tracking, warn user that the work is untracked |
 
 ## Decision Framework
 
