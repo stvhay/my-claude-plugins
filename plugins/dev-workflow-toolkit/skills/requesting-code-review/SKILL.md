@@ -86,6 +86,30 @@ Use Task tool with code-reviewer type, fill template at `code-reviewer.md`
 - Note Minor issues for later
 - Push back if reviewer is wrong (with reasoning)
 
+## Review Documentation (Post-PR)
+
+When a PR exists (`PR_NUMBER` is set), the code-reviewer subagent posts findings as PR comments:
+
+- **Line-level comments** where applicable: `gh api repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/pulls/{PR_NUMBER}/comments` with `path`, `line`, and `body`
+- **General findings** as top-level PR comment: `gh pr comment {PR_NUMBER} --body "<findings>"`
+- **Summary:** Post a structured review summary:
+  ```bash
+  gh pr comment $PR_NUMBER --body "$(cat <<'REVIEW_EOF'
+  ## Code Review Summary
+  **Verdict:** PASS/NEEDS_WORK
+  - Critical: N | Important: N | Minor: N
+
+  <details><summary>Findings</summary>
+
+  1. [severity] description — file:line
+  2. [severity] description — file:line
+  </details>
+  REVIEW_EOF
+  )"
+  ```
+
+When no PR exists, findings are reported locally only (existing behavior unchanged).
+
 ## Example: Local Review (no PR)
 
 ```

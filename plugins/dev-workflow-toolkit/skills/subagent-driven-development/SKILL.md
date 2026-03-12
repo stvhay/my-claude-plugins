@@ -110,10 +110,25 @@ digraph process {
 5. **Handle questions.** If the subagent asks questions, answer clearly before letting them proceed.
 6. **Spec review.** Dispatch spec compliance reviewer (./spec-reviewer-prompt.md). If issues found, dispatch fix subagent, then re-review.
 7. **Quality review.** Dispatch code quality reviewer (./code-quality-reviewer-prompt.md). If issues found, dispatch fix subagent, then re-review.
-8. **Next task.** Repeat until all tasks complete.
-9. **Verify acceptance criteria.** Check the plan's acceptance criteria. Run the tests.
-10. **Final review.** Dispatch code reviewer for the entire implementation — catches cross-task integration issues.
-11. **Finish.** Use finishing-a-development-branch.
+8. **Document review.** After both reviews pass, document the findings:
+   - **Beads:** `bd update <task-id> --notes "Review: PASS — spec ✅, quality ✅, N findings resolved"`
+   - **GitHub issue:** Post a summary using the collapsible format:
+     ```bash
+     gh issue comment <N> --body "$(cat <<'REVIEW_EOF'
+     ## Spec Review — Task N
+     <details><summary>Verdict: PASS — N findings resolved</summary>
+
+     - Finding 1: description + resolution
+     - Finding 2: description + resolution
+     </details>
+     REVIEW_EOF
+     )"
+     ```
+   - If either `bd` or `gh` is unavailable, use whichever is available. If neither is available, log a warning and proceed.
+9. **Next task.** Repeat until all tasks complete.
+10. **Verify acceptance criteria.** Check the plan's acceptance criteria. Run the tests.
+11. **Final review.** Dispatch code reviewer for the entire implementation — catches cross-task integration issues.
+12. **Finish.** Use finishing-a-development-branch.
 
 ### Parallel dispatch
 
