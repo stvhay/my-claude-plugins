@@ -288,7 +288,10 @@ class TestEnsureDirenvHook:
     ):
         """Hook must exit 0 when no .envrc in repo root."""
         # Init a git repo without .envrc
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True,
+            env=env_with_mock_direnv,
+        )
         result = subprocess.run(
             [bash_path, str(hooks_dir / "ensure-direnv-hook.sh")],
             capture_output=True,
@@ -318,7 +321,10 @@ class TestEnsureDirenvHook:
     ):
         """Hook must install the post-checkout hook in a git repo with .envrc."""
         # Set up a git repo with .envrc
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True,
+            env=env_with_mock_direnv,
+        )
         (tmp_path / ".envrc").write_text("# test envrc\n")
 
         result = subprocess.run(
@@ -340,7 +346,10 @@ class TestEnsureDirenvHook:
         env_with_mock_direnv: dict,
     ):
         """Hook must write the path to direnv-post-checkout.sh in a path file."""
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True,
+            env=env_with_mock_direnv,
+        )
         (tmp_path / ".envrc").write_text("# test envrc\n")
 
         subprocess.run(
@@ -362,7 +371,10 @@ class TestEnsureDirenvHook:
         env_with_mock_direnv: dict,
     ):
         """Running twice must not duplicate the hook block."""
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True,
+            env=env_with_mock_direnv,
+        )
         (tmp_path / ".envrc").write_text("# test envrc\n")
 
         # Run twice
@@ -385,7 +397,10 @@ class TestEnsureDirenvHook:
         env_with_mock_direnv: dict,
     ):
         """Must append to existing post-checkout hooks, not replace."""
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True,
+            env=env_with_mock_direnv,
+        )
         (tmp_path / ".envrc").write_text("# test envrc\n")
 
         # Create existing post-checkout hook
@@ -413,7 +428,10 @@ class TestEnsureDirenvHook:
     ):
         """Hook must exit 1 with stderr when direnv-post-checkout.sh is not found."""
         # Set up a git repo with .envrc
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True,
+            env=env_with_mock_direnv,
+        )
         (tmp_path / ".envrc").write_text("# test envrc\n")
 
         # Create a fake hooks dir with only ensure-direnv-hook.sh (no post-checkout script)
@@ -438,7 +456,10 @@ class TestEnsureDirenvHook:
         env_with_mock_direnv: dict,
     ):
         """Hook must update the path file even when the hook block is already installed."""
-        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(
+            ["git", "init"], cwd=str(tmp_path), capture_output=True,
+            env=env_with_mock_direnv,
+        )
         (tmp_path / ".envrc").write_text("# test envrc\n")
 
         # First install
