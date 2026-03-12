@@ -3,6 +3,14 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.8.2-0
+
+### Review documentation standard
+
+Add `check-review-documented.sh` validation script and INV-9 review
+documentation standard. Five skills updated with review documentation
+instructions. Consolidate INV-8a/8b into INV-8.
+
 ## v1.8.0
 
 ### Langfuse tracing: full data capture
