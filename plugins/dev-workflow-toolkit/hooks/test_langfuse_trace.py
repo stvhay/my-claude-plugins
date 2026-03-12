@@ -249,9 +249,24 @@ class TestExtractTextOutput:
         ]
         assert extract_text_output(blocks) == "Hello\nWorld"
 
-    def test_no_text(self):
-        blocks = [{"type": "tool_use", "id": "t1"}]
-        assert extract_text_output(blocks) is None
+    def test_no_text_falls_back_to_tool_summary(self):
+        blocks = [
+            {"type": "tool_use", "id": "t1", "name": "Bash",
+             "input": {"command": "ls", "description": "List files"}},
+        ]
+        result = extract_text_output(blocks)
+        assert result is not None
+        assert "Bash" in result
+        assert "List files" in result
+
+    def test_no_text_tool_without_description(self):
+        blocks = [
+            {"type": "tool_use", "id": "t1", "name": "Read",
+             "input": {"file_path": "/tmp/foo"}},
+        ]
+        result = extract_text_output(blocks)
+        assert result is not None
+        assert "Read" in result
 
     def test_empty(self):
         assert extract_text_output([]) is None
@@ -377,8 +392,8 @@ class TestShipTranscriptData:
         assert gen_call.kwargs["input"] == "What is 2+2?"
         assert gen_call.kwargs["output"] == "4"
 
-    def test_ships_timestamps_on_generation(self, tmp_path):
-        """User timestamp → metadata start_time, assistant timestamp → end() + metadata."""
+    def test_ships_timestamps_and_sets_otel_start_time(self, tmp_path):
+        """User timestamp → OTel _start_time + metadata, assistant → end() + metadata."""
         path = tmp_path / "transcript.jsonl"
         msgs = [
             {"type": "user", "timestamp": "2026-03-11T12:00:00.000Z",
@@ -392,21 +407,27 @@ class TestShipTranscriptData:
         write_transcript(path, msgs)
 
         client = MagicMock()
+        mock_otel_span = MagicMock()
         mock_obs = MagicMock()
+        mock_obs._otel_span = mock_otel_span
         client.start_observation.return_value = mock_obs
 
         ship_transcript_data(client, "trace123", str(path), set())
 
         gen_call = client.start_observation.call_args_list[0]
-        # SDK v4: timestamps stored in metadata, end_time passed to .end()
+        # Timestamps still in metadata for reference
         metadata = gen_call.kwargs["metadata"]
         assert "2026-03-11T12:00:00" in metadata["start_time"]
         assert "2026-03-11T12:00:05" in metadata["end_time"]
+        # OTel span _start_time set for real latency calculation
+        assert mock_otel_span._start_time is not None
+        start_ns = mock_otel_span._start_time
+        assert start_ns > 0
         # end_time passed as nanoseconds to .end()
         mock_obs.end.assert_called_once()
         end_ns = mock_obs.end.call_args.kwargs.get("end_time")
         assert end_ns is not None
-        assert end_ns > 0
+        assert end_ns > start_ns  # end should be after start
 
     def test_user_string_content_as_input(self, tmp_path):
         """User messages with plain string content are captured."""
@@ -626,3 +647,36 @@ class TestRecordError:
 
         error_files = list(errors_dir.iterdir())
         assert len(error_files) == 3
+
+
+class TestOtelStartTimeCanary:
+    """Canary tests for _otel_span._start_time workaround.
+
+    The Langfuse SDK v4 doesn't expose start_time on start_observation().
+    We work around this by setting the OTel span's _start_time directly.
+    These tests verify the attribute chain exists so SDK upgrades break CI
+    rather than silently shipping latency=0.
+
+    Remove when langfuse/langfuse#9404 adds start_time to start_observation().
+    """
+
+    def test_otel_span_has_settable_start_time(self):
+        """OTel SDK spans expose _start_time as a writable attribute."""
+        from opentelemetry.sdk.trace import TracerProvider
+
+        tracer = TracerProvider().get_tracer("canary")
+        span = tracer.start_span("test")
+        assert hasattr(span, "_start_time")
+        original = span._start_time
+        assert original > 0
+        span._start_time = 1234567890
+        assert span._start_time == 1234567890
+
+    def test_langfuse_wrapper_exposes_otel_span(self):
+        """LangfuseObservationWrapper stores the OTel span as _otel_span."""
+        from langfuse._client.span import LangfuseObservationWrapper
+        import inspect
+
+        assert "otel_span" in LangfuseObservationWrapper.__init__.__code__.co_varnames
+        src = inspect.getsource(LangfuseObservationWrapper.__init__)
+        assert "self._otel_span = otel_span" in src

@@ -104,9 +104,22 @@ def extract_usage(usage):
 
 
 def extract_text_output(content_blocks):
-    """Extract text content from assistant message content blocks."""
+    """Extract text content from assistant message content blocks.
+
+    Falls back to tool call summaries when no text blocks exist.
+    """
     texts = [b.get("text", "") for b in content_blocks if b.get("type") == "text"]
-    return "\n".join(texts) if texts else None
+    if texts:
+        return "\n".join(texts)
+    # Fallback: summarize tool_use blocks so the generation has visible output
+    tools = []
+    for b in content_blocks:
+        if b.get("type") == "tool_use":
+            name = b.get("name", "unknown")
+            inp = b.get("input", {})
+            desc = inp.get("description", "") if isinstance(inp, dict) else ""
+            tools.append(f"[tool_use: {name}] {desc}".strip())
+    return "\n".join(tools) if tools else None
 
 
 # -- State management (track which requestIds have been shipped) --
@@ -257,14 +270,19 @@ def ship_transcript_data(client, trace_id, transcript_path, sent_ids,
                 ),
             },
         }
-        # SDK v4 start_observation doesn't accept start_time/end_time.
-        # Store timestamps in metadata; pass end_time (as epoch ns) to .end().
+        # SDK v4 start_observation doesn't expose start_time param.
+        # Upstream: https://github.com/langfuse/langfuse/issues/9404
+        # Workaround: set _start_time on the underlying OTel span so Langfuse
+        # computes real latency (endTime - startTime).
         if last_user_ts:
             gen_kwargs["metadata"]["start_time"] = last_user_ts.isoformat()
         if assistant_ts:
             gen_kwargs["metadata"]["end_time"] = assistant_ts.isoformat()
 
         gen = client.start_observation(**gen_kwargs)
+        if last_user_ts:
+            start_ns = int(last_user_ts.timestamp() * 1e9)
+            gen._otel_span._start_time = start_ns
         end_ns = int(assistant_ts.timestamp() * 1e9) if assistant_ts else None
         gen.end(end_time=end_ns)
 
