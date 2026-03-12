@@ -288,7 +288,7 @@ class TestWorktreeAutoDetection:
     """Skills that operate on repos must auto-detect worktree context."""
 
     def test_review_has_pr_worktree_resolution(self, skills_dir: Path):
-        """INV-8a: requesting-code-review resolves PR branch to local worktree."""
+        """INV-8(a): requesting-code-review resolves PR branch to local worktree."""
         skill_file = skills_dir / "requesting-code-review" / "SKILL.md"
         text = skill_file.read_text()
         assert "git worktree list" in text, (
@@ -300,7 +300,7 @@ class TestWorktreeAutoDetection:
 
     @pytest.mark.parametrize("skill", WORKTREE_CONFIRM_SKILLS)
     def test_execution_skill_confirms_worktree(self, skills_dir: Path, skill: str):
-        """INV-8b: execution skills confirm worktree context."""
+        """INV-8(b): execution skills confirm worktree context."""
         skill_file = skills_dir / skill / "SKILL.md"
         assert skill_file.exists(), f"Skill file not found: {skill}"
         text = skill_file.read_text()

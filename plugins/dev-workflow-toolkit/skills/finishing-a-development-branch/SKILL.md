@@ -56,6 +56,24 @@ Quality gate failures in `inv-numbering`, `skill-structure`, and `doc-structure`
 must be resolved before proceeding. `tool-health` and `issue-tracking` warnings
 can proceed with a note in the PR body.
 
+### Step 1c: Review Documentation Check
+
+Run the check-review-documented validation:
+
+```bash
+${CLAUDE_SKILL_DIR}/../../scripts/check-review-documented.sh \
+  --issue "$(gh pr view --json body --jq '.body' 2>/dev/null | grep -oP '(?<=Closes #)\d+' || echo '')" \
+  --beads-id "$(bd list --type=feature --json 2>/dev/null | jq -r '.[0].id // ""' || echo '')"
+```
+
+This is a **soft gate** — warnings are included in the PR body but do not block:
+
+- If warnings found: include them in PR body under `**Review documentation gaps:**`
+- If no warnings: proceed silently
+- If script not found or fails to run: proceed with a note
+
+> **Why soft gate:** Small changes (typo fixes, doc updates) may not have formal review documentation. The warning surfaces the gap for the PR reviewer to evaluate.
+
 ### Step 2: Validate Documentation
 
 <HARD-GATE>
