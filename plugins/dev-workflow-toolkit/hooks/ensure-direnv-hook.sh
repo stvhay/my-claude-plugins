@@ -2,7 +2,7 @@
 # Claude Code SessionStart hook: ensures the direnv post-checkout git hook
 # is installed. Runs at the start of every session. Silent on success.
 #
-# To be registered in hooks.json as a SessionStart hook.
+# Registered in hooks.json as a SessionStart hook.
 
 # Exit silently if direnv is not available
 command -v direnv >/dev/null 2>&1 || exit 0

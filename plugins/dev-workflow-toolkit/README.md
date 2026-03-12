@@ -61,6 +61,7 @@ The plugin registers hooks via `hooks/hooks.json` for Langfuse tracing:
 | Hook Event | What It Ships |
 |---|---|
 | `SessionStart` | Creates trace with name, session_id (git branch), tags |
+| `SessionStart` | Ensures `post-checkout` git hook is installed for direnv worktree initialization |
 | `PostToolUse` / `PostToolUseFailure` | LLM generations (model, tokens, cost) + tool observations |
 | `SubagentStop` | Parent agent span with nested observations |
 | `SessionEnd` | Summary span with totals; cleans up state |

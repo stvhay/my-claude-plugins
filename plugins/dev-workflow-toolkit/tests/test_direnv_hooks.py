@@ -395,3 +395,20 @@ class TestEnsureDirenvHook:
         script = hooks_dir / "ensure-direnv-hook.sh"
         first_line = script.read_text().splitlines()[0]
         assert first_line.startswith("#!/"), "Script must have a shebang line"
+
+
+import json
+
+
+class TestHooksJsonRegistration:
+    """Tests that hooks.json registers the direnv SessionStart hook."""
+
+    def test_hooks_json_has_direnv_session_start(self, hooks_dir: Path):
+        hooks_json = json.loads((hooks_dir / "hooks.json").read_text())
+        session_start_hooks = hooks_json["hooks"]["SessionStart"]
+        commands = []
+        for entry in session_start_hooks:
+            for hook in entry["hooks"]:
+                commands.append(hook["command"])
+        assert any("ensure-direnv-hook" in cmd for cmd in commands), \
+            "hooks.json must register ensure-direnv-hook.sh as a SessionStart hook"
