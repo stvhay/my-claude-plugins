@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
+description: "Use when creating features, building components, adding functionality, or modifying behavior — any creative work that benefits from exploring intent, requirements, and alternatives before implementation begins."
 ---
 
 # Brainstorming Ideas Into Designs
@@ -29,23 +29,17 @@ The user's initial message or `/brainstorming` arguments describe the work. Use 
 
 **Determine the issue type** from context — use `feature`, `bug`, or `epic` for `bd create --type=`. Map to GitHub labels: `feature`→`enhancement`, `bug`→`bug`, `epic`→`epic`. If the label doesn't exist on the repo, create it first with `gh label create "<label>" --description "<type> work"`.
 
-**Auto-create flow:**
+**Resolve the issue** (pick the first matching branch):
 
-1. **If existing issue number or URL provided:** Run `gh issue view <number> --json title,state` to verify it exists. Capture the title. If the issue is **closed**, warn: "Issue #N is closed. Continue with this issue, pick a different one, or proceed without?" Handle accordingly.
+- **Existing issue number or URL provided:** Run `gh issue view <number> --json title,state` to verify it exists. Capture the title. If the issue is **closed**, warn: "Issue #N is closed. Continue with this issue, pick a different one, or proceed without?" Handle accordingly.
+- **Description provided (no issue number):** Run `gh issue list --search "<keywords>" --state open --json number,title --limit 5` to check for duplicates. If matches found, tell the user: "Found existing issue #N '<title>' which looks related — using that." If multiple matches, pick the best one and mention the others. If no matches, tell the user: "No existing issues match — creating issue." Run `gh issue create --title "<summary>" --body "<one-paragraph description of the work>" --label "<gh-label>"`.
+- **Description too vague to search:** Ask: "Can you give me a one-line summary of what you're working on?"
+- **User wants exploratory/no-issue work:** Route to `ideate` skill instead — ideation is the right tool for divergent exploration without a concrete issue. If the user returns with a specific direction, resume from the bullet above.
 
-2. **If description provided (no issue number):**
-   - Extract 3-5 keywords from the description
-   - Run `gh issue list --search "<keywords>" --state open --json number,title --limit 5` to check for duplicates
-   - **If matches found:** Tell the user: "Found existing issue #N '<title>' which looks related — using that." Use the matched issue. If multiple matches, pick the best one and mention the others.
-   - **If no matches:** Tell the user: "No existing issues match — creating issue." Run `gh issue create --title "<summary>" --body "<one-paragraph description of the work>" --label "<gh-label>"` to create the GH issue.
+**After issue is resolved:**
 
-3. **If description is too vague to search:** Ask: "Can you give me a one-line summary of what you're working on?"
-
-4. **Create beads issue:** Run `bd create --title="<summary>" --type=<type> --description="<one-paragraph description>" --external-ref=gh-<N> --json` to create the beads issue. Always include `--description` to provide context for beads tracking.
-
-5. **If `bd` is unavailable or fails:** Proceed without beads tracking — the GitHub issue alone is sufficient for brainstorming.
-
-6. **Record both:** Capture the GH issue number and beads ID (the `id` field from the `--json` response, e.g., `{"id": "beads-NNN", ...}`) for the design doc header.
+1. **Create beads issue:** Run `bd create --title="<summary>" --type=<type> --description="<one-paragraph description>" --external-ref=gh-<N> --json`. Always include `--description` to provide context. If `bd` is unavailable or fails, proceed without beads tracking — the GitHub issue alone is sufficient.
+2. **Record both:** Capture the GH issue number and beads ID (the `id` field from the `--json` response, e.g., `{"id": "beads-NNN", ...}`) for the design doc header.
 
 ### 1b. Branch Check
 
@@ -86,6 +80,8 @@ digraph brainstorming {
     "Pre-flight checks" -> "Issue number given?";
     "Issue number given?" -> "Verify issue exists" [label="yes"];
     "Issue number given?" -> "Search for duplicates" [label="no, description given"];
+    "Issue number given?" -> "Route to ideate" [label="exploratory / no issue"];
+    "Route to ideate" [shape=doublecircle];
     "Verify issue exists" -> "On feature branch?";
     "Search for duplicates" -> "Duplicate found?";
     "Duplicate found?" -> "Use existing issue" [label="yes"];
