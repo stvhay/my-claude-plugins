@@ -68,7 +68,8 @@ Skills compose into a development workflow graph. The primary flow is:
 | INV-5 | Skills that reference other skills use the skill name (not file path) in their Integration section | reasoning-required | Skill directories may move; names are the stable identifier |
 | INV-6 | Support files (prompts, templates, examples) live inside the skill's own directory | structural | Skills must be self-contained — an agent loads one directory |
 | INV-7 | Entry-point skills (brainstorming, systematic-debugging) auto-create GitHub issues with duplicate search via `gh issue list --search` and always pass `--description` to `bd create` | reasoning-required | Prevents duplicate issues and provides beads context |
-| INV-8 | Skills that operate on repos (requesting-code-review, executing-plans, subagent-driven-development) auto-detect worktree context via `git rev-parse --show-toplevel` | reasoning-required | Ensures skills operate in the correct worktree without manual context passing |
+| INV-8a | Skills invocable by PR number (`requesting-code-review`) resolve the PR's branch to a local worktree via `gh pr view` + `git worktree list` | reasoning-required | Enables review from outside a worktree by mapping PR branch to local worktree path |
+| INV-8b | Skills that execute within an existing worktree (`executing-plans`, `subagent-driven-development`) confirm context via `git rev-parse --show-toplevel` + `git worktree list` and cross-reference the `.issue` file | reasoning-required | Ensures execution stays in the correct worktree without requiring PR-level resolution |
 
 **Enforcement classification:**
 - **structural** — enforced by test suite, gitignore structure, or directory convention; pattern-matchable

@@ -28,7 +28,7 @@ Dispatch code-reviewer subagent to catch issues before they cascade.
 Before running review, ensure you're in the correct worktree:
 
 1. Run `git rev-parse --show-toplevel` to get the current repo root
-2. If the path contains `.claude/worktrees/`, you're already in a worktree — proceed
+2. Run `git worktree list` — if the current toplevel appears as a worktree entry (not the main working tree), you're in a worktree — proceed
 3. If a PR number was provided as argument:
    - Run `gh pr view <N> --json headRefName --jq '.headRefName'` to get the PR's branch
    - Run `git worktree list` and find the worktree whose branch matches
