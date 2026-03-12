@@ -29,6 +29,8 @@ echo "Verified: on branch $branch in $(pwd)"
 
 **If CWD is invalid** (e.g., worktree was removed): Navigate back to the project root or worktree path before proceeding. Run `git worktree list` to find valid worktree paths.
 
+**Worktree auto-detection:** Run `git rev-parse --show-toplevel` and compare with `git worktree list` to determine if you're in a worktree. If the toplevel path appears as a worktree entry (not the main working tree), confirm you're operating in the correct worktree for the plan's issue. Cross-reference the `.issue` file if present.
+
 **Re-verify CWD at the start of each batch** — agents can lose track of their working directory between batches.
 
 ## The Process

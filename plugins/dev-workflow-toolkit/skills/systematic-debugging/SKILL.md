@@ -13,6 +13,22 @@ Random fixes waste time and create new bugs. Quick patches mask underlying issue
 
 **Violating the letter of this process is violating the spirit of debugging.**
 
+## Pre-flight: Issue Tracking
+
+When invoked as an entry point (user calls `/systematic-debugging` directly), check for issue context:
+
+1. **If a `.issue` file exists** in the repo root or worktree root, read it — issue context is already established. Proceed to debugging.
+
+2. **If no issue context exists:**
+   - Extract a short summary from the user's bug description (error message, symptom, or component name)
+   - Run `gh issue list --search "<keywords>" --state open --label bug --json number,title --limit 5`
+   - **If match found:** "Found existing bug #N '<title>' — using that."
+   - **If no match:** "Creating bug issue for tracking." Run `gh issue create --title "Bug: <summary>" --body "<user's description>" --label "bug"`
+   - Create beads issue: `bd create --title="Bug: <summary>" --type=bug --description="<description>" --external-ref=gh-<N> --json`
+   - If `bd` unavailable, proceed with GH issue only.
+
+3. **Do not let issue tracking delay debugging.** If `gh` commands fail (auth, network), note it and proceed — debugging is the priority.
+
 ## The Iron Law
 
 ```
