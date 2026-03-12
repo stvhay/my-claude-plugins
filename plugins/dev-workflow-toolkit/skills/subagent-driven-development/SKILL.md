@@ -48,6 +48,8 @@ echo "Verified: on branch $branch in $(pwd)"
 
 **If CWD is invalid** (e.g., worktree was removed): Navigate back to the project root or worktree path before proceeding. Run `git worktree list` to find valid worktree paths.
 
+**Worktree auto-detection:** Run `git rev-parse --show-toplevel`. If the path contains `.claude/worktrees/`, confirm you're operating in the correct worktree for the plan's issue. Cross-reference the `.issue` file if present. Re-verify worktree path before each subagent dispatch — subagents inherit the working directory but should confirm it.
+
 **Re-verify CWD before each task dispatch** — agents can lose track of their working directory between tasks.
 
 ## The Process
