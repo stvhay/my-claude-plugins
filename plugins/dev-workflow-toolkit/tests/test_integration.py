@@ -310,3 +310,65 @@ class TestWorktreeAutoDetection:
         assert "git worktree list" in text, (
             f"{skill} must use git worktree list for robust worktree detection"
         )
+
+
+# ---------------------------------------------------------------------------
+# Review documentation standard
+# ---------------------------------------------------------------------------
+
+REVIEW_DOC_SKILLS = {
+    "subagent-driven-development": ["bd update", "gh issue comment"],
+    "verification-before-completion": ["bd update", "gh issue comment"],
+    "requesting-code-review": ["gh pr comment", "gh api"],
+    "receiving-code-review": ["atomic commit", "fix:"],
+    "finishing-a-development-branch": ["check-review-documented"],
+}
+
+
+class TestReviewDocumentationStandard:
+    """Skills must document review findings per INV-9."""
+
+    @pytest.mark.parametrize(
+        "skill,patterns",
+        list(REVIEW_DOC_SKILLS.items()),
+        ids=list(REVIEW_DOC_SKILLS.keys()),
+    )
+    def test_skill_has_review_documentation_instructions(  # Tests INV-9
+        self, skills_dir: Path, skill: str, patterns: list[str]
+    ):
+        skill_file = skills_dir / skill / "SKILL.md"
+        assert skill_file.exists(), f"Skill file not found: {skill}"
+        text = skill_file.read_text().lower()
+        for pattern in patterns:
+            assert pattern.lower() in text, (
+                f"{skill} must contain '{pattern}' for review documentation standard (INV-9)"
+            )
+
+
+class TestCheckReviewDocumentedScript:
+    """check-review-documented.sh must exist and be executable."""  # Tests FAIL-7
+
+    def test_script_exists(self, plugin_root: Path):
+        script = plugin_root / "scripts" / "check-review-documented.sh"
+        assert script.exists(), "scripts/check-review-documented.sh must exist"
+
+    def test_script_is_executable(self, plugin_root: Path):
+        script = plugin_root / "scripts" / "check-review-documented.sh"
+        assert script.exists(), "Script must exist before checking permissions"
+        import os
+
+        assert os.access(script, os.X_OK), "check-review-documented.sh must be executable"
+
+    def test_script_checks_beads(self, plugin_root: Path):
+        script = plugin_root / "scripts" / "check-review-documented.sh"
+        assert script.exists()
+        text = script.read_text()
+        assert "bd" in text, "Script must check beads (bd) for review status"
+
+    def test_script_checks_github(self, plugin_root: Path):
+        script = plugin_root / "scripts" / "check-review-documented.sh"
+        assert script.exists()
+        text = script.read_text()
+        assert "gh issue" in text or "gh api" in text, (
+            "Script must check GitHub issue for review comments"
+        )
