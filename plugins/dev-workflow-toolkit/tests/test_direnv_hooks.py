@@ -1,8 +1,9 @@
 """Tests for direnv worktree hook scripts."""
 
+import json
 import os
-import stat
 import shutil
+import stat
 import subprocess
 from pathlib import Path
 
@@ -110,17 +111,19 @@ class TestDirenvPostCheckout:
         )
         (wt / ".envrc").write_text("# wt envrc\n")
 
-        # Create a mock direnv that logs calls
+        # Create a mock direnv that logs calls.
+        # 'exec <dir> true' exits 0 (approved); 'allow' is logged.
         log_file = tmp_path / "direnv_calls.log"
         mock_bin = tmp_path / "bin"
         mock_bin.mkdir()
         mock_direnv = mock_bin / "direnv"
         mock_direnv.write_text(
-            f"#!/usr/bin/env bash\n"
+            f'#!/usr/bin/env bash\n'
             f'echo "$@" >> "{log_file}"\n'
-            f'if [ "$1" = "status" ]; then\n'
-            f'  echo "Found RC allowed true"\n'
-            f"fi\n"
+            f'if [ "$1" = "exec" ]; then\n'
+            f'  shift 2  # skip dir\n'
+            f'  exec "$@"\n'
+            f'fi\n'
         )
         mock_direnv.chmod(0o755)
 
@@ -141,8 +144,9 @@ class TestDirenvPostCheckout:
         assert result.returncode == 0
 
         # Verify direnv allow was called
-        calls = log_file.read_text()
-        assert "allow" in calls, f"Expected 'direnv allow' call, got: {calls}"
+        calls = log_file.read_text().splitlines()
+        assert any(line.strip() == "allow" for line in calls), \
+            f"Expected 'direnv allow' call, got: {calls}"
 
     def test_no_allow_when_main_not_approved(
         self, hooks_dir: Path, tmp_path: Path, bash_path: str
@@ -178,17 +182,17 @@ class TestDirenvPostCheckout:
         )
         (wt / ".envrc").write_text("# wt envrc\n")
 
-        # Create a mock direnv that reports NOT approved
+        # Create a mock direnv where 'exec' exits 1 (not approved)
         log_file = tmp_path / "direnv_calls.log"
         mock_bin = tmp_path / "bin"
         mock_bin.mkdir()
         mock_direnv = mock_bin / "direnv"
         mock_direnv.write_text(
-            f"#!/usr/bin/env bash\n"
+            f'#!/usr/bin/env bash\n'
             f'echo "$@" >> "{log_file}"\n'
-            f'if [ "$1" = "status" ]; then\n'
-            f'  echo "Found RC allowed false"\n'
-            f"fi\n"
+            f'if [ "$1" = "exec" ]; then\n'
+            f'  exit 1\n'
+            f'fi\n'
         )
         mock_direnv.chmod(0o755)
 
@@ -209,8 +213,9 @@ class TestDirenvPostCheckout:
         assert result.returncode == 0
 
         # Verify direnv allow was NOT called
-        calls = log_file.read_text()
-        assert "allow" not in calls, f"'direnv allow' should not be called, got: {calls}"
+        calls = log_file.read_text().splitlines()
+        assert not any(line.strip() == "allow" for line in calls), \
+            f"'direnv allow' should not be called, got: {calls}"
 
 
 # --- ensure-direnv-hook.sh tests ---
@@ -226,6 +231,10 @@ class TestEnsureDirenvHook:
     def test_script_is_executable(self, hooks_dir: Path):
         script = hooks_dir / "ensure-direnv-hook.sh"
         assert os.access(script, os.X_OK), "ensure-direnv-hook.sh must be executable"
+
+    def test_fragment_exists(self, hooks_dir: Path):
+        fragment = hooks_dir / "post-checkout-fragment.sh"
+        assert fragment.exists(), "post-checkout-fragment.sh must exist"
 
     def test_exits_cleanly_when_no_direnv(
         self, hooks_dir: Path, tmp_path: Path, bash_path: str
@@ -282,6 +291,24 @@ class TestEnsureDirenvHook:
         assert hook_file.exists(), "post-checkout hook must be created"
         assert os.access(hook_file, os.X_OK), "post-checkout hook must be executable"
         assert "direnv-worktree-hook-start" in hook_file.read_text()
+
+    def test_writes_path_file(self, hooks_dir: Path, tmp_path: Path):
+        """Hook must write the path to direnv-post-checkout.sh in a path file."""
+        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        (tmp_path / ".envrc").write_text("# test envrc\n")
+
+        subprocess.run(
+            [str(hooks_dir / "ensure-direnv-hook.sh")],
+            capture_output=True,
+            text=True,
+            cwd=str(tmp_path),
+        )
+
+        path_file = tmp_path / ".git" / "hooks" / ".direnv-post-checkout-path"
+        assert path_file.exists(), "Path file must be created"
+        stored_path = path_file.read_text().strip()
+        assert stored_path.endswith("direnv-post-checkout.sh")
+        assert os.path.isfile(stored_path), "Stored path must point to an existing file"
 
     def test_idempotent_installation(self, hooks_dir: Path, tmp_path: Path):
         """Running twice must not duplicate the hook block."""
@@ -349,10 +376,10 @@ class TestEnsureDirenvHook:
         assert result.returncode == 1, "Must exit 1 when post-checkout script is missing"
         assert "direnv-post-checkout.sh not found" in result.stderr
 
-    def test_reinstalls_when_path_is_stale(
+    def test_updates_path_file_when_stale(
         self, hooks_dir: Path, tmp_path: Path
     ):
-        """Hook must reinstall if the embedded path to direnv-post-checkout.sh is stale."""
+        """Hook must update the path file even when the hook block is already installed."""
         subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
         (tmp_path / ".envrc").write_text("# test envrc\n")
 
@@ -364,18 +391,13 @@ class TestEnsureDirenvHook:
             cwd=str(tmp_path),
         )
 
-        hook_file = tmp_path / ".git" / "hooks" / "post-checkout"
-        assert hook_file.exists()
+        path_file = tmp_path / ".git" / "hooks" / ".direnv-post-checkout-path"
+        assert path_file.exists()
 
-        # Corrupt the installed path to simulate a stale reference
-        content = hook_file.read_text()
-        content = content.replace(
-            str(hooks_dir / "direnv-post-checkout.sh"),
-            "/nonexistent/path/direnv-post-checkout.sh",
-        )
-        hook_file.write_text(content)
+        # Corrupt the path file to simulate a stale reference
+        path_file.write_text("/nonexistent/path/direnv-post-checkout.sh\n")
 
-        # Run again — should detect stale path and reinstall
+        # Run again — should update the path file
         result = subprocess.run(
             [str(hooks_dir / "ensure-direnv-hook.sh")],
             capture_output=True,
@@ -384,20 +406,19 @@ class TestEnsureDirenvHook:
         )
         assert result.returncode == 0
 
-        # Verify the block was reinstalled with the correct path
-        new_content = hook_file.read_text()
-        assert new_content.count("direnv-worktree-hook-start") == 1, \
-            "Hook block must appear exactly once after reinstall"
-        assert str(hooks_dir / "direnv-post-checkout.sh") in new_content, \
-            "Reinstalled block must contain the correct path"
+        # Verify the path file was updated
+        stored_path = path_file.read_text().strip()
+        assert stored_path.endswith("direnv-post-checkout.sh")
+        assert os.path.isfile(stored_path), "Path file must be updated with valid path"
+
+        # Hook block should still appear exactly once
+        hook_file = tmp_path / ".git" / "hooks" / "post-checkout"
+        assert hook_file.read_text().count("direnv-worktree-hook-start") == 1
 
     def test_has_shebang(self, hooks_dir: Path):
         script = hooks_dir / "ensure-direnv-hook.sh"
         first_line = script.read_text().splitlines()[0]
         assert first_line.startswith("#!/"), "Script must have a shebang line"
-
-
-import json
 
 
 class TestHooksJsonRegistration:

@@ -18,12 +18,9 @@ main_worktree="$(git worktree list --porcelain 2>/dev/null | head -1 | sed 's/^w
 # If we ARE the main worktree, nothing to do — user manages their own approval
 [ "$(pwd -P)" != "$main_worktree" ] || exit 0
 
-# Check if main worktree's .envrc is approved by direnv
-main_approved="$(cd "$main_worktree" && direnv status 2>/dev/null | grep 'Found RC allowed' | head -1)"
-case "$main_approved" in
-    *"true"*) ;;
-    *) exit 0 ;;  # Main worktree not approved — don't auto-allow
-esac
+# Check if main worktree's .envrc is approved by direnv.
+# Uses 'direnv exec' as a programmatic check — exits 0 only when allowed.
+direnv exec "$main_worktree" true 2>/dev/null || exit 0
 
 # Inherit the trust: allow this worktree's .envrc
 direnv allow >/dev/null 2>&1

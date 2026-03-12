@@ -16,25 +16,18 @@ repo_root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
 # Find git hooks directory
 hooks_path="$(git rev-parse --git-path hooks 2>/dev/null)" || exit 0
 
-# Check if already installed (idempotency marker)
-if [ -f "$hooks_path/post-checkout" ]; then
-    if grep -q "direnv-worktree-hook-start" "$hooks_path/post-checkout" 2>/dev/null; then
-        # Check if the installed path is still valid
-        installed_path="$(sed -n '/direnv-worktree-hook-start/,/direnv-worktree-hook-end/p' "$hooks_path/post-checkout" | grep -o '"[^"]*direnv-post-checkout.sh"' | tr -d '"')"
-        if [ -x "$installed_path" ]; then
-            exit 0  # Already installed and path is valid
-        fi
-        # Stale path — remove old block and reinstall
-        sed -i '/# direnv-worktree-hook-start/,/# direnv-worktree-hook-end/d' "$hooks_path/post-checkout"
-    fi
-fi
-
-# Resolve the path to direnv-post-checkout.sh relative to this script
+# Resolve paths to our shipped files
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 post_checkout_script="$script_dir/direnv-post-checkout.sh"
+fragment_file="$script_dir/post-checkout-fragment.sh"
 
 if [ ! -x "$post_checkout_script" ]; then
     echo "ensure-direnv-hook: direnv-post-checkout.sh not found at $post_checkout_script" >&2
+    exit 1
+fi
+
+if [ ! -f "$fragment_file" ]; then
+    echo "ensure-direnv-hook: post-checkout-fragment.sh not found at $fragment_file" >&2
     exit 1
 fi
 
@@ -44,20 +37,21 @@ set -e
 # Ensure hooks directory exists
 mkdir -p "$hooks_path"
 
+# Always write the path file — handles stale paths automatically
+echo "$post_checkout_script" > "$hooks_path/.direnv-post-checkout-path"
+
+# If the hook fragment is already installed, we're done
+if [ -f "$hooks_path/post-checkout" ] && grep -q "direnv-worktree-hook-start" "$hooks_path/post-checkout" 2>/dev/null; then
+    exit 0
+fi
+
 # If no post-checkout hook exists, create one with a shebang
 if [ ! -f "$hooks_path/post-checkout" ]; then
     printf '#!/bin/sh\n' > "$hooks_path/post-checkout"
 fi
 
-# Append the direnv block
-cat >> "$hooks_path/post-checkout" <<EOF
-
-# direnv-worktree-hook-start
-# Auto-installed by dev-workflow-toolkit plugin.
-# Runs direnv allow in new worktrees when main worktree is approved.
-"$post_checkout_script"
-# direnv-worktree-hook-end
-EOF
+# Append the static hook fragment
+cat "$fragment_file" >> "$hooks_path/post-checkout"
 
 # Ensure executable
 chmod +x "$hooks_path/post-checkout"
