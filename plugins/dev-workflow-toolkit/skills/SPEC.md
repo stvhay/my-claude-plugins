@@ -67,7 +67,8 @@ Skills compose into a development workflow graph. The primary flow is:
 | INV-4 | Upstream provenance tracking (`UPSTREAM-*.md`) is maintainer-only; consuming agents must not modify these files | reasoning-required | UPSTREAM files in the plugin cache are read-only from the consuming project's perspective |
 | INV-5 | Skills that reference other skills use the skill name (not file path) in their Integration section | reasoning-required | Skill directories may move; names are the stable identifier |
 | INV-6 | Support files (prompts, templates, examples) live inside the skill's own directory | structural | Skills must be self-contained — an agent loads one directory |
-| INV-7 | Entry-point issue automation: Entry-point skills (brainstorming, systematic-debugging) auto-create GitHub issues with duplicate search via `gh issue list --search` and always pass `--description` to `bd create`. Skills that operate on repos (requesting-code-review, executing-plans, subagent-driven-development) auto-detect worktree context via `git rev-parse --show-toplevel`. | reasoning-required | Prevents duplicate issues and ensures worktree-aware operations work correctly |
+| INV-7 | Entry-point skills (brainstorming, systematic-debugging) auto-create GitHub issues with duplicate search via `gh issue list --search` and always pass `--description` to `bd create` | reasoning-required | Prevents duplicate issues and provides beads context |
+| INV-8 | Skills that operate on repos (requesting-code-review, executing-plans, subagent-driven-development) auto-detect worktree context via `git rev-parse --show-toplevel` | reasoning-required | Ensures skills operate in the correct worktree without manual context passing |
 
 **Enforcement classification:**
 - **structural** — enforced by test suite, gitignore structure, or directory convention; pattern-matchable

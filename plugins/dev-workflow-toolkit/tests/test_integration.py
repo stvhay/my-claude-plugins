@@ -274,7 +274,7 @@ WORKTREE_AWARE_SKILLS = [
 
 
 class TestWorktreeAutoDetection:
-    """Skills that operate on repos must auto-detect worktree context."""  # Tests INV-7
+    """Skills that operate on repos must auto-detect worktree context."""  # Tests INV-8
 
     @pytest.mark.parametrize("skill", WORKTREE_AWARE_SKILLS)
     def test_skill_has_worktree_detection(self, skills_dir: Path, skill: str):
