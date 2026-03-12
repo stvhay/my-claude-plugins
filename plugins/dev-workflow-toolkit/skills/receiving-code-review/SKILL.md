@@ -110,6 +110,24 @@ FOR multi-item feedback:
   4. Verify no regressions
 ```
 
+## Atomic Commits and PR Thread Replies
+
+Each fix from review feedback is an atomic commit:
+
+```
+fix: <what was fixed> (review)
+```
+
+After committing a fix, reply to the PR comment thread with the commit SHA:
+
+```bash
+# Reply in the comment thread (not top-level)
+gh api repos/{owner}/{repo}/pulls/{PR_NUMBER}/comments/{comment_id}/replies \
+  -f body="Fixed in $(git rev-parse --short HEAD)"
+```
+
+This creates a traceable link: review comment → fix commit → verification.
+
 ## When To Push Back
 
 Push back when:
