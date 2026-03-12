@@ -2,7 +2,6 @@
 
 import os
 import shutil
-import stat
 import subprocess
 from pathlib import Path
 
@@ -75,3 +74,139 @@ class TestDirenvPostCheckout:
             cwd=str(tmp_path),
         )
         assert result.stdout == ""
+
+    def test_allows_envrc_when_main_approved(
+        self, hooks_dir: Path, tmp_path: Path, bash_path: str
+    ):
+        """Hook calls 'direnv allow' when main worktree .envrc is approved."""
+        # Create a real git repo as the main worktree
+        main = tmp_path / "main"
+        main.mkdir()
+        subprocess.run(["git", "init", str(main)], capture_output=True, check=True)
+        subprocess.run(
+            ["git", "-C", str(main), "config", "user.email", "test@test.com"],
+            capture_output=True,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(main), "config", "user.name", "Test"],
+            capture_output=True,
+            check=True,
+        )
+        (main / ".envrc").write_text("# main envrc\n")
+
+        # Create a worktree
+        subprocess.run(
+            ["git", "-C", str(main), "commit", "--allow-empty", "-m", "init"],
+            capture_output=True,
+            check=True,
+        )
+        wt = tmp_path / "worktree"
+        subprocess.run(
+            ["git", "-C", str(main), "worktree", "add", str(wt), "-b", "wt"],
+            capture_output=True,
+            check=True,
+        )
+        (wt / ".envrc").write_text("# wt envrc\n")
+
+        # Create a mock direnv that logs calls
+        log_file = tmp_path / "direnv_calls.log"
+        mock_bin = tmp_path / "bin"
+        mock_bin.mkdir()
+        mock_direnv = mock_bin / "direnv"
+        mock_direnv.write_text(
+            f"#!/usr/bin/env bash\n"
+            f'echo "$@" >> "{log_file}"\n'
+            f'if [ "$1" = "status" ]; then\n'
+            f'  echo "Found RC allowed true"\n'
+            f"fi\n"
+        )
+        mock_direnv.chmod(0o755)
+
+        # Build PATH with mock bin first, plus git
+        git_path = shutil.which("git")
+        assert git_path
+        git_dir = str(Path(git_path).parent)
+        env = {k: v for k, v in os.environ.items() if k != "PATH"}
+        env["PATH"] = f"{mock_bin}:{git_dir}:/usr/bin:/bin"
+
+        result = subprocess.run(
+            [bash_path, str(hooks_dir / "direnv-post-checkout.sh")],
+            capture_output=True,
+            text=True,
+            env=env,
+            cwd=str(wt),
+        )
+        assert result.returncode == 0
+
+        # Verify direnv allow was called
+        calls = log_file.read_text()
+        assert "allow" in calls, f"Expected 'direnv allow' call, got: {calls}"
+
+    def test_no_allow_when_main_not_approved(
+        self, hooks_dir: Path, tmp_path: Path, bash_path: str
+    ):
+        """Hook must NOT call 'direnv allow' when main worktree is not approved."""
+        # Create a real git repo as the main worktree
+        main = tmp_path / "main"
+        main.mkdir()
+        subprocess.run(["git", "init", str(main)], capture_output=True, check=True)
+        subprocess.run(
+            ["git", "-C", str(main), "config", "user.email", "test@test.com"],
+            capture_output=True,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(main), "config", "user.name", "Test"],
+            capture_output=True,
+            check=True,
+        )
+        (main / ".envrc").write_text("# main envrc\n")
+
+        # Create a worktree
+        subprocess.run(
+            ["git", "-C", str(main), "commit", "--allow-empty", "-m", "init"],
+            capture_output=True,
+            check=True,
+        )
+        wt = tmp_path / "worktree"
+        subprocess.run(
+            ["git", "-C", str(main), "worktree", "add", str(wt), "-b", "wt"],
+            capture_output=True,
+            check=True,
+        )
+        (wt / ".envrc").write_text("# wt envrc\n")
+
+        # Create a mock direnv that reports NOT approved
+        log_file = tmp_path / "direnv_calls.log"
+        mock_bin = tmp_path / "bin"
+        mock_bin.mkdir()
+        mock_direnv = mock_bin / "direnv"
+        mock_direnv.write_text(
+            f"#!/usr/bin/env bash\n"
+            f'echo "$@" >> "{log_file}"\n'
+            f'if [ "$1" = "status" ]; then\n'
+            f'  echo "Found RC allowed false"\n'
+            f"fi\n"
+        )
+        mock_direnv.chmod(0o755)
+
+        # Build PATH with mock bin first, plus git
+        git_path = shutil.which("git")
+        assert git_path
+        git_dir = str(Path(git_path).parent)
+        env = {k: v for k, v in os.environ.items() if k != "PATH"}
+        env["PATH"] = f"{mock_bin}:{git_dir}:/usr/bin:/bin"
+
+        result = subprocess.run(
+            [bash_path, str(hooks_dir / "direnv-post-checkout.sh")],
+            capture_output=True,
+            text=True,
+            env=env,
+            cwd=str(wt),
+        )
+        assert result.returncode == 0
+
+        # Verify direnv allow was NOT called
+        calls = log_file.read_text()
+        assert "allow" not in calls, f"'direnv allow' should not be called, got: {calls}"
