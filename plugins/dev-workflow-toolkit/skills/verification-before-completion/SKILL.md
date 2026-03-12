@@ -231,3 +231,24 @@ Staleness:
 - New invariants/interfaces not in spec: [yes/no — describe if yes]
 - Recommendation: [Current / Recommend re-codification]
 ```
+
+### Review Documentation
+
+After verification and quality gate pass, document the review:
+
+- **Beads:** `bd update <task-id> --notes "Review: PASS — verification ✅, quality gate ✅"`
+- **GitHub issue:** Post a summary:
+  ```bash
+  gh issue comment <N> --body "$(cat <<'REVIEW_EOF'
+  ## Verification Review
+  <details><summary>Verdict: PASS — all checks green</summary>
+
+  - Tests: N/N passing
+  - Quality gate: PASS
+  - SPEC.md invariants: all hold
+  </details>
+  REVIEW_EOF
+  )"
+  ```
+
+If either `bd` or `gh` is unavailable, use whichever is available. Proceed without documentation if neither is available.
