@@ -61,6 +61,7 @@ The plugin registers hooks via `hooks/hooks.json` for Langfuse tracing:
 | Hook Event | What It Ships |
 |---|---|
 | `SessionStart` | Creates trace with name, session_id (git branch), tags |
+| `SessionStart` | Ensures `post-checkout` git hook is installed for direnv worktree initialization |
 | `PostToolUse` / `PostToolUseFailure` | LLM generations (model, tokens, cost) + tool observations |
 | `SubagentStop` | Parent agent span with nested observations |
 | `SessionEnd` | Summary span with totals; cleans up state |
@@ -109,10 +110,11 @@ cd plugins/dev-workflow-toolkit
 ./tests/run-all.sh
 ```
 
-**90 tests**[^stat-test-count] across 3 modules[^stat-suite-count]:
+**110 tests**[^stat-test-count] across 4 modules[^stat-suite-count]:
 - Structure — frontmatter validation, SPEC.md checks, project-init templates, setup-rag config, cross-plugin validation
 - Integration — skill loading, dependency resolution, trigger patterns, reference files
 - Quality gate — smoke tests, negative fixtures, doc-stats validation
+- Direnv hooks — post-checkout behavior, SessionStart installer, idempotency, trust inheritance
 
 See `tests/README.md` for details.
 

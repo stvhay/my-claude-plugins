@@ -98,6 +98,20 @@ eliminates dependency on the user's project environment. Shipping data on
 every PostToolUse adds per-tool overhead but ensures crash resilience — if a
 session exits abnormally, most data has already been shipped.
 
+## Environment Hooks
+
+The dev-workflow-toolkit plugin ships a `post-checkout` git hook that runs
+`direnv allow` after any checkout event (including `git worktree add`). The
+hook only auto-allows if the main worktree's `.envrc` is already approved,
+inheriting the user's existing trust decision. A Claude Code `SessionStart`
+hook ensures the git hook is installed, self-healing if it was removed or
+never set up.
+
+**Trade-offs.** Automating `direnv allow` trades explicit per-directory
+approval for worktree reliability. The trust boundary is the main worktree's
+existing approval — if the user trusted that `.envrc`, worktrees sharing the
+same content inherit that trust.
+
 ## Documentation Structure
 
 This document (`docs/ARCHITECTURE.md`) and its companion `docs/DESIGN.md`
