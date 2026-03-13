@@ -1,6 +1,6 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+description: Use when completing tasks, implementing major features, before merging to verify work meets requirements, or to review a specific PR by number
 ---
 
 # Requesting Code Review
@@ -25,15 +25,17 @@ Dispatch code-reviewer subagent to catch issues before they cascade.
 
 ### Worktree Auto-Detection
 
-Before running review, ensure you're in the correct worktree:
+Before running review, locate the correct worktree:
 
 1. Run `git rev-parse --show-toplevel` to get the current repo root
-2. Run `git worktree list` — if the current toplevel appears as a worktree entry (not the main working tree), you're in a worktree — proceed
+2. Run `git worktree list` — if the current toplevel appears as a worktree entry (not the main working tree), you're already in a worktree — proceed
 3. If a PR number was provided as argument:
-   - Run `gh pr view <N> --json headRefName --jq '.headRefName'` to get the PR's branch
-   - Run `git worktree list` and find the worktree whose branch matches
-   - If found, operate on that worktree's directory
-   - If not found, warn: "No local worktree found for PR #N's branch `<branch>`. Reviewing from current directory."
+   a. Run `gh pr view <N> --json body,headRefName` to get the PR body and branch name
+   b. Extract the issue number from the PR body — look for `Closes #N`, `Fixes #N`, or `Resolves #N` (case-insensitive)
+   c. Run `git worktree list` and scan paths for `/<issue>-` (e.g., `/39-` for issue #39)
+   d. If a matching worktree is found, operate on that worktree's directory
+   e. If no issue link found in PR body, fall back to matching by branch name (existing behavior)
+   f. If no worktree found by either method, warn: "No local worktree found for PR #N (issue #M). Reviewing from current directory."
 4. If no PR number and not in a worktree, proceed from current directory
 
 **1. Detect context:**
