@@ -30,7 +30,10 @@ if [ -n "$SOURCE_FILES" ]; then
 fi
 
 if [ "$SOURCE_CHANGED" = true ] && [ "$VERSION_CHANGED" = false ]; then
-    CURRENT_VERSION=$(python3 -c "import json; print(json.load(open('$PLUGIN_JSON'))['version'])" 2>/dev/null || echo "unknown")
+    if ! CURRENT_VERSION=$(python3 -c "import json; print(json.load(open('$PLUGIN_JSON'))['version'])"); then
+        echo "ERROR: Failed to read version from $PLUGIN_JSON. Ensure python3 is available and $PLUGIN_JSON contains a 'version' field." >&2
+        exit 1
+    fi
     echo "VERSION_BUMP_REQUIRED: Source files changed but version in $PLUGIN_JSON is unchanged ($CURRENT_VERSION)."
     echo "Run: compute-version.sh <patch|minor|major> --update"
     exit 1

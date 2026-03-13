@@ -1,5 +1,6 @@
 """Integration tests for compute-version.sh shell wrapper."""
 
+import json
 import subprocess
 from pathlib import Path
 
@@ -38,3 +39,32 @@ class TestComputeVersionShell:
             cwd=plugin_root,
         )
         assert result.returncode != 0
+
+    def test_update_writes_version_files(self, script_path: Path, tmp_path: Path):
+        """--update flag writes new version to plugin.json and pyproject.toml."""
+        # Set up version files
+        pj_dir = tmp_path / ".claude-plugin"
+        pj_dir.mkdir()
+        (pj_dir / "plugin.json").write_text(
+            json.dumps({"name": "test", "version": "1.0.0"}, indent=2) + "\n"
+        )
+        (tmp_path / "pyproject.toml").write_text(
+            '[project]\nname = "test"\nversion = "1.0.0"\n'
+        )
+        # Changelog required for --update
+        (tmp_path / "CHANGELOG.md").write_text("# Changelog\n\n## v1.1.0\n\n- Feat\n")
+
+        result = subprocess.run(
+            [str(script_path), "minor", "--update", "--project-root", str(tmp_path)],
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, f"Script failed: {result.stderr}"
+        assert result.stdout.strip() == "1.1.0"
+
+        # Verify files were updated
+        pj_data = json.loads((pj_dir / "plugin.json").read_text())
+        assert pj_data["version"] == "1.1.0"
+
+        toml_content = (tmp_path / "pyproject.toml").read_text()
+        assert '"1.1.0"' in toml_content

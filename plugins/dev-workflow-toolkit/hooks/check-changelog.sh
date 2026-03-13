@@ -19,10 +19,14 @@ if ! echo "$ALL_CHANGED" | grep -q 'plugin\.json'; then
     exit 0
 fi
 
-VERSION=$(python3 -c "import json; print(json.load(open('$PLUGIN_JSON'))['version'])" 2>/dev/null || exit 0)
+if ! VERSION=$(python3 -c "import json; print(json.load(open('$PLUGIN_JSON'))['version'])"); then
+    echo "ERROR: Failed to read version from $PLUGIN_JSON. Ensure python3 is available and $PLUGIN_JSON contains a 'version' field." >&2
+    exit 1
+fi
 
 if [ -z "$VERSION" ]; then
-    exit 0
+    echo "ERROR: Version field is empty in $PLUGIN_JSON." >&2
+    exit 1
 fi
 
 if [ ! -f "$CHANGELOG" ]; then

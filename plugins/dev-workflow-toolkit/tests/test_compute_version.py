@@ -182,8 +182,10 @@ class TestUpdateVersionFiles:
         _setup_version_files(tmp_path, "1.0.0")
         _setup_changelog(tmp_path, ["1.1.0"])
         update_version_files(tmp_path, "1.1.0")
-        content = (tmp_path / "pyproject.toml").read_text()
-        assert 'version = "1.1.0"' in content
+        import tomllib
+
+        data = tomllib.loads((tmp_path / "pyproject.toml").read_text())
+        assert data["project"]["version"] == "1.1.0"
 
     def test_preserves_other_plugin_json_fields(self, tmp_path: Path) -> None:
         _setup_version_files(tmp_path, "1.0.0", license="MIT")

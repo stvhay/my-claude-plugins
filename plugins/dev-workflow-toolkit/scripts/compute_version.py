@@ -136,17 +136,15 @@ def _write_plugin_json(project_root: Path, version: str) -> None:
 
 
 def _write_pyproject_toml(project_root: Path, version: str) -> None:
-    """Update version in pyproject.toml using regex replacement."""
+    """Update version in pyproject.toml using TOML parser."""
+    import tomllib
+
+    import tomli_w
+
     path = project_root / "pyproject.toml"
-    content = path.read_text(encoding="utf-8")
-    new_content = re.sub(
-        r'^(version\s*=\s*)"[^"]*"',
-        f'\\1"{version}"',
-        content,
-        count=1,
-        flags=re.MULTILINE,
-    )
-    path.write_text(new_content, encoding="utf-8")
+    data = tomllib.loads(path.read_text(encoding="utf-8"))
+    data["project"]["version"] = version
+    path.write_bytes(tomli_w.dumps(data).encode("utf-8"))
 
 
 def update_version_files(project_root: Path, new_version: str) -> None:
