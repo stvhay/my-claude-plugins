@@ -93,7 +93,7 @@ download_and_install() {
 
     # Find the binary in extracted files
     local extracted_binary
-    extracted_binary="$(find "$tmpdir" -name 'claude-statusline' -type f ! -name '*.tar.gz' | head -1)"
+    extracted_binary="$(find "$tmpdir" -name 'statusline' -type f ! -name '*.tar.gz' | head -1)"
     if [ -z "$extracted_binary" ]; then
         warn "binary not found in tarball"
         return 1
