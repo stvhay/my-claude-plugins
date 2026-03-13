@@ -99,7 +99,7 @@ Each task must be self-contained — a subagent receiving only this task text ha
 > **Slug convention:** When creating beads tasks, title format is `<slug>- <description>` (e.g., `auth- Implement authentication`). The slug is a short (1-8 char) identifier used by the pipeline status display.
 
 ````markdown
-### Task N: [Component Name]
+## Task N: [Component Name]
 
 **Context:** [What this task builds, where it fits in the system, any relevant architectural decisions. Include enough that a fresh subagent understands the landscape without reading other tasks.]
 
@@ -154,9 +154,9 @@ git commit -m "feat: add specific feature"
 Mark each task's dependencies explicitly. Independent tasks can be dispatched to subagents in parallel. Dependent tasks run sequentially.
 
 ```markdown
-### Task 1: Data model          [Independent]
-### Task 2: API endpoint        [Independent]
-### Task 3: Integration tests   [Depends on: Task 1, Task 2]
+## Task 1: Data model          [Independent]
+## Task 2: API endpoint        [Independent]
+## Task 3: Integration tests   [Depends on: Task 1, Task 2]
 ```
 
 ## Remember
