@@ -70,6 +70,8 @@ Skills compose into a development workflow graph. The primary flow is:
 | INV-7 | Entry-point skills (brainstorming, systematic-debugging) auto-create GitHub issues with duplicate search via `gh issue list --search` and always pass `--description` to `bd create` | reasoning-required | Prevents duplicate issues and provides beads context |
 | INV-8 | Worktree auto-detection: (a) Skills invocable by PR number (`requesting-code-review`) resolve the PR's branch to a local worktree via `gh pr view` + `git worktree list`. (b) Skills that execute within an existing worktree (`executing-plans`, `subagent-driven-development`) confirm context via `git rev-parse --show-toplevel` + `git worktree list` and cross-reference the `.issue` file | reasoning-required | Enables review from outside a worktree and ensures execution stays in the correct worktree |
 | INV-9 | Review documentation exists in beads (notes with "Review: PASS/FAIL") and GitHub issue (comment with review summary) for completed tasks | reasoning-required | Ensures review findings are traceable and visible to collaborators |
+| INV-10 | Source changes in a plugin directory require a version bump in that plugin's `plugin.json` | structural | Prevents unversioned changes from shipping to users; hook-enforced via `check-version-bump.sh` |
+| INV-11 | Version bumps in `plugin.json` require a corresponding `## vX.Y.Z` section in `CHANGELOG.md` | structural | Ensures users and agents can discover what changed; hook-enforced via `check-changelog.sh` |
 
 **Enforcement classification:**
 - **structural** — enforced by test suite, gitignore structure, or directory convention; pattern-matchable
@@ -86,6 +88,7 @@ Skills compose into a development workflow graph. The primary flow is:
 | FAIL-5 | Skill references broken after rename | Cross-references use file paths instead of skill names | Update references to use `/skill-name` form |
 | FAIL-6 | Silent issue creation skipped | Entry-point skill fails to create issue (network error, auth failure) without informing the user | Surface the error, proceed without issue tracking, warn user that the work is untracked |
 | FAIL-7 | Review documentation missing at branch completion | `finishing-a-development-branch` runs `check-review-documented.sh` but no review comments found in beads or GitHub issue | Post review summaries during development via `bd update` and `gh issue comment` |
+| FAIL-8 | `compute-version.sh --update` errors with VERSION_DRIFT | Version files (`plugin.json` and `pyproject.toml`) have different version strings | Run `compute-version.sh` without `--update` to see current state, then manually align the files |
 
 ## Decision Framework
 
@@ -102,6 +105,8 @@ INV-3: structural — plugin distribution eliminates the need for gitignore mana
 INV-4: reasoning-required — maintainer-only, verified during plugin releases.
 INV-5: reasoning-required — verified during code review.
 INV-6: structural — directory convention.
+
+INV-10, INV-11: enforced by Claude Code hooks (`check-version-bump.sh`, `check-changelog.sh`) at session Stop events. Also validated by `test_version_hooks.py`.
 
 Skills are additionally validated via subagent pressure testing — see `/skill-creator`.
 

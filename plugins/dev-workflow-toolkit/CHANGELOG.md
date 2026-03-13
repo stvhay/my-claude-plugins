@@ -3,6 +3,42 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.9.0
+
+### Merge strategy & release pipeline
+
+Squash merge is now the only merge strategy in finishing-a-development-branch.
+Version bump workflow integrated: agent recommends release type, writes
+changelog, runs `compute-version.sh --update`.
+
+**New scripts:**
+- `compute-version.sh` / `compute_version.py` — semver computation and
+  version file updates for `plugin.json` + `pyproject.toml`
+
+**New hooks:**
+- `check-version-bump.sh` — errors if source files changed without version bump
+- `check-changelog.sh` — errors if version bumped without changelog section
+
+**Skill updates:**
+- `finishing-a-development-branch` — squash merge only, version bump step
+  (Step 2b), missing release infrastructure warning
+- `project-init` — release infrastructure scaffolding (compute-version.sh,
+  release.yml, validation hooks)
+- `writing-plans` — scope detection warning before plan creation
+
+**New SPEC.md invariants:**
+- INV-10: Version bump enforcement (structural, hook-enforced)
+- INV-11: Changelog enforcement (structural, hook-enforced)
+- FAIL-8: Version drift between version files
+
+**ACTION:** Marketplace cleanup — `version` fields removed from
+marketplace.json plugin entries and `metadata.version`. Plugin.json is
+now the sole version authority. If you have scripts that read version
+from marketplace.json, update them to read from plugin.json instead.
+
+**ACTION:** Run `compute-version.sh` for version bumps instead of
+manually editing plugin.json + pyproject.toml.
+
 ## v1.8.2-0
 
 ### Review documentation standard

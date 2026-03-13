@@ -82,6 +82,28 @@ finishing-a-development-branch (pre-PR gate), and documentation-standards
 (on-demand audit). This converts several reasoning-required invariants into
 structural ones enforced by automation.
 
+## Release Infrastructure
+
+Each project scaffolded by `project-init` gets generated release tooling:
+
+- **`compute-version.sh` + `compute_version.py`** — Semver computation and
+  version file updates. Shell wrapper delegates to Python via `uv run`.
+  Reads/writes project-specific version files (plugin.json, pyproject.toml,
+  package.json, Cargo.toml).
+- **`release.yml`** — GitHub Actions workflow triggered on push to main.
+  Creates lexicographically sortable timestamp git tags (`YYYY-MM-DDTHHMMSSZ`)
+  and GitHub Releases with changelog content.
+- **Validation hooks** — Claude Code hooks enforce version bump and changelog
+  guardrails. Silent when compliant, structured error messages when violated.
+
+Version authority: `plugin.json` (for Claude Code plugins) or the
+stack-appropriate manifest. Marketplace.json does not carry version
+information — `plugin.json` drives update detection directly.
+
+Trade-off: generated scripts are per-project (not shared library). Each
+project owns its release tooling and can customize. Cost is duplication;
+benefit is zero coupling between projects.
+
 ## Hook-Based Telemetry
 
 The dev-workflow-toolkit plugin registers Claude Code hooks for Langfuse
