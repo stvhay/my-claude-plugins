@@ -178,31 +178,17 @@ digraph brainstorming {
 
 ## Evaluating UX Design Need
 
-After validating the design direction, evaluate whether detailed UX design is needed:
+UX design is always required unless both:
+- User experience (including with agents) is unaffected
+- Agent interaction patterns — how agents ask questions, present options, handle approval, escalate, or delegate — are unaffected
 
-**Recommend ux-design-agent when:**
-- User-facing interface (GUI, CLI, voice)
-- Agentic system (AI takes actions on user's behalf)
-- User model isn't obvious ("who uses this and how?")
-- Complex interaction flows (onboarding, wizards, multi-step)
-
-**Skip to writing-plans when:**
-- Internal tooling (user model is "us")
-- Simple feature with obvious interaction
-- Backend/infrastructure work
+**DO NOT** make exceptions because changes are viewed as "internal" or "infrastructure".
 
 **Ask explicitly:**
-> "This involves [user-facing interface / agentic behavior / complex interaction].
-> Would you like detailed UX design (requirements, user model, modality selection)?
-> Or proceed directly to implementation planning?"
+> "This affects [user experience / agent interaction patterns / both / neither].
+> I recommend UX design — proceed, or skip to implementation planning?"
 
-**If yes:**
-- **REQUIRED SUB-SKILL:** Use ux-design-agent
-- ux-design-agent will produce structured requirements
-- Then continue to writing-plans
-
-**If no:**
-- Proceed to writing-plans with current design document
+When UX design is required, use **ux-design-agent** (REQUIRED SUB-SKILL) to produce structured requirements, then continue to writing-plans. Otherwise, proceed directly to writing-plans.
 
 ## After the Design
 
