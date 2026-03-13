@@ -5,6 +5,10 @@ read this file and apply retroactive actions marked with **ACTION**.
 
 ## v1.14.0
 
+### Added
+
+- `resist-memory-redirect.sh` SessionStart hook — detects when Claude Code writes memory to `~/.claude/projects/` and redirects content to project root `MEMORY.md`
+
 ### Fixed
 - Brainstorming auto-creates worktree when on main/master instead of asking (#97)
 - Release workflow blocked by branch protection — use GitHub App token + ruleset bypass for version bump push (#104)
