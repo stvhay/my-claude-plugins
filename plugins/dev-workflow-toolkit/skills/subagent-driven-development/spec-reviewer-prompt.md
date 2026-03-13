@@ -53,9 +53,15 @@ Task tool (general-purpose):
     - Did they solve the wrong problem?
     - Did they implement the right feature but wrong way?
 
+    **Plan fidelity:**
+    - Did the implementer use the approach/libraries specified in the task?
+    - If they diverged, did they document it with rationale in their report?
+    - Are there undocumented divergences (different tech stack, architecture, or approach than specified)?
+
     **Verify by reading code, not by trusting report.**
 
     Report:
     - ✅ Spec compliant (if everything matches after code inspection)
     - ❌ Issues found: [list specifically what's missing or extra, with file:line references]
+    - ⚠️ Plan divergence: [what was specified vs. what was implemented, whether documented by implementer]
 ```
