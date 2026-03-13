@@ -1,9 +1,8 @@
 """Tests for resist-memory-redirect.sh SessionStart hook."""
-import os
 import hashlib
+import os
+import shutil
 import subprocess
-import tempfile
-import textwrap
 
 import pytest
 
@@ -87,7 +86,6 @@ class TestStubMatching:
 
     def test_no_claude_projects_dir_exits_silently(self, env):
         # Remove the memory directory entirely
-        import shutil
         shutil.rmtree(str(env["memory_file"].parent), ignore_errors=True)
 
         result = _run_hook(env)
