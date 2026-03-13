@@ -6,6 +6,9 @@ read this file and apply retroactive actions marked with **ACTION**.
 ## Unreleased
 <!-- bump: minor -->
 
+### Fixed
+- Brainstorming auto-creates worktree when on main/master instead of asking (#97)
+
 ### Changed
 - **Version bumping is now CI-driven.** Branches write `## Unreleased` changelog
   entries with `<!-- bump: TYPE -->` comments instead of bumping version files
