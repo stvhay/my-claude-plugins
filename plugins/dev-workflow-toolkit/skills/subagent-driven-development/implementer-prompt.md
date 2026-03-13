@@ -31,6 +31,13 @@ Task tool (general-purpose):
 
     **Ask them now.** Raise any concerns before starting work.
 
+    ## Plan Fidelity
+
+    The task description reflects a deliberate design. If you find yourself
+    choosing a different approach, library, or architecture than what the
+    task specifies — document the divergence and your rationale in the report.
+    Do not silently substitute a different technical approach.
+
     ## Your Job
 
     Once you're clear on requirements:
@@ -64,6 +71,7 @@ Task tool (general-purpose):
     - Did I avoid overbuilding (YAGNI)?
     - Did I only build what was requested?
     - Did I follow existing patterns in the codebase?
+    - Did I follow the approach/libraries specified in the task, or did I diverge? If I diverged, have I documented why?
 
     **Testing:**
     - Do tests actually verify behavior (not just mock behavior)?
@@ -79,5 +87,6 @@ Task tool (general-purpose):
     - What you tested and test results
     - Files changed
     - Self-review findings (if any)
+    - Plan divergences (any deviations from specified approach/tech stack, with rationale — or "None")
     - Any issues or concerns
 ```
