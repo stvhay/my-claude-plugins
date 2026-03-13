@@ -186,6 +186,12 @@ After validating the design direction, evaluate whether detailed UX design is ne
 - User model isn't obvious ("who uses this and how?")
 - Complex interaction flows (onboarding, wizards, multi-step)
 
+**DO NOT skip UX design when:**
+- The design introduces or modifies agent-human interaction patterns
+  (e.g., how the agent asks questions, presents options, handles approval,
+  orchestrates sub-skills, or delegates to other agents)
+- This applies even if the work is "internal tooling" or seems "simple"
+
 **Skip to writing-plans when:**
 - Internal tooling (user model is "us")
 - Simple feature with obvious interaction

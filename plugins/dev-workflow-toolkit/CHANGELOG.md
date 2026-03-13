@@ -3,6 +3,13 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.12.3
+
+Fix: brainstorming skill's "Evaluating UX Design Need" section skipped UX
+design for agentic interaction work when skip criteria ("internal tooling",
+"simple feature") matched. Added explicit "DO NOT skip" override block with
+concrete examples of interaction patterns that always require UX evaluation.
+
 ## v1.12.2
 
 Fix: `extract_usage()` in `langfuse-trace.py` included cached tokens in the
