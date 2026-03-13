@@ -3,6 +3,14 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.12.2
+
+Fix: `extract_usage()` in `langfuse-trace.py` included cached tokens in the
+`input` field, causing Langfuse to double-charge them (~9x cost inflation).
+Now passes Anthropic's non-overlapping token fields through directly using
+Langfuse canonical field names (`cache_read_input_tokens`,
+`cache_creation_input_tokens`), ensuring costs match default model pricing.
+
 ## v1.12.1
 
 Fix: `ensure-statusline.sh` looked for binary named `claude-statusline` in
