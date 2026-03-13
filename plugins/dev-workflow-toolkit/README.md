@@ -110,10 +110,11 @@ cd plugins/dev-workflow-toolkit
 ./tests/run-all.sh
 ```
 
-**175 tests**[^stat-test-count] across 7 modules[^stat-suite-count]:
+**185 tests**[^stat-test-count] across 8 modules[^stat-suite-count]:
 - Structure — frontmatter validation, SPEC.md checks, project-init templates, setup-rag config, cross-plugin validation
 - Integration — skill loading, dependency resolution, trigger patterns, reference files
 - Quality gate — smoke tests, negative fixtures, doc-stats validation
+- Capability guard — pytest marker registration, CI_CAPABILITIES skipping, resource-based test filtering
 - Direnv hooks — post-checkout behavior, SessionStart installer, idempotency, trust inheritance
 - Compute version — semver computation, file updates, consistency checks
 - Compute version shell — shell wrapper integration tests
