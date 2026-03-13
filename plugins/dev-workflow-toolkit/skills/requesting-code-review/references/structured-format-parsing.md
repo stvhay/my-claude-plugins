@@ -22,7 +22,7 @@ exist in all major languages.
 |--------|--------------|-------------|
 | JSON | Python: `json`; Shell: `jq` | — |
 | TOML (read) | Python 3.11+: `tomllib` | `tomli` (older Python) |
-| TOML (write) | — | `tomli_w` |
+| TOML (write) | — | `tomlkit` (preserves comments/formatting), `tomli_w` (lossy) |
 | YAML | — | `pyyaml`, `ruamel.yaml` |
 | XML | Python: `xml.etree.ElementTree` | `lxml` |
 | CSV | Python: `csv` | `pandas` (for analysis) |
@@ -35,7 +35,7 @@ exist in all major languages.
 **Bad:** `re.sub(r'version = ".*"', f'version = "{new}"', toml_content)`
 — Breaks on multiline strings, inline tables, comments after the value.
 
-**Good:** Parse with `tomllib`, modify the data structure, write with `tomli_w`.
+**Good:** Parse with `tomlkit` (preserves comments/formatting), modify, write back. Use `tomli_w` only when comment preservation isn't needed.
 
 **Bad:** `grep -oP '"version":\s*"\K[^"]+' package.json`
 — Breaks on nested objects, escaped quotes, different formatting.
