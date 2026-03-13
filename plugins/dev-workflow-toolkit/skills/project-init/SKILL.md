@@ -30,7 +30,7 @@ After scaffolding the base files, offer to set up release infrastructure:
 2. **Research conventions** — for the detected stack, research community-standard release practices (npm version, cargo release, Python versioning tools, etc.)
 3. **Confirm with user** — present findings and proposed approach
 4. **Generate compute-version.sh** — thin Bash wrapper that checks dependencies and delegates to Python
-5. **Generate compute_version.py** — Python implementation using stdlib `json` + `tomllib` and `tomli_w` for TOML. Tailored to the project's version file locations.
+5. **Generate compute_version.py** — Python implementation using stdlib `json` + `tomllib` for reading, regex-based writes for TOML. Tailored to the project's version file locations.
 6. **Generate release.yml** — GitHub Actions workflow: on push to main, create timestamp git tag (`YYYY-MM-DDTHHMMSSZ`), create GitHub Release with changelog content
 7. **Register hooks** — add `check-version-bump.sh` and `check-changelog.sh` to the project's Claude Code hook configuration
 

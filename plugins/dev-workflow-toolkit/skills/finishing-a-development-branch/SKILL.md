@@ -7,7 +7,7 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 ## Overview
 
-Guide completion of development work by presenting clear options and handling chosen workflow.
+Guide completion of development work through a fixed workflow: verify, validate, bump version, squash merge PR, clean up.
 
 **Core principle:** Verify tests → Validate docs → Version bump → Push + squash merge PR → Clean up.
 
@@ -201,7 +201,7 @@ fi
 
 ### Step 7: Beads Sync
 
-**After executing any option**, if a `.beads/` directory exists:
+**After PR creation**, if a `.beads/` directory exists:
 
 ```bash
 # Find the beads feature/epic linked to this branch's GitHub issue
