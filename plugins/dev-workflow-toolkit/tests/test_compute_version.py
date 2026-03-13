@@ -1,7 +1,5 @@
 """Tests for compute_version.py — semver computation and version file management."""
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 

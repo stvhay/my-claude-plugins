@@ -12,8 +12,6 @@ Checks: inv-numbering, issue-tracking, skill-structure, doc-structure,
         vsa-coverage, cross-links, tool-health, doc-stats
 """
 
-from __future__ import annotations
-
 import argparse
 import re
 import shutil
@@ -21,10 +19,8 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
+from collections.abc import Callable
+from typing import Any
 
 from markdown_it import MarkdownIt
 from mdit_py_plugins.footnote import footnote_plugin
