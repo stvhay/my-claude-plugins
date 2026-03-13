@@ -47,7 +47,7 @@ jobs:
             # Check if plugin has source file changes (exclude docs, config, locks)
             SOURCE_CHANGES=$(git diff --name-only "$BASE_SHA"...HEAD -- "$plugin_dir" \
               | grep -v -E '\.(md|yml|yaml)$' \
-              | grep -v -E '(uv\.lock|plugin\.json)$' \
+              | grep -v -E '(uv\.lock|plugin\.json|pyproject\.toml)$' \
               || true)
 
             if [ -z "$SOURCE_CHANGES" ]; then
