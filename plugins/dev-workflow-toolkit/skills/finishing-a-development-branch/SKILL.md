@@ -154,6 +154,44 @@ git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 
 Or ask: "This branch split from main - is that correct?"
 
+### Step 3b: Scope Check
+
+Before creating the PR, review the accumulated changes for scope coherence. This is a **soft gate** — warn if scope drift is detected, but let the user proceed.
+
+**Evaluate:**
+
+```bash
+# Review commit history for this branch
+git log main..HEAD --oneline
+
+# Review overall change footprint
+git diff main...HEAD --stat
+```
+
+**Ask:**
+
+> Did implementation reveal scope that justifies splitting this into multiple PRs?
+
+**Signs of scope drift:**
+- Commits that address unrelated issues or features
+- Changes to unrelated subsystems with no connection to the original issue
+- Bug fixes for pre-existing issues bundled into a feature branch
+- Refactoring that could stand alone as its own PR
+
+**If scope drift detected:**
+```
+This branch appears to include changes beyond issue #<N>:
+
+- [specific changes that appear unrelated]
+
+Consider splitting these into separate issues/PRs before merging.
+Proceed anyway, or split?
+```
+
+**If user proceeds:** Continue to Step 4 with a note in the PR body: `**Scope note:** [brief description of bundled changes and why they were kept together]`
+
+**If clean:** Proceed to Step 4.
+
 ### Step 4: Create Pull Request
 
 **Always create a PR and attach it to the relevant GitHub issue.** Do not ask the user to choose — PRs are the default workflow.
@@ -292,7 +330,7 @@ improvements, and files GitHub issues for upstream items once the user approves.
 
 ## Quick Reference
 
-**Workflow:** Verify tests → Quality gate → Review docs check → CI check → Validate docs → Version bump → Determine base → Push + squash merge PR → Post-PR CI verify → Cleanup → Beads sync → Retrospective
+**Workflow:** Verify tests → Quality gate → Review docs check → CI check → Validate docs → Version bump → Determine base → Scope check → Push + squash merge PR → Post-PR CI verify → Cleanup → Beads sync → Retrospective
 
 ## Common Mistakes
 
@@ -327,7 +365,7 @@ improvements, and files GitHub issues for upstream items once the user approves.
 - **documentation-standards** — Validate mode, hard gate after test verification
 - **retrospective** — Step 8, non-blocking session analysis after PR creation
 
-**Workflow:** Verify → CI check → Validate → Version bump → Determine base → Push + squash merge PR → Post-PR CI verify → Cleanup → Beads sync → Retrospective
+**Workflow:** Verify → CI check → Validate → Version bump → Determine base → Scope check → Push + squash merge PR → Post-PR CI verify → Cleanup → Beads sync → Retrospective
 
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete
