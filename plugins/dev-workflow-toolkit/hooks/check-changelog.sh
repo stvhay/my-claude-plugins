@@ -22,7 +22,7 @@ if ! grep -q '^## Unreleased' "$CHANGELOG"; then
 fi
 
 # ## Unreleased exists — require bump comment
-if ! grep -qE '<!--\s*bump:\s*(major|minor|patch)\s*-->' "$CHANGELOG"; then
+if ! sed -n '/^## Unreleased/,/^## /p' "$CHANGELOG" | grep -qE '<!--\s*bump:\s*(major|minor|patch)\s*-->'; then
     echo "BUMP_TYPE_MISSING: ## Unreleased section found but missing <!-- bump: TYPE --> comment."
     echo "Add <!-- bump: patch -->, <!-- bump: minor -->, or <!-- bump: major -->."
     exit 1

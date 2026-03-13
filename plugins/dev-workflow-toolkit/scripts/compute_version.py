@@ -146,35 +146,32 @@ def _write_pyproject_toml(project_root: Path, version: str) -> None:
     path.write_bytes(tomli_w.dumps(data).encode("utf-8"))
 
 
+def _write_version_files(project_root: Path, new_version: str) -> None:
+    """Write new_version to all discovered version files."""
+    versions = _discover_versions(project_root)
+    if "plugin.json" in versions:
+        _write_plugin_json(project_root, new_version)
+    if "pyproject.toml" in versions:
+        _write_pyproject_toml(project_root, new_version)
+
+
 def update_version_files(project_root: Path, new_version: str) -> None:
     """Update all version files after validating consistency and changelog.
 
     Checks are run first — no files are written if any check fails.
     """
-    # Pre-checks: consistency and changelog
     check_version_consistency(project_root)
     check_changelog_has_version(project_root, new_version)
-
-    # Write updates
-    versions = _discover_versions(project_root)
-    if "plugin.json" in versions:
-        _write_plugin_json(project_root, new_version)
-    if "pyproject.toml" in versions:
-        _write_pyproject_toml(project_root, new_version)
+    _write_version_files(project_root, new_version)
 
 
 def update_version_files_no_changelog_check(project_root: Path, new_version: str) -> None:
-    """Update all version files, checking consistency but NOT changelog.
+    """Update all version files, skipping changelog check.
 
     Used by CI mode which rewrites the changelog itself.
+    Caller is responsible for checking version consistency beforehand.
     """
-    check_version_consistency(project_root)
-
-    versions = _discover_versions(project_root)
-    if "plugin.json" in versions:
-        _write_plugin_json(project_root, new_version)
-    if "pyproject.toml" in versions:
-        _write_pyproject_toml(project_root, new_version)
+    _write_version_files(project_root, new_version)
 
 
 # ── Changelog CI helpers ─────────────────────────────────────────────
@@ -215,7 +212,11 @@ def parse_changelog_bump_type(project_root: Path) -> str:
 
 
 def rewrite_changelog_unreleased(project_root: Path, new_version: str) -> None:
-    """Replace ``## Unreleased`` with ``## vX.Y.Z`` and remove the bump comment."""
+    """Replace ``## Unreleased`` with ``## vX.Y.Z`` and remove the bump comment.
+
+    Precondition: caller must verify ## Unreleased section exists
+    (e.g., via parse_changelog_bump_type).
+    """
     changelog = project_root / "CHANGELOG.md"
     content = changelog.read_text(encoding="utf-8")
 

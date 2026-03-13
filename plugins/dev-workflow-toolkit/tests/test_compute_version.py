@@ -334,12 +334,14 @@ class TestUpdateVersionFilesNoChangelogCheck:
         data = json.loads((tmp_path / ".claude-plugin" / "plugin.json").read_text())
         assert data["version"] == "1.1.0"
 
-    def test_still_checks_consistency(self, tmp_path: Path) -> None:
+    def test_does_not_check_consistency(self, tmp_path: Path) -> None:
+        """Caller is responsible for consistency checks; this function just writes."""
         _setup_plugin_json(tmp_path, "1.0.0")
         _setup_pyproject_toml(tmp_path, "2.0.0")
-        with pytest.raises(SystemExit) as exc_info:
-            update_version_files_no_changelog_check(tmp_path, "3.0.0")
-        assert exc_info.value.code == 1
+        # Should NOT raise — caller owns the consistency check
+        update_version_files_no_changelog_check(tmp_path, "3.0.0")
+        pj = json.loads((tmp_path / ".claude-plugin" / "plugin.json").read_text())
+        assert pj["version"] == "3.0.0"
 
     def test_updates_both_files(self, tmp_path: Path) -> None:
         _setup_version_files(tmp_path, "1.0.0")

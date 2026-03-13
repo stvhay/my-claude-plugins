@@ -21,7 +21,7 @@ if [ -z "$ALL_CHANGED" ]; then
 fi
 
 # Check if any source files changed (exclude docs, config, version files)
-SOURCE_FILES=$(echo "$ALL_CHANGED" | grep -vE '(plugin\.json|pyproject\.toml|package\.json|Cargo\.toml|CHANGELOG\.md|uv\.lock|package-lock\.json|Cargo\.lock|poetry\.lock|\.md$|\.yml$|\.yaml$)' || true)
+SOURCE_FILES=$(echo "$ALL_CHANGED" | grep -vE '(plugin\.json|pyproject\.toml|package\.json|Cargo\.toml|uv\.lock|package-lock\.json|Cargo\.lock|poetry\.lock|\.md$|\.yml$|\.yaml$)' || true)
 if [ -z "$SOURCE_FILES" ]; then
     exit 0
 fi
@@ -39,7 +39,7 @@ if ! grep -q '^## Unreleased' "$CHANGELOG"; then
     exit 1
 fi
 
-if ! grep -qE '<!--\s*bump:\s*(major|minor|patch)\s*-->' "$CHANGELOG"; then
+if ! sed -n '/^## Unreleased/,/^## /p' "$CHANGELOG" | grep -qE '<!--\s*bump:\s*(major|minor|patch)\s*-->'; then
     echo "BUMP_TYPE_MISSING: ## Unreleased section found but missing <!-- bump: TYPE --> comment."
     echo "Add <!-- bump: patch -->, <!-- bump: minor -->, or <!-- bump: major -->."
     exit 1
