@@ -72,10 +72,11 @@ You MUST create a task for each of these items and complete them in order:
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Consider subsystem boundaries** — does this fit in one subsystem or cross boundaries? If it crosses, note which SPEC.md files are relevant and flag that the plan should be split by subsystem. If a new subsystem boundary is identified that lacks a SPEC.md, recommend `/codify-subsystem` after implementation
 6. **Present design** — in sections scaled to their complexity, get user approval after each section
-7. **Identify documentation impact** — invoke documentation-standards (draft mode) to draft updates to tracked project docs
-8. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` (local working directory, not committed), include documentation updates section
-9. **Evaluate UX design need** — if user-facing or agentic, recommend ux-design-agent
-10. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+7. **Evaluate epic scope** — does this design represent multiple distinct issues? If yes, restructure as epic with child issues (soft gate, see Evaluate Epic Scope section)
+8. **Identify documentation impact** — invoke documentation-standards (draft mode) to draft updates to tracked project docs
+9. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` (local working directory, not committed), include documentation updates section
+10. **Evaluate UX design need** — if user-facing or agentic, recommend ux-design-agent
+11. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
 
@@ -133,12 +134,17 @@ digraph brainstorming {
     "User approves design?" -> "Present design sections" [label="no, revise"];
 
     // Finalization
+    "Evaluate epic scope" [shape=diamond];
+    "Restructure as epic" [shape=box];
     "Draft doc updates" [shape=box];
     "Write design doc" [shape=box];
     "UX design needed?" [shape=diamond];
     "Invoke ux-design-agent" [shape=box];
     "Invoke writing-plans skill" [shape=doublecircle];
-    "User approves design?" -> "Draft doc updates" [label="yes"];
+    "User approves design?" -> "Evaluate epic scope" [label="yes"];
+    "Evaluate epic scope" -> "Restructure as epic" [label="yes, split"];
+    "Evaluate epic scope" -> "Draft doc updates" [label="no, single issue"];
+    "Restructure as epic" -> "Draft doc updates";
     "Draft doc updates" -> "Write design doc";
     "Write design doc" -> "UX design needed?";
     "UX design needed?" -> "Invoke ux-design-agent" [label="yes"];
@@ -175,6 +181,29 @@ digraph brainstorming {
 - Ask after each section whether it looks right so far
 - Cover: architecture, components, data flow, error handling, testing
 - Be ready to go back and clarify if something doesn't make sense
+
+## Evaluate Epic Scope
+
+After the user approves the design, evaluate whether it represents multiple distinct issues that should be structured as an epic. This is a **soft gate** — recommend restructuring but let the user proceed if they disagree.
+
+**Ask:**
+
+> Does this design represent multiple distinct issues/features that should be an epic?
+
+**Signs the work should be an epic:**
+- The design has 2+ independently deliverable features
+- Different parts could be reviewed and merged separately
+- The work would produce a PR touching unrelated subsystems for unrelated reasons
+- The issue title uses "and" to join distinct goals
+
+**If yes — restructure:**
+1. Add the `epic` label to the current issue: `gh issue edit <N> --add-label epic`
+2. Create child issues for each distinct unit of work: `gh issue create --title "<child summary>" --body "Part of #<N>" --label enhancement`
+3. Update beads issue type if available: `bd update <id> --type=epic`
+4. Each child issue maps 1:1 to a future PR
+5. Continue with the design doc, noting the epic structure and child issues
+
+**If no:** Proceed to documentation impact.
 
 ## Evaluating UX Design Need
 

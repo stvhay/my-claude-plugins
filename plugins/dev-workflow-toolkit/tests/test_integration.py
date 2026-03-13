@@ -298,6 +298,54 @@ class TestEntryPointIssueCreation:
             f"{skill} must document graceful handling when issue creation fails (FAIL-6)"
         )
 
+# ---------------------------------------------------------------------------
+# Epic scope check in brainstorming and finishing
+# ---------------------------------------------------------------------------
+
+
+class TestEpicScopeCheck:
+    """Brainstorming and finishing skills must include epic scope checks."""
+
+    def test_brainstorming_has_epic_scope_step(self, skills_dir: Path):
+        """Brainstorming checklist must include epic scope evaluation."""
+        skill_file = skills_dir / "brainstorming" / "SKILL.md"
+        text = skill_file.read_text()
+        assert "Evaluate epic scope" in text, (
+            "brainstorming must have 'Evaluate epic scope' checklist step"
+        )
+
+    def test_brainstorming_scope_check_mentions_epic_label(self, skills_dir: Path):
+        """Brainstorming scope check must describe how to convert to epic."""
+        skill_file = skills_dir / "brainstorming" / "SKILL.md"
+        text = skill_file.read_text()
+        assert "gh issue edit" in text and "epic" in text, (
+            "brainstorming scope check must describe epic label conversion via gh issue edit"
+        )
+
+    def test_brainstorming_scope_check_in_dot_graph(self, skills_dir: Path):
+        """Brainstorming dot graph must include the epic scope check node."""
+        skill_file = skills_dir / "brainstorming" / "SKILL.md"
+        text = skill_file.read_text()
+        assert "Evaluate epic scope" in text and "digraph" in text, (
+            "brainstorming dot graph must include 'Evaluate epic scope' node"
+        )
+
+    def test_finishing_has_scope_check(self, skills_dir: Path):
+        """Finishing skill must include a pre-PR scope check."""
+        skill_file = skills_dir / "finishing-a-development-branch" / "SKILL.md"
+        text = skill_file.read_text()
+        assert "scope" in text.lower() and "git log" in text and "git diff" in text, (
+            "finishing must have scope check with git log and git diff analysis"
+        )
+
+    def test_finishing_scope_check_is_soft_gate(self, skills_dir: Path):
+        """Finishing scope check must be a soft gate, not a hard gate."""
+        skill_file = skills_dir / "finishing-a-development-branch" / "SKILL.md"
+        text = skill_file.read_text().lower()
+        assert "soft" in text, (
+            "finishing scope check must be described as a soft gate"
+        )
+
 
 # ---------------------------------------------------------------------------
 # Worktree auto-detection
