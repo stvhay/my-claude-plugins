@@ -73,7 +73,7 @@ class TestCheckVersionBumpScript:
         subprocess.run(["git", "add", "main.py"], cwd=tmp_path, capture_output=True, check=True)
         result = _run_hook(hooks_dir / "check-version-bump.sh", tmp_path)
         assert result.returncode == 1
-        assert "VERSION_BUMP_REQUIRED" in result.stdout
+        assert "VERSION_BUMP_REQUIRED" in result.stderr
 
     def test_passes_when_version_bumped_with_source(
         self, hooks_dir: Path, tmp_path: Path
@@ -136,7 +136,7 @@ class TestCheckChangelogScript:
         pj.write_text(json.dumps({"name": "test", "version": "1.1.0"}))
         result = _run_hook(hooks_dir / "check-changelog.sh", tmp_path)
         assert result.returncode == 1
-        assert "CHANGELOG_MISSING" in result.stdout
+        assert "CHANGELOG_MISSING" in result.stderr
 
     def test_passes_when_version_bumped_with_changelog(
         self, hooks_dir: Path, tmp_path: Path
