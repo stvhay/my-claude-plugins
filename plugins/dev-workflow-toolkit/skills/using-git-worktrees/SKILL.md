@@ -53,7 +53,7 @@ Which would you prefer?
 Branch names and worktree paths follow a strict pattern that enables cross-skill navigation (e.g., `/review <PR#>` locating the correct worktree).
 
 **Branch:** `<type>/<issue>-<slug>`
-- `type` is one of: `feature`, `fix`, `docs`
+- `type` is one of: `feature`, `fix`, `docs`, `chore`, `refactor`
 - `issue` is the GitHub issue number
 - `slug` is a short hyphenated description
 
@@ -64,7 +64,7 @@ Examples:
 - Branch `fix/42-broken-auth` → `.worktrees/fix/42-broken-auth`
 - Branch `docs/39-token-efficiency` → `.worktrees/docs/39-token-efficiency`
 
-**Why this matters:** `requesting-code-review` navigates PR → issue number → worktree path. It scans `git worktree list` for paths containing `/<issue>-`. If the worktree path doesn't follow this convention, `/review <PR#>` cannot find it.
+**Why this matters:** `requesting-code-review` navigates PR → issue number → worktree path. It matches `git worktree list` paths using the regex `/<issue>-` (bounded — `/63-` must not match `/630-`). If the worktree path doesn't follow this convention, `/review <PR#>` cannot find it.
 
 ## Safety Verification
 

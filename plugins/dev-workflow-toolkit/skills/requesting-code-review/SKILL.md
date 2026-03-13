@@ -31,8 +31,8 @@ Before running review, locate the correct worktree:
 2. Run `git worktree list` — if the current toplevel appears as a worktree entry (not the main working tree), you're already in a worktree — proceed
 3. If a PR number was provided as argument:
    a. Run `gh pr view <N> --json body,headRefName` to get the PR body and branch name
-   b. Extract the issue number from the PR body — look for `Closes #N`, `Fixes #N`, or `Resolves #N` (case-insensitive)
-   c. Run `git worktree list` and scan paths for `/<issue>-` (e.g., `/39-` for issue #39)
+   b. Extract the issue number from the PR body — match `(close[sd]?|fix(e[sd])?|resolve[sd]?)\s+#(\d+)` (case-insensitive). GitHub accepts all these variants.
+   c. Run `git worktree list` and match worktree paths using the regex `/<issue>-` where `<issue>` is bounded by `/` before and `-` after (e.g., `/63-` for issue #63 — must not substring-match `/630-` or `/6-`)
    d. If a matching worktree is found, operate on that worktree's directory
    e. If no issue link found in PR body, fall back to matching by branch name (existing behavior)
    f. If no worktree found by either method, warn: "No local worktree found for PR #N (issue #M). Reviewing from current directory."
