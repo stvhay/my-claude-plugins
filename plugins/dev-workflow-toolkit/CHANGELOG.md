@@ -3,8 +3,7 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
-## Unreleased
-<!-- bump: minor -->
+## v1.14.0
 
 ### Fixed
 - Brainstorming auto-creates worktree when on main/master instead of asking (#97)
