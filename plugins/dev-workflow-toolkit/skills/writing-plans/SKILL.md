@@ -174,14 +174,7 @@ Mark each task's dependencies explicitly. Independent tasks can be dispatched to
 
 ## Work Tracking
 
-**When CLAUDE.md contains a beads work-tracking directive:**
-- Use `bd` for all work tracking. Do not use Claude Code task lists.
-- Task titles follow the slug convention: `<slug>- <description>`.
-- If a `bd` command fails, **stop the workflow** and recommend `bd doctor`. Beads is critical infrastructure.
-
-**When no beads directive in CLAUDE.md (fallback):**
-- Use Claude Code task lists for in-session tracking.
-- Plan file is the source of truth.
+Follow the work-tracking protocol in SPEC.md (INV-14). Plan file is the fallback source of truth.
 
 ## Beads Conversion
 

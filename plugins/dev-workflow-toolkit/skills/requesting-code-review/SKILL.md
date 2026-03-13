@@ -213,14 +213,11 @@ PR_NUMBER=12, IS_AUTHOR=false
 
 ## Work Tracking
 
-**When CLAUDE.md contains a beads work-tracking directive:**
-- Create a review task in beads when requesting review.
-- Update the parent feature issue with review status.
-- Task titles follow the slug convention: `<slug>- <description>`.
-- If a `bd` command fails, **stop the workflow** and recommend `bd doctor`. Beads is critical infrastructure.
+Follow the work-tracking protocol in SPEC.md (INV-14). Skill-specific additions:
 
-**When no beads directive in CLAUDE.md (fallback):**
-- Use Claude Code task lists for tracking review progress.
-- GitHub PR comments serve as the review record.
+- Create a review task: `bd create "review- Code review for PR #<N>" --type=task --external-ref=gh-pr-<N>`
+- Update parent feature: `bd update <feature-id> --append-notes "Review requested: PR #<N>"`
+
+**Fallback note:** GitHub PR comments serve as the review record.
 
 See template at: requesting-code-review/code-reviewer.md

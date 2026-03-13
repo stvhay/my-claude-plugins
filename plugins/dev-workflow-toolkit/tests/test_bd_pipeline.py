@@ -89,6 +89,23 @@ class TestBdPipeline:
         result = run_script(tasks)
         assert result == "executing || api --> finishing"
 
+    def test_blocked_tasks_counted_separately(self, run_script):
+        tasks = json.dumps([
+            {"id": "bd-1", "title": "auth- Implement auth", "status": "in_progress"},
+            {"id": "bd-2", "title": "routes- Add routes", "status": "blocked"},
+            {"id": "bd-3", "title": "tests- Write tests", "status": "open"},
+        ])
+        result = run_script(tasks)
+        assert result == "executing || auth | (1 blocked) | (1 more) --> finishing"
+
+    def test_only_blocked_tasks(self, run_script):
+        tasks = json.dumps([
+            {"id": "bd-1", "title": "auth- Implement auth", "status": "blocked"},
+            {"id": "bd-2", "title": "routes- Add routes", "status": "blocked"},
+        ])
+        result = run_script(tasks)
+        assert result == "executing || (2 blocked) --> finishing"
+
     def test_empty_input(self, run_script):
         result = run_script("[]")
         assert result == "executing || (done) --> finishing"

@@ -24,11 +24,15 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-python3 -c "
-import json, sys
+BD_PIPELINE_PHASE="$phase" BD_PIPELINE_NEXT="$next_phase" python3 -c "
+import json, os, sys
+
+phase = os.environ['BD_PIPELINE_PHASE']
+next_phase = os.environ['BD_PIPELINE_NEXT']
 
 data = json.load(sys.stdin)
 active = []
+blocked = 0
 remaining = 0
 
 for item in data:
@@ -38,19 +42,23 @@ for item in data:
 
     if status == 'in_progress':
         active.append(slug)
+    elif status == 'blocked':
+        blocked += 1
     elif status == 'open':
         remaining += 1
 
-if not active and remaining == 0:
-    middle = '(done)'
-elif not active:
-    middle = f'({remaining} more)'
-elif remaining == 0:
-    middle = ' | '.join(active)
-else:
-    middle = ' | '.join(active) + f' | ({remaining} more)'
+parts = []
+if active:
+    parts.append(' | '.join(active))
+if blocked:
+    parts.append(f'({blocked} blocked)')
+if remaining:
+    parts.append(f'({remaining} more)')
 
-phase = '$phase'
-next_phase = '$next_phase'
+if parts:
+    middle = ' | '.join(parts)
+else:
+    middle = '(done)'
+
 print(f'{phase} || {middle} --> {next_phase}')
 "

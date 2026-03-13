@@ -24,21 +24,6 @@ WHEN receiving code review feedback:
 6. IMPLEMENT: One item at a time, test each
 ```
 
-**Beads tracking (when CLAUDE.md directive present):**
-
-Log reviewer feedback to beads:
-
-```bash
-bd update <review-task-id> --append-notes "Feedback received: <summary of reviewer comments>"
-```
-
-After implementing fixes:
-
-```bash
-bd update <review-task-id> --append-notes "Review: PASS — all feedback addressed"
-bd close <review-task-id> --reason "Feedback addressed in <commit-sha>"
-```
-
 ## Forbidden Responses
 
 **NEVER:**
@@ -238,18 +223,15 @@ You understand 1,2,3,6. Unclear on 4,5.
 
 When replying to inline review comments on GitHub, reply in the comment thread (`gh api repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/pulls/{pr}/comments/{id}/replies`), not as a top-level PR comment.
 
-## The Bottom Line
-
 ## Work Tracking
 
-**When CLAUDE.md contains a beads work-tracking directive:**
-- Log reviewer feedback to beads via `bd update --append-notes`.
-- Close the review task after addressing all feedback.
-- If a `bd` command fails, **stop the workflow** and recommend `bd doctor`. Beads is critical infrastructure.
+Follow the work-tracking protocol in SPEC.md (INV-14). Skill-specific additions:
 
-**When no beads directive in CLAUDE.md (fallback):**
-- Use Claude Code task lists for tracking review response progress.
-- GitHub PR thread replies serve as the feedback record.
+- Log reviewer feedback: `bd update <review-task-id> --append-notes "Feedback received: <summary>"`
+- After fixes: `bd update <review-task-id> --append-notes "Review: PASS — all feedback addressed"`
+- Close: `bd close <review-task-id> --reason "Feedback addressed in <commit-sha>"`
+
+**Fallback note:** GitHub PR thread replies serve as the feedback record.
 
 ## The Bottom Line
 

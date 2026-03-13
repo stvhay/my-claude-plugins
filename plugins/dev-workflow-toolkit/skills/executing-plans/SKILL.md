@@ -47,15 +47,11 @@ echo "Verified: on branch $branch in $(pwd)"
 
 ## Work Tracking
 
-**When CLAUDE.md contains a beads work-tracking directive:**
-- Use `bd` for all work tracking. Do not use Claude Code task lists (TaskCreate/TaskUpdate).
-- Task titles follow the slug convention: `<slug>- <description>`.
-- If a `bd` command fails, **stop the workflow** and recommend `bd doctor`. Beads is critical infrastructure.
+Follow the work-tracking protocol in SPEC.md (INV-14). Skill-specific additions:
+
 - Display pipeline status after each batch: `bd list --type=task --json | bd-pipeline --phase executing --next finishing`
 
-**When no beads directive in CLAUDE.md (fallback):**
-- Use Claude Code task lists (TaskCreate/TaskUpdate) for in-session progress tracking.
-- Plan file is the source of truth.
+**Fallback note:** Plan file is the source of truth.
 
 ## The Process
 

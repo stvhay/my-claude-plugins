@@ -169,11 +169,10 @@ are relevant to the project.
 
 ## Work Tracking
 
-**project-init is responsible for the beads/task-list decision:**
+**project-init is the origin of the beads/task-list decision** (see SPEC.md INV-14):
 - By default, install beads (`bd init`) and write the CLAUDE.md work-tracking directive.
 - If the user opts out, no directive is written — skills fall back to Claude Code task lists.
-- If a `bd` command fails during setup, surface the error and recommend `bd doctor`. Beads is critical infrastructure once installed.
-- Task titles follow the slug convention: `<slug>- <description>`.
+- If a `bd` command fails during setup, surface the error and recommend `bd doctor`.
 
 ## Key Principles
 

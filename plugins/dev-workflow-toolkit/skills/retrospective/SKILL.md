@@ -129,13 +129,11 @@ Report what was saved/filed and end the session.
 
 ## Work Tracking
 
-**When CLAUDE.md contains a beads work-tracking directive:**
-- File upstream improvements as beads issues (linked to GitHub via `--external-ref`).
-- Task titles follow the slug convention: `<slug>- <description>`.
-- If a `bd` command fails, **stop the workflow** and recommend `bd doctor`. Beads is critical infrastructure.
+Follow the work-tracking protocol in SPEC.md (INV-14). Skill-specific additions:
 
-**When no beads directive in CLAUDE.md (fallback):**
-- File upstream improvements as GitHub issues only.
+- File upstream improvements as beads issues: `bd create "improve- <summary>" --type=bug --external-ref=gh-<N>`
+
+**Fallback note:** File upstream improvements as GitHub issues only.
 
 ## Key Principles
 

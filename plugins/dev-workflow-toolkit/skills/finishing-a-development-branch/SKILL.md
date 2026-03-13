@@ -351,13 +351,9 @@ improvements, and files GitHub issues for upstream items once the user approves.
 
 ## Work Tracking
 
-**When CLAUDE.md contains a beads work-tracking directive:**
-- Use `bd` for all work tracking. Do not use Claude Code task lists.
-- Beads is critical infrastructure — if `bd` fails, stop and recommend `bd doctor`.
-- Task titles follow the slug convention: `<slug>- <description>`.
+Follow the work-tracking protocol in SPEC.md (INV-14).
 
-**When no beads directive in CLAUDE.md (fallback):**
-- Use GitHub PR body and comments for tracking completion steps.
+**Fallback note:** Use GitHub PR body and comments for tracking completion steps.
 
 ## Common Mistakes
 

@@ -26,15 +26,11 @@ context_pct=$(bash "$(dirname "$CLAUDE_SKILL_DIR")/../scripts/context-check" 2>/
 
 ## Work Tracking
 
-**When CLAUDE.md contains a beads work-tracking directive:**
-- Use `bd` for all work tracking. Do not use Claude Code task lists (TaskCreate/TaskUpdate).
-- Task titles follow the slug convention: `<slug>- <description>`.
-- If a `bd` command fails, **stop the workflow** and recommend `bd doctor`. Beads is critical infrastructure.
+Follow the work-tracking protocol in SPEC.md (INV-14). Skill-specific additions:
+
 - Display pipeline status after each task batch: `bd list --type=task --json | bd-pipeline --phase executing --next finishing`
 
-**When no beads directive in CLAUDE.md (fallback):**
-- Use Claude Code task lists for in-session progress and coordination.
-- Plan file is the source of truth.
+**Fallback note:** Plan file is the source of truth.
 
 ## When to Use
 
