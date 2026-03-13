@@ -92,14 +92,11 @@ def get_tool_results(transcript_path):
 
 def extract_usage(usage):
     """Extract Langfuse usage_details from Anthropic usage dict."""
-    input_tokens = usage.get("input_tokens", 0)
-    cache_read = usage.get("cache_read_input_tokens", 0)
-    cache_create = usage.get("cache_creation_input_tokens", 0)
-    output_tokens = usage.get("output_tokens", 0)
     return {
-        "input": input_tokens + cache_read + cache_create,
-        "output": output_tokens,
-        "inputCached": cache_read,
+        "input": usage.get("input_tokens", 0),
+        "output": usage.get("output_tokens", 0),
+        "cache_read_input_tokens": usage.get("cache_read_input_tokens", 0),
+        "cache_creation_input_tokens": usage.get("cache_creation_input_tokens", 0),
     }
 
 
