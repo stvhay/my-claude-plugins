@@ -96,6 +96,21 @@ finishing-a-development-branch (pre-PR gate), and documentation-standards
 (on-demand audit). This converts several reasoning-required invariants into
 structural ones enforced by automation.
 
+## Work Tracking
+
+Beads is the primary work-tracking system. When configured via project-init,
+a CLAUDE.md directive activates beads for all skills. GitHub serves as the
+external projection layer — issues and PRs receive comments at key lifecycle
+points (plan summaries, progress updates, review findings, preflight results).
+Granular task tracking stays in beads.
+
+When beads is not installed (user opted out during project-init), skills fall
+back to Claude Code task lists and GitHub issues.
+
+Task titles follow a slug convention (`<slug>- <description>`) enabling
+a lightweight pipeline status script (`bd-pipeline`) that renders one-line
+progress: `<phase> || <slugs> | (N more) --> <next_phase>`.
+
 ## Release Infrastructure
 
 Each project scaffolded by `project-init` gets generated release tooling:
