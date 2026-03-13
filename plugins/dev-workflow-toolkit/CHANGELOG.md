@@ -3,6 +3,19 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.13.0
+
+### Added
+- **brainstorming:** New checklist step 7 "Evaluate epic scope" — after design
+  approval, checks whether the work spans multiple distinct issues that should
+  be an epic with child issues. Soft gate: recommends restructuring but lets the
+  user proceed.
+- **finishing-a-development-branch:** New Step 3b "Scope Check" — before PR
+  creation, reviews accumulated changes for scope drift. Warns when commits go
+  beyond the originating issue. Soft gate.
+
+Both checks enforce the squash-merge convention: one PR = one commit = one issue.
+
 ## v1.12.3
 
 Fix: brainstorming skill's "Evaluating UX Design Need" section had competing

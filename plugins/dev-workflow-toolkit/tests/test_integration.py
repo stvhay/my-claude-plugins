@@ -298,6 +298,75 @@ class TestEntryPointIssueCreation:
             f"{skill} must document graceful handling when issue creation fails (FAIL-6)"
         )
 
+# ---------------------------------------------------------------------------
+# Epic scope check in brainstorming and finishing
+# ---------------------------------------------------------------------------
+
+
+class TestEpicScopeCheck:
+    """Brainstorming and finishing skills must include epic scope checks."""
+
+    def test_brainstorming_epic_scope_step_ordering(self, skills_dir: Path):
+        """Epic scope must come after design presentation and before doc impact."""
+        text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
+        checklist_match = re.search(r"## Checklist.*?(?=\n## )", text, re.DOTALL)
+        assert checklist_match, "brainstorming must have a Checklist section"
+        lines = [
+            l.strip()
+            for l in checklist_match.group().splitlines()
+            if re.match(r"\d+\.", l.strip())
+        ]
+        steps = {
+            re.sub(r"^\d+\.\s+\*\*", "", l).split("**")[0]: i
+            for i, l in enumerate(lines)
+        }
+        assert "Evaluate epic scope" in steps, "checklist must have 'Evaluate epic scope' step"
+        assert "Present design" in steps, "checklist must have 'Present design' step"
+        assert "Identify documentation impact" in steps, "checklist must have 'Identify documentation impact' step"
+        assert steps["Present design"] < steps["Evaluate epic scope"], (
+            "epic scope must come after design presentation"
+        )
+        assert steps["Evaluate epic scope"] < steps["Identify documentation impact"], (
+            "epic scope must come before documentation impact"
+        )
+
+    def test_brainstorming_scope_check_mentions_epic_label(self, skills_dir: Path):
+        """Brainstorming scope check must describe how to convert to epic."""
+        text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
+        assert "gh issue edit" in text and "epic" in text, (
+            "brainstorming scope check must describe epic label conversion via gh issue edit"
+        )
+
+    def test_brainstorming_dot_graph_has_epic_scope_edges(self, skills_dir: Path):
+        """Dot graph must wire epic scope between design approval and doc drafting."""
+        text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
+        dot_match = re.search(r"```dot\n(.*?)```", text, re.DOTALL)
+        assert dot_match, "brainstorming must have a dot graph"
+        dot = dot_match.group(1)
+        assert '"Evaluate epic scope"' in dot, "Node must exist in graph"
+        assert '-> "Evaluate epic scope"' in dot, "Must have incoming edge"
+        assert '"Evaluate epic scope" ->' in dot, "Must have outgoing edge"
+
+    def test_finishing_scope_check_before_pr_creation(self, skills_dir: Path):
+        """Scope check must appear before PR creation step."""
+        text = (skills_dir / "finishing-a-development-branch" / "SKILL.md").read_text()
+        assert "Step 3b: Scope Check" in text, "finishing must have Step 3b: Scope Check"
+        scope_pos = text.index("Step 3b: Scope Check")
+        pr_pos = text.index("Step 4: Create Pull Request")
+        assert scope_pos < pr_pos, (
+            "scope check (Step 3b) must appear before PR creation (Step 4)"
+        )
+
+    def test_finishing_scope_check_offers_user_choice(self, skills_dir: Path):
+        """Scope check must be a soft gate offering proceed-or-split choice."""
+        text = (skills_dir / "finishing-a-development-branch" / "SKILL.md").read_text()
+        start = text.index("### Step 3b")
+        end = text.index("### Step 4")
+        section = text[start:end]
+        assert "soft gate" in section.lower(), "scope check must be described as a soft gate"
+        assert "Proceed anyway, or split?" in section, "must offer proceed-or-split choice"
+        assert "If user proceeds" in section, "must describe what happens if user proceeds"
+
 
 # ---------------------------------------------------------------------------
 # Worktree auto-detection
