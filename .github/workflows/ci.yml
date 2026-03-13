@@ -8,6 +8,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      CI_CAPABILITIES: ""
     steps:
       - uses: actions/checkout@v4
 
@@ -16,8 +18,7 @@ jobs:
           enable-cache: true
 
       - name: Run tests
-        working-directory: plugins/dev-workflow-toolkit
-        run: uv run pytest tests/ -v
+        run: tests/run-all.sh -v
 
       - name: Run quality gate
         working-directory: plugins/dev-workflow-toolkit

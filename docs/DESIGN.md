@@ -117,3 +117,8 @@ bump and changelog enforcement are structural invariants (INV-10, INV-11)
 enforced by hooks, not reasoning-required checks.
 
 Squash merge is the only merge strategy. Every PR is one commit on main.
+
+Branch protection (require CI pass, require squash merge) is part of the
+generated infrastructure. `project-init` configures this via `gh api` during
+initial scaffolding, enforcing the squash-merge-only invariant at the GitHub
+level rather than relying on developer discipline.
