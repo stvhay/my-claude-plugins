@@ -13,7 +13,6 @@ SETTINGS_PATH=".claude/settings.json"
 
 python3 - "$SETTINGS_PATH" << 'PYEOF'
 import json
-import os
 import sys
 
 settings_path = sys.argv[1]
