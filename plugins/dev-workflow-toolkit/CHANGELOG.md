@@ -3,6 +3,12 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.13.4
+
+- **fix:** Replace `bd create -f` with `plan-to-beads.sh` for plan-to-beads conversion (#92)
+- `bd create -f` uses h2 headings as task boundaries and doesn't skip code fences, producing spurious tasks from embedded file content
+- New script uses `markdown-it-py` to parse `### Task N:` headings with proper code fence handling
+
 ## v1.13.3
 
 - **fix:** Move quality gate SessionStart hook from project `settings.json` to plugin `hooks.json`, using `${CLAUDE_PLUGIN_ROOT}` for version-independent path resolution (#83)
