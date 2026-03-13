@@ -9,8 +9,6 @@ Usage:
     compute_version.py <patch|minor|major> [--update] [--project-root <path>]
 """
 
-from __future__ import annotations
-
 import argparse
 import json
 import re

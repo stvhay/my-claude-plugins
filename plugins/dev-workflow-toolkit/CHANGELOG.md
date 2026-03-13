@@ -3,6 +3,14 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.13.1
+
+Remove unnecessary `from __future__ import annotations` from all Python scripts
+and tests. The project requires Python 3.13+ (`pyproject.toml`), making these
+imports no-ops. Also moves `Callable` import in `quality_gate.py` from
+`TYPE_CHECKING`-only to a regular import, fixing a latent runtime error that
+was masked by the `__future__` import.
+
 ## v1.13.0
 
 ### Added
