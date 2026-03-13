@@ -41,6 +41,7 @@ git diff {BASE_SHA}..{HEAD_SHA}
 - Type safety (if applicable)?
 - DRY principle followed?
 - Edge cases handled?
+- Formats with formal grammars parsed with libraries, not regex/sed/grep? See references/structured-format-parsing.md
 
 **Architecture:**
 - Sound design decisions?

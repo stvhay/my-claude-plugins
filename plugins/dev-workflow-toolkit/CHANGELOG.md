@@ -3,6 +3,18 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.10.1
+
+### Prefer parsers for formats with formal grammars
+
+Added guidance so agents use stdlib/third-party parsers instead of regex/sed/grep
+for any format with a formal grammar (#62).
+
+- Reference doc: `requesting-code-review/references/structured-format-parsing.md`
+- Code reviewer checklist item for formal grammar format handling
+- Inline rules in test-driven-development (GREEN section) and code-simplification
+  (new Parser Preference pattern category)
+
 ## v1.10.0
 
 ### Worktree naming convention and review navigation
