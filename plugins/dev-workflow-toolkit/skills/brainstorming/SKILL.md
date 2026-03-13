@@ -57,9 +57,7 @@ The user's initial message or `/brainstorming` arguments describe the work. Use 
 
 Run `git branch --show-current` to detect the current branch.
 
-- **If on `main` or `master`:** Warn: "You're on `<branch>`. CONTRIBUTING.md requires a feature branch before brainstorming. Want me to run `/using-git-worktrees` to create one?"
-  - If yes: invoke using-git-worktrees, then resume brainstorming from Step 2.
-  - If no: allow proceeding with a warning.
+- **If on `main` or `master`:** Notify: "You're on `<branch>` — creating a worktree." Invoke using-git-worktrees automatically. If worktree creation fails, warn and allow proceeding on main.
 - **If on any other branch:** Proceed to Step 2.
 
 ## Work Tracking
@@ -108,15 +106,10 @@ digraph brainstorming {
 
     // Pre-flight: branch check
     "On feature branch?" [shape=diamond];
-    "Warn: on main" [shape=box];
-    "Create branch?" [shape=diamond];
-    "Invoke using-git-worktrees" [shape=box];
+    "Auto-create worktree" [shape=box];
     "On feature branch?" -> "Explore project context" [label="yes"];
-    "On feature branch?" -> "Warn: on main" [label="no"];
-    "Warn: on main" -> "Create branch?";
-    "Create branch?" -> "Invoke using-git-worktrees" [label="yes"];
-    "Create branch?" -> "Explore project context" [label="no, proceed anyway"];
-    "Invoke using-git-worktrees" -> "Explore project context";
+    "On feature branch?" -> "Auto-create worktree" [label="no"];
+    "Auto-create worktree" -> "Explore project context";
 
     // Discovery and design
     "Explore project context" [shape=box];
@@ -266,7 +259,7 @@ When UX design is required, use **ux-design-agent** (REQUIRED SUB-SKILL) to prod
 ## Integration
 
 **Invokes:**
-- **using-git-worktrees** — During pre-flight checks, if user is on `main`/`master` and wants a branch
+- **using-git-worktrees** — During pre-flight checks, if on `main`/`master` (auto-created)
 - **documentation-standards** — Draft mode, after design approval, before writing design doc
 
 **Called by:**
