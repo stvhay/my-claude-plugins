@@ -24,7 +24,7 @@ if echo "$ALL_CHANGED" | grep -qE '(plugin\.json|pyproject\.toml|package\.json|C
 fi
 
 SOURCE_CHANGED=false
-SOURCE_FILES=$(echo "$ALL_CHANGED" | grep -vE '(plugin\.json|pyproject\.toml|package\.json|Cargo\.toml|CHANGELOG\.md|\.md$|\.yml$|\.yaml$)' || true)
+SOURCE_FILES=$(echo "$ALL_CHANGED" | grep -vE '(plugin\.json|pyproject\.toml|package\.json|Cargo\.toml|CHANGELOG\.md|\.md$|\.yml$|\.yaml$|\.lock$)' || true)
 if [ -n "$SOURCE_FILES" ]; then
     SOURCE_CHANGED=true
 fi
@@ -34,7 +34,7 @@ if [ "$SOURCE_CHANGED" = true ] && [ "$VERSION_CHANGED" = false ]; then
         echo "ERROR: Failed to read version from $PLUGIN_JSON. Ensure python3 is available and $PLUGIN_JSON contains a 'version' field." >&2
         exit 1
     fi
-    echo "VERSION_BUMP_REQUIRED: Source files changed but version in $PLUGIN_JSON is unchanged ($CURRENT_VERSION)."
-    echo "Run: compute-version.sh <patch|minor|major> --update"
+    echo "VERSION_BUMP_REQUIRED: Source files changed but version in $PLUGIN_JSON is unchanged ($CURRENT_VERSION)." >&2
+    echo "Run: compute-version.sh <patch|minor|major> --update" >&2
     exit 1
 fi

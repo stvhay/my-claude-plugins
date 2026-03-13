@@ -30,13 +30,13 @@ if [ -z "$VERSION" ]; then
 fi
 
 if [ ! -f "$CHANGELOG" ]; then
-    echo "CHANGELOG_MISSING: Version $VERSION found in $PLUGIN_JSON but no CHANGELOG.md exists."
-    echo "Create CHANGELOG.md with a ## v$VERSION section."
+    echo "CHANGELOG_MISSING: Version $VERSION found in $PLUGIN_JSON but no CHANGELOG.md exists." >&2
+    echo "Create CHANGELOG.md with a ## v$VERSION section." >&2
     exit 1
 fi
 
 if ! grep -qF "## v$VERSION" "$CHANGELOG"; then
-    echo "CHANGELOG_MISSING: Version $VERSION found in $PLUGIN_JSON but CHANGELOG.md has no section for ## v$VERSION."
-    echo "Write a changelog entry for v$VERSION before proceeding."
+    echo "CHANGELOG_MISSING: Version $VERSION found in $PLUGIN_JSON but CHANGELOG.md has no section for ## v$VERSION." >&2
+    echo "Write a changelog entry for v$VERSION before proceeding." >&2
     exit 1
 fi
