@@ -125,10 +125,16 @@ Release tooling (`compute-version.sh`, `release.yml`, validation hooks) is
 generated per-project by `project-init`, not shipped as templates in the plugin.
 The skill prompt contains the knowledge to produce stack-appropriate scripts.
 
+Version bumping is CI-driven to eliminate race conditions between parallel
+branches. Branches write `## Unreleased` sections with `<!-- bump: TYPE -->`
+HTML comments in CHANGELOG.md. CI validates label/changelog consistency
+pre-merge and performs the actual version bump post-merge.
+
 This follows the principle: **guardrails that can be mechanistically determined
-run as hooks, silent when compliant, speaking only on violation.** Version
-bump and changelog enforcement are structural invariants (INV-10, INV-11)
-enforced by hooks, not reasoning-required checks.
+run as hooks, silent when compliant, speaking only on violation.** Changelog
+entry enforcement (INV-10) runs as a branch-time hook. Label/changelog
+consistency (INV-11) runs as a CI pre-merge check. Version file updates run
+post-merge with a concurrency group for serialization.
 
 Squash merge is the only merge strategy. Every PR is one commit on main.
 

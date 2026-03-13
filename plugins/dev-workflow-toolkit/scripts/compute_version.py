@@ -7,6 +7,7 @@ and version consistency between files.
 
 Usage:
     compute_version.py <patch|minor|major> [--update] [--project-root <path>]
+    compute_version.py --ci [--update] [--project-root <path>]
 """
 
 import argparse
@@ -145,21 +146,87 @@ def _write_pyproject_toml(project_root: Path, version: str) -> None:
     path.write_bytes(tomli_w.dumps(data).encode("utf-8"))
 
 
-def update_version_files(project_root: Path, new_version: str) -> None:
-    """Update all version files after validating consistency and changelog.
-
-    Checks are run first — no files are written if any check fails.
-    """
-    # Pre-checks: consistency and changelog
-    check_version_consistency(project_root)
-    check_changelog_has_version(project_root, new_version)
-
-    # Write updates
+def _write_version_files(project_root: Path, new_version: str) -> None:
+    """Write new_version to all discovered version files."""
     versions = _discover_versions(project_root)
     if "plugin.json" in versions:
         _write_plugin_json(project_root, new_version)
     if "pyproject.toml" in versions:
         _write_pyproject_toml(project_root, new_version)
+
+
+def update_version_files(project_root: Path, new_version: str) -> None:
+    """Update all version files after validating consistency and changelog.
+
+    Checks are run first — no files are written if any check fails.
+    """
+    check_version_consistency(project_root)
+    check_changelog_has_version(project_root, new_version)
+    _write_version_files(project_root, new_version)
+
+
+def update_version_files_no_changelog_check(project_root: Path, new_version: str) -> None:
+    """Update all version files, skipping changelog check.
+
+    Used by CI mode which rewrites the changelog itself.
+    Caller is responsible for checking version consistency beforehand.
+    """
+    _write_version_files(project_root, new_version)
+
+
+# ── Changelog CI helpers ─────────────────────────────────────────────
+
+_BUMP_COMMENT_RE = re.compile(r"<!--\s*bump:\s*(major|minor|patch)\s*-->")
+
+
+def parse_changelog_bump_type(project_root: Path) -> str:
+    """Read bump type from ``<!-- bump: TYPE -->`` in the ``## Unreleased`` section.
+
+    Exits with code 1 if CHANGELOG.md is missing, has no ``## Unreleased``
+    section, has no bump comment in that section, or the bump type is invalid.
+    """
+    changelog = project_root / "CHANGELOG.md"
+    if not changelog.exists():
+        print("CHANGELOG_MISSING: CHANGELOG.md not found", file=sys.stderr)
+        sys.exit(1)
+
+    content = changelog.read_text(encoding="utf-8")
+
+    # Find ## Unreleased section
+    unreleased_match = re.search(r"^## Unreleased\b", content, re.MULTILINE)
+    if not unreleased_match:
+        print("CHANGELOG_NO_UNRELEASED: no '## Unreleased' section", file=sys.stderr)
+        sys.exit(1)
+
+    # Extract text between ## Unreleased and next ## heading (or end of file)
+    start = unreleased_match.end()
+    next_heading = re.search(r"^## ", content[start:], re.MULTILINE)
+    section = content[start : start + next_heading.start()] if next_heading else content[start:]
+
+    bump_match = _BUMP_COMMENT_RE.search(section)
+    if not bump_match:
+        print("CHANGELOG_NO_BUMP: no '<!-- bump: TYPE -->' in Unreleased section", file=sys.stderr)
+        sys.exit(1)
+
+    return bump_match.group(1)
+
+
+def rewrite_changelog_unreleased(project_root: Path, new_version: str) -> None:
+    """Replace ``## Unreleased`` with ``## vX.Y.Z`` and remove the bump comment.
+
+    Precondition: caller must verify ## Unreleased section exists
+    (e.g., via parse_changelog_bump_type).
+    """
+    changelog = project_root / "CHANGELOG.md"
+    content = changelog.read_text(encoding="utf-8")
+
+    # Replace heading
+    content = re.sub(r"^## Unreleased\b.*$", f"## v{new_version}", content, count=1, flags=re.MULTILINE)
+
+    # Remove bump comment line (including surrounding blank line if present)
+    content = re.sub(r"\n?<!--\s*bump:\s*(?:major|minor|patch)\s*-->\n?", "\n", content, count=1)
+
+    changelog.write_text(content, encoding="utf-8")
 
 
 # ── CLI ──────────────────────────────────────────────────────────────
@@ -172,8 +239,14 @@ def main(argv: list[str] | None = None) -> None:
     )
     parser.add_argument(
         "bump_type",
+        nargs="?",
         choices=["patch", "minor", "major"],
-        help="Semver bump type",
+        help="Semver bump type (required unless --ci is used)",
+    )
+    parser.add_argument(
+        "--ci",
+        action="store_true",
+        help="CI mode: read bump type from <!-- bump: TYPE --> in CHANGELOG.md",
     )
     parser.add_argument(
         "--update",
@@ -188,6 +261,12 @@ def main(argv: list[str] | None = None) -> None:
     )
     args = parser.parse_args(argv)
 
+    # Validate: --ci and bump_type are mutually exclusive
+    if args.ci and args.bump_type:
+        parser.error("--ci and bump_type are mutually exclusive")
+    if not args.ci and not args.bump_type:
+        parser.error("bump_type is required unless --ci is used")
+
     project_root = args.project_root.resolve()
 
     # Read current version from whichever file exists
@@ -200,10 +279,20 @@ def main(argv: list[str] | None = None) -> None:
     check_version_consistency(project_root)
 
     current = next(iter(versions.values()))
-    new_version = bump_version(current, args.bump_type)
+
+    if args.ci:
+        bump_type = parse_changelog_bump_type(project_root)
+    else:
+        bump_type = args.bump_type
+
+    new_version = bump_version(current, bump_type)
 
     if args.update:
-        update_version_files(project_root, new_version)
+        if args.ci:
+            update_version_files_no_changelog_check(project_root, new_version)
+            rewrite_changelog_unreleased(project_root, new_version)
+        else:
+            update_version_files(project_root, new_version)
 
     # Output new version to stdout
     print(new_version)

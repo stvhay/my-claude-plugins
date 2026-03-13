@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: version-bump
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -12,22 +16,73 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
-      - name: Check for version changes
-        id: version
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Configure git
         run: |
-          CHANGED=false
-          for pj in plugins/*/.claude-plugin/plugin.json; do
-            if git diff HEAD~1 --name-only | grep -qF "$pj"; then
-              CHANGED=true
-              break
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump versions for unreleased plugins
+        id: bump
+        run: |
+          BUMPED=false
+          RELEASE_BODY=""
+
+          for plugin_dir in plugins/*/; do
+            plugin_name=$(basename "$plugin_dir")
+            changelog="$plugin_dir/CHANGELOG.md"
+
+            if [ ! -f "$changelog" ]; then
+              continue
             fi
+
+            if ! grep -q '^## Unreleased' "$changelog"; then
+              continue
+            fi
+
+            echo "Bumping version for plugin '$plugin_name'"
+
+            uv run --project plugins/dev-workflow-toolkit \
+              python plugins/dev-workflow-toolkit/scripts/compute_version.py \
+              --ci --update --project-root "$plugin_dir"
+
+            # Read new version from plugin.json
+            plugin_json="$plugin_dir/.claude-plugin/plugin.json"
+            VERSION=$(python3 -c "import json; print(json.load(open('$plugin_json'))['version'])")
+
+            # Stage files
+            git add "$plugin_json" "$changelog"
+            if [ -f "$plugin_dir/pyproject.toml" ]; then
+              git add "$plugin_dir/pyproject.toml"
+            fi
+            if [ -f plugins/dev-workflow-toolkit/uv.lock ]; then
+              git add plugins/dev-workflow-toolkit/uv.lock
+            fi
+
+            git commit -m "chore: bump $plugin_name to v$VERSION"
+
+            # Collect changelog section for release notes
+            SECTION=$(sed -n "/^## v${VERSION}$/,/^## v/{ /^## v${VERSION}$/d; /^## v/d; p; }" "$changelog")
+            RELEASE_BODY="${RELEASE_BODY}## ${plugin_name} v${VERSION}\n\n${SECTION}\n\n"
+
+            BUMPED=true
           done
-          echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
+
+          echo "bumped=$BUMPED" >> "$GITHUB_OUTPUT"
+          # Write release body to file to preserve newlines
+          echo -e "$RELEASE_BODY" > /tmp/release-body.md
+
+      - name: Push version commits
+        if: steps.bump.outputs.bumped == 'true'
+        run: git push
 
       - name: Create timestamp tag and release
-        if: steps.version.outputs.changed == 'true'
+        if: steps.bump.outputs.bumped == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -35,27 +90,6 @@ jobs:
           git tag "$TAG"
           git push origin "$TAG"
 
-          BODY=""
-          for pj in plugins/*/.claude-plugin/plugin.json; do
-            if git diff HEAD~1 --name-only | grep -qF "$pj"; then
-              PLUGIN_DIR=$(dirname "$(dirname "$pj")")
-              PLUGIN_NAME=$(basename "$PLUGIN_DIR")
-              VERSION=$(python3 -c "
-          import json, sys
-          data = json.load(open('$pj'))
-          if 'version' not in data:
-              print(f'ERROR: {\"$pj\"} is missing required \"version\" field. Add a version to plugin.json before releasing.', file=sys.stderr)
-              sys.exit(1)
-          print(data['version'])
-          ")
-              CHANGELOG="$PLUGIN_DIR/CHANGELOG.md"
-              if [ -f "$CHANGELOG" ]; then
-                SECTION=$(sed -n "/^## v${VERSION}$/,/^## v/{ /^## v${VERSION}$/d; /^## v/d; p; }" "$CHANGELOG")
-                BODY="${BODY}## ${PLUGIN_NAME} v${VERSION}\n\n${SECTION}\n\n"
-              fi
-            fi
-          done
-
           gh release create "$TAG" \
             --title "Release $TAG" \
-            --notes "$(echo -e "$BODY")"
+            --notes-file /tmp/release-body.md

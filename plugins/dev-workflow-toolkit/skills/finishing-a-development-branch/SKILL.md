@@ -129,21 +129,21 @@ Invoke documentation-standards in validate mode. The skill will:
 
 **If documentation gate passes:** Continue to Step 3.
 
-### Step 2b: Version Bump
+### Step 2b: Changelog and Bump Label
 
-If the project has a `compute-version.sh` script (created by project-init):
+If the project has a `CHANGELOG.md` (created by project-init):
 
 1. **Analyze changes** — review the diff against the base branch
 2. **Recommend release type** — based on changes, recommend patch (bug fix), minor (new feature, backward compatible), or major (breaking change). Always present the recommendation with rationale:
    > "This adds a new scaffolding step to project-init — new capability, backward compatible. I'd recommend **minor**. Patch, minor, or major?"
-3. **Write changelog entry** — write the `## vX.Y.Z` section in `CHANGELOG.md` with migration-relevant details. Include `**ACTION**` markers for any changes users need to apply.
-4. **Run version bump** — `compute-version.sh <type> --update`
-5. **Commit version bump** — separate commit for the version change
+3. **Write changelog entry** — add an `## Unreleased` section in `CHANGELOG.md` with a `<!-- bump: TYPE -->` comment and migration-relevant details. Include `**ACTION**` markers for any changes users need to apply.
+4. **Commit changelog** — separate commit for the changelog entry
+5. **Note PR label** — remind to apply `bump:TYPE` label when creating PR (or apply via `gh pr create --label bump:TYPE`)
 
-If `compute-version.sh` does not exist:
-> "No release infrastructure found. Consider running project-init to set up compute-version.sh and release.yml."
+If `CHANGELOG.md` does not exist:
+> "No changelog found. Consider running project-init to set up release infrastructure."
 
-This is a **soft warning** — proceed without version bump if the project hasn't adopted the convention.
+This is a **soft warning** — proceed without changelog if the project hasn't adopted the convention.
 
 ### Step 3: Determine Base Branch
 
@@ -347,7 +347,7 @@ improvements, and files GitHub issues for upstream items once the user approves.
 
 ## Quick Reference
 
-**Workflow:** Verify tests → Quality gate → Review docs check → CI check → Validate docs → Version bump → Determine base → Scope check → Push + squash merge PR → Post-PR CI verify → Cleanup → Beads sync → Retrospective
+**Workflow:** Verify tests → Quality gate → Review docs check → CI check → Validate docs → Changelog + label → Determine base → Scope check → Push + squash merge PR → Post-PR CI verify → Cleanup → Beads sync → Retrospective
 
 ## Work Tracking
 
@@ -361,9 +361,9 @@ Follow the work-tracking protocol in SPEC.md (INV-14).
 - **Problem:** Merge broken code, create failing PR
 - **Fix:** Always verify tests before offering options
 
-**Skipping version bump**
-- **Problem:** Changes ship without version bump, users don't get updates
-- **Fix:** Step 2b prompts for release type when compute-version.sh exists
+**Skipping changelog entry**
+- **Problem:** Changes ship without changelog, CI can't determine version bump type
+- **Fix:** Step 2b prompts for release type and writes ## Unreleased entry with bump comment
 
 **Automatic worktree cleanup**
 - **Problem:** Remove worktree when might need it
@@ -379,7 +379,7 @@ Follow the work-tracking protocol in SPEC.md (INV-14).
 
 **Always:**
 - Verify tests before creating PR
-- Run compute-version.sh if present before creating PR
+- Write changelog entry with bump type if CHANGELOG.md exists before creating PR
 - Clean up worktree after PR creation
 
 ## Integration
@@ -388,7 +388,7 @@ Follow the work-tracking protocol in SPEC.md (INV-14).
 - **documentation-standards** — Validate mode, hard gate after test verification
 - **retrospective** — Step 8, non-blocking session analysis after PR creation
 
-**Workflow:** Verify → CI check → Validate → Version bump → Determine base → Scope check → Push + squash merge PR → Post-PR CI verify → Cleanup → Beads sync → Retrospective
+**Workflow:** Verify → CI check → Validate → Changelog + label → Determine base → Scope check → Push + squash merge PR → Post-PR CI verify → Cleanup → Beads sync → Retrospective
 
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete
