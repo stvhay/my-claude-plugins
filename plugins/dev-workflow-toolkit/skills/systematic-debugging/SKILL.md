@@ -35,6 +35,7 @@ When invoked as an entry point (user calls `/systematic-debugging` directly), ch
 - Use `bd` for all work tracking. Do not use Claude Code task lists.
 - Task titles follow the slug convention: `<slug>- <description>` (e.g., `repro- Reproduce the bug`).
 - If a `bd` command fails, **stop the workflow** and recommend `bd doctor`. Beads is critical infrastructure.
+- **GitHub projection:** After identifying root cause, post findings as an issue comment: `gh issue comment <N> --body "Root cause: <summary>"`
 
 **When no beads directive in CLAUDE.md (fallback):**
 - Use Claude Code task lists for in-session tracking.
