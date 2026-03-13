@@ -18,6 +18,15 @@
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/ensure-direnv-hook.sh"
           }
         ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/ensure-statusline.sh"
+          }
+        ]
       }
     ],
     "PostToolUse": [
