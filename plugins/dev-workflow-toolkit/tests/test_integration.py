@@ -162,15 +162,23 @@ class TestReferenceFiles:
 
     def test_reference_dirs_exist(self, skills_dir: Path):
         missing = []
+        ref_path_re = re.compile(r"`(?:([a-z-]+)/)?references/([a-z0-9._-]+)`")
         for skill in SKILLS_WITH_REFS:
             skill_file = skills_dir / skill / "SKILL.md"
             if not skill_file.exists():
                 continue
-            if "references/" in skill_file.read_text():
+            text = skill_file.read_text()
+            for match in ref_path_re.finditer(text):
+                owner = match.group(1) or skill  # cross-skill or self
+                ref_file = skills_dir / owner / "references" / match.group(2)
+                if not ref_file.exists():
+                    missing.append(f"{owner}/references/{match.group(2)}")
+            # Also check for bare references/ (no backtick path) → own dir
+            if "references/" in text and not ref_path_re.search(text):
                 refs_dir = skills_dir / skill / "references"
                 if not refs_dir.is_dir():
                     missing.append(f"{skill}/references")
-        assert not missing, f"Missing reference directories: {missing}"
+        assert not missing, f"Missing reference paths: {missing}"
 
 
 # ---------------------------------------------------------------------------
