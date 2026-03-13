@@ -5,6 +5,9 @@ read this file and apply retroactive actions marked with **ACTION**.
 
 ## v1.13.4
 
+- **fix:** Replace `bd create -f` with `plan-to-beads.sh` for plan-to-beads conversion (#92)
+- `bd create -f` uses h2 headings as task boundaries and doesn't skip code fences, producing spurious tasks from embedded file content
+- New script uses `markdown-it-py` to parse `### Task N:` headings with proper code fence handling
 - **fix:** Add plan fidelity guidance to implementer and spec reviewer prompt templates (#61)
   - Implementer subagents must document divergences from plan's specified approach/tech stack
   - Spec reviewer checks for undocumented plan divergences and flags them as findings
