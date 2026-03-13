@@ -3,6 +3,28 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.11.0
+
+### CI integration and capability-based test guards
+
+Added CI infrastructure for the plugin ecosystem (#51).
+
+- **Capability markers:** Tests declare resource requirements with
+  `@pytest.mark.capability("gpu")`. `conftest.py` reads `CI_CAPABILITIES` env var
+  and auto-skips tests when required resources aren't available.
+- **Discovery runner:** Repo-root `tests/run-all.sh` discovers and runs all
+  `plugins/*/tests/run-all.sh` — single CI entry point.
+- **CI workflow:** `ci.yml` switched from direct pytest to the discovery runner.
+- **CI hard gate:** `finishing-a-development-branch` Step 1d enforces `gh pr checks`
+  before PR creation (INV-12).
+- **Branch protection:** `project-init` now configures branch protection on `main`
+  via `gh api` (require CI pass, require squash merge).
+- **Test fix:** `test_reference_dirs_exist` now resolves cross-skill reference paths
+  correctly.
+
+**ACTION:** If you use `finishing-a-development-branch`, note the new Step 1d
+(CI status check) between review docs check and documentation validation.
+
 ## v1.10.1
 
 ### Prefer parsers for formats with formal grammars
