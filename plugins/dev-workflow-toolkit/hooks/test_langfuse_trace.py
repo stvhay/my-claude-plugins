@@ -225,16 +225,31 @@ class TestExtractUsage:
             "cache_creation_input_tokens": 10,
         }
         result = extract_usage(usage)
-        assert result == {"input": 310, "output": 50, "inputCached": 200}
+        assert result == {
+            "input": 100,
+            "output": 50,
+            "cache_read_input_tokens": 200,
+            "cache_creation_input_tokens": 10,
+        }
 
     def test_empty_usage(self):
         result = extract_usage({})
-        assert result == {"input": 0, "output": 0, "inputCached": 0}
+        assert result == {
+            "input": 0,
+            "output": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+        }
 
     def test_no_cache(self):
         usage = {"input_tokens": 500, "output_tokens": 100}
         result = extract_usage(usage)
-        assert result == {"input": 500, "output": 100, "inputCached": 0}
+        assert result == {
+            "input": 500,
+            "output": 100,
+            "cache_read_input_tokens": 0,
+            "cache_creation_input_tokens": 0,
+        }
 
 
 # -- extract_text_output --
