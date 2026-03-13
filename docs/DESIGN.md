@@ -104,3 +104,16 @@ Documentation is organized into three tiers by lifecycle:
    not appended as ADRs. Git history preserves the evolution.
 3. **Tracked subsystem specs.** `SPEC.md` files inside each plugin's `skills/`
    directory. Define the contract for that plugin's skill set.
+
+## Generated Release Infrastructure
+
+Release tooling (`compute-version.sh`, `release.yml`, validation hooks) is
+generated per-project by `project-init`, not shipped as templates in the plugin.
+The skill prompt contains the knowledge to produce stack-appropriate scripts.
+
+This follows the principle: **guardrails that can be mechanistically determined
+run as hooks, silent when compliant, speaking only on violation.** Version
+bump and changelog enforcement are structural invariants (INV-10, INV-11)
+enforced by hooks, not reasoning-required checks.
+
+Squash merge is the only merge strategy. Every PR is one commit on main.

@@ -44,8 +44,12 @@ description: What this skill does and when to use it.
 ## Modifying a Plugin
 
 1. File an issue or reference an existing one
-2. Branch, make changes, open a PR
-3. Bump the version in `plugin.json`
+2. Create a branch
+3. Make changes
+4. Run `compute-version.sh <patch|minor|major> --update` to bump version
+   (writes `plugin.json` + `pyproject.toml`, validates changelog)
+5. Open a PR — squash merge is the only merge strategy
+6. After merge, `release.yml` creates a timestamp git tag and GitHub Release
 
 ## Standards
 

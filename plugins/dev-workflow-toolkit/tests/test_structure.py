@@ -309,31 +309,44 @@ class TestReadmeDepth:
         assert not shallow, "READMEs too short:\n" + "\n".join(shallow)
 
 
-class TestMarketplaceVersionConsistency:
-    """marketplace.json versions must match each plugin's plugin.json."""
+class TestMarketplacePluginRegistration:
+    """marketplace.json must list all plugins (no version check — plugin.json is authority)."""
 
-    def test_versions_match(self, repo_root: Path, all_plugin_dirs: list[Path]):
+    def test_all_plugins_registered(self, repo_root: Path, all_plugin_dirs: list[Path]):
         marketplace = json.loads(
             (repo_root / ".claude-plugin" / "marketplace.json").read_text()
         )
-        marketplace_versions = {
-            p["name"]: p["version"] for p in marketplace["plugins"]
-        }
-        mismatches = []
+        marketplace_names = {p["name"] for p in marketplace["plugins"]}
+        missing = []
         for plugin_dir in all_plugin_dirs:
             plugin_json = json.loads(
                 (plugin_dir / ".claude-plugin" / "plugin.json").read_text()
             )
             name = plugin_json["name"]
-            pj_version = plugin_json["version"]
-            mp_version = marketplace_versions.get(name)
-            if mp_version is None:
-                mismatches.append(f"{name}: not in marketplace.json")
-            elif mp_version != pj_version:
-                mismatches.append(
-                    f"{name}: marketplace={mp_version} plugin.json={pj_version}"
-                )
-        assert not mismatches, "Version mismatches:\n" + "\n".join(mismatches)
+            if name not in marketplace_names:
+                missing.append(name)
+        assert not missing, f"Plugins not in marketplace.json: {missing}"
+
+    def test_no_version_in_marketplace_entries(self, repo_root: Path):
+        """marketplace.json plugin entries must not contain version fields."""
+        marketplace = json.loads(
+            (repo_root / ".claude-plugin" / "marketplace.json").read_text()
+        )
+        with_version = [p["name"] for p in marketplace["plugins"] if "version" in p]
+        assert not with_version, (
+            f"Marketplace entries must not have 'version' field (plugin.json is authority): "
+            f"{with_version}"
+        )
+
+    def test_no_metadata_version(self, repo_root: Path):
+        """marketplace.json metadata must not contain version field."""
+        marketplace = json.loads(
+            (repo_root / ".claude-plugin" / "marketplace.json").read_text()
+        )
+        metadata = marketplace.get("metadata", {})
+        assert "version" not in metadata, (
+            "marketplace.json metadata must not have 'version' field"
+        )
 
 
 PLUGINS_WITH_UPSTREAM = {

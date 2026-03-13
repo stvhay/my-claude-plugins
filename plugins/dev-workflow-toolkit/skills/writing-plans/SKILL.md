@@ -68,6 +68,15 @@ Size tasks to the work, not to an arbitrary count. A plan may have 2 tasks or 6 
 
 The **Issue**, **Beads**, and **Design** fields carry context from the brainstorming phase. Populate them from the design doc header. If brainstorming was skipped, use `Issue: None` and `Beads: None`.
 
+## Scope Detection
+
+Before writing tasks, check whether the plan spans multiple concerns that should be separate issues/PRs. Compare the planned file changes against the issue scope.
+
+If the plan touches independent concerns:
+> "This plan touches both [concern A] and [concern B]. These could be separate issues/PRs — [rationale for why they're independent]. Want to split, or keep as one?"
+
+This is a **soft warning** — the user decides. If they choose to keep as one, proceed. If they choose to split, help create the additional issues before continuing.
+
 ## Task Structure
 
 Each task must be self-contained — a subagent receiving only this task text has everything needed to implement it.
