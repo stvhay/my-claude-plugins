@@ -1,6 +1,6 @@
 ---
 name: finishing-a-development-branch
-description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup
+description: Use when implementation is complete, all tests pass, and you need to integrate the work - guides completion via version bump, squash merge PR, and cleanup
 ---
 
 # Finishing a Development Branch
@@ -9,7 +9,7 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 Guide completion of development work by presenting clear options and handling chosen workflow.
 
-**Core principle:** Verify tests → Validate docs → Present options → Execute choice → Clean up.
+**Core principle:** Verify tests → Validate docs → Version bump → Push + squash merge PR → Clean up.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
@@ -96,6 +96,22 @@ Invoke documentation-standards in validate mode. The skill will:
 
 **If documentation gate passes:** Continue to Step 3.
 
+### Step 2b: Version Bump
+
+If the project has a `compute-version.sh` script (created by project-init):
+
+1. **Analyze changes** — review the diff against the base branch
+2. **Recommend release type** — based on changes, recommend patch (bug fix), minor (new feature, backward compatible), or major (breaking change). Always present the recommendation with rationale:
+   > "This adds a new scaffolding step to project-init — new capability, backward compatible. I'd recommend **minor**. Patch, minor, or major?"
+3. **Write changelog entry** — write the `## vX.Y.Z` section in `CHANGELOG.md` with migration-relevant details. Include `**ACTION**` markers for any changes users need to apply.
+4. **Run version bump** — `compute-version.sh <type> --update`
+5. **Commit version bump** — separate commit for the version change
+
+If `compute-version.sh` does not exist:
+> "No release infrastructure found. Consider running project-init to set up compute-version.sh and release.yml."
+
+This is a **soft warning** — proceed without version bump if the project hasn't adopted the convention.
+
 ### Step 3: Determine Base Branch
 
 ```bash
@@ -109,32 +125,7 @@ Or ask: "This branch split from main - is that correct?"
 
 **Always create a PR and attach it to the relevant GitHub issue.** Do not ask the user to choose — PRs are the default workflow.
 
-Skip directly to Option 2 (Push and Create PR) below.
-
-### Step 5: Execute Choice
-
-#### Option 1: Merge Locally (only if user explicitly requests)
-
-```bash
-# Switch to base branch
-git checkout <base-branch>
-
-# Pull latest
-git pull
-
-# Merge feature branch
-git merge <feature-branch>
-
-# Verify tests on merged result
-<test command>
-
-# If tests pass
-git branch -d <feature-branch>
-```
-
-Then: Cleanup worktree (Step 6)
-
-#### Option 2: Push and Create PR
+### Step 5: Squash Merge via PR
 
 ```bash
 # Push branch
@@ -191,37 +182,7 @@ bd close <feature-id> --reason "PR #<N> created"
 
 Then: Cleanup worktree (Step 6)
 
-#### Option 3: Keep As-Is
-
-Report: "Keeping branch <name>. Worktree preserved at <path>."
-
-**Don't cleanup worktree.**
-
-#### Option 4: Discard
-
-**Confirm first:**
-```
-This will permanently delete:
-- Branch <name>
-- All commits: <commit-list>
-- Worktree at <path>
-
-Type 'discard' to confirm.
-```
-
-Wait for exact confirmation.
-
-If confirmed:
-```bash
-git checkout <base-branch>
-git branch -D <feature-branch>
-```
-
-Then: Cleanup worktree (Step 6)
-
 ### Step 6: Cleanup Worktree
-
-**For Options 1, 2, 4:**
 
 Check if in worktree:
 ```bash
@@ -237,8 +198,6 @@ else
   git worktree remove <worktree-path>
 fi
 ```
-
-**For Option 3:** Keep worktree.
 
 ### Step 7: Beads Sync
 
@@ -269,16 +228,9 @@ This step is non-blocking — if the user declines, skip it. The retrospective
 analyzes the session, categorizes findings as project-local or upstream skill
 improvements, and files GitHub issues for upstream items once the user approves.
 
-> **Note:** Step 1 (Verify Tests) and Step 2 (Validate Documentation) run before options are presented. The table below covers Steps 5-7.
-
 ## Quick Reference
 
-| Option | Merge | Push | Keep Worktree | Cleanup Branch |
-|--------|-------|------|---------------|----------------|
-| 1. Merge locally | ✓ | - | - | ✓ |
-| 2. Create PR | - | ✓ | ✓ | - |
-| 3. Keep as-is | - | - | ✓ | - |
-| 4. Discard | - | - | - | ✓ (force) |
+**Workflow:** Verify tests → Quality gate → Review docs check → Validate docs → Version bump → Determine base → Push + squash merge PR → Cleanup → Beads sync → Retrospective
 
 ## Common Mistakes
 
@@ -286,17 +238,13 @@ improvements, and files GitHub issues for upstream items once the user approves.
 - **Problem:** Merge broken code, create failing PR
 - **Fix:** Always verify tests before offering options
 
-**Open-ended questions**
-- **Problem:** "What should I do next?" → ambiguous
-- **Fix:** Present exactly 4 structured options
+**Skipping version bump**
+- **Problem:** Changes ship without version bump, users don't get updates
+- **Fix:** Step 2b prompts for release type when compute-version.sh exists
 
 **Automatic worktree cleanup**
-- **Problem:** Remove worktree when might need it (Option 2, 3)
-- **Fix:** Only cleanup for Options 1 and 4
-
-**No confirmation for discard**
-- **Problem:** Accidentally delete work
-- **Fix:** Require typed "discard" confirmation
+- **Problem:** Remove worktree when might need it
+- **Fix:** Only cleanup after PR creation
 
 ## Red Flags
 
@@ -307,16 +255,17 @@ improvements, and files GitHub issues for upstream items once the user approves.
 - Force-push without explicit request
 
 **Always:**
-- Verify tests before offering options
-- Present exactly 4 options
-- Get typed confirmation for Option 4
-- Clean up worktree for Options 1 & 4 only
+- Verify tests before creating PR
+- Run compute-version.sh if present before creating PR
+- Clean up worktree after PR creation
 
 ## Integration
 
 **Invokes:**
 - **documentation-standards** — Validate mode, hard gate after test verification
 - **retrospective** — Step 8, non-blocking session analysis after PR creation
+
+**Workflow:** Verify → Validate → Version bump → Determine base → Push + squash merge PR → Cleanup → Beads sync → Retrospective
 
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete
