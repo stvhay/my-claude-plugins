@@ -9,7 +9,7 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 Guide completion of development work through a fixed workflow: verify, validate, bump version, squash merge PR, clean up.
 
-**Core principle:** Verify tests → Validate docs → Version bump → Push + squash merge PR → Clean up.
+**Core principle:** Verify tests → CI check → Validate docs → Version bump → Push + squash merge PR → Clean up.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
@@ -73,6 +73,39 @@ This is a **soft gate** — warnings are included in the PR body but do not bloc
 - If script not found or fails to run: proceed with a note
 
 > **Why soft gate:** Small changes (typo fixes, doc updates) may not have formal review documentation. The warning surfaces the gap for the PR reviewer to evaluate.
+
+### Step 1d: CI Status Check
+
+<HARD-GATE>
+Do NOT proceed to documentation validation, PR creation, or merge until CI checks pass.
+</HARD-GATE>
+
+Check if a PR already exists for the current branch:
+
+```bash
+PR_NUM=$(gh pr view --json number --jq .number 2>/dev/null || echo "")
+```
+
+**If no PR exists:** Skip this step with a note: "No PR yet — CI status will be verified after PR creation." Continue to Step 2.
+
+**If PR exists:** Verify all CI checks pass:
+
+```bash
+gh pr checks "$PR_NUM" --fail-on-error
+```
+
+**If checks pass:** Continue to Step 2.
+
+**If checks fail:**
+```
+CI checks failing on PR #<N>:
+
+[Show failing checks]
+
+Cannot proceed until CI passes. Fix the failing checks and re-run.
+```
+
+Stop. Don't proceed to Step 2.
 
 ### Step 2: Validate Documentation
 
@@ -230,7 +263,7 @@ improvements, and files GitHub issues for upstream items once the user approves.
 
 ## Quick Reference
 
-**Workflow:** Verify tests → Quality gate → Review docs check → Validate docs → Version bump → Determine base → Push + squash merge PR → Cleanup → Beads sync → Retrospective
+**Workflow:** Verify tests → Quality gate → Review docs check → CI check → Validate docs → Version bump → Determine base → Push + squash merge PR → Cleanup → Beads sync → Retrospective
 
 ## Common Mistakes
 
@@ -265,7 +298,7 @@ improvements, and files GitHub issues for upstream items once the user approves.
 - **documentation-standards** — Validate mode, hard gate after test verification
 - **retrospective** — Step 8, non-blocking session analysis after PR creation
 
-**Workflow:** Verify → Validate → Version bump → Determine base → Push + squash merge PR → Cleanup → Beads sync → Retrospective
+**Workflow:** Verify → CI check → Validate → Version bump → Determine base → Push + squash merge PR → Cleanup → Beads sync → Retrospective
 
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete
