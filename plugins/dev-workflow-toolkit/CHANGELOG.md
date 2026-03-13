@@ -3,6 +3,12 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.12.1
+
+Fix: `ensure-statusline.sh` looked for binary named `claude-statusline` in
+the release tarball, but the actual binary is named `statusline`. Hook failed
+on fresh installs.
+
 ## v1.12.0
 
 ### Added
