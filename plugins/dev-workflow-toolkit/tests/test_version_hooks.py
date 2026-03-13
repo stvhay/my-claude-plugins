@@ -63,27 +63,52 @@ class TestCheckVersionBumpScript:
         assert result.returncode == 0
         assert result.stdout.strip() == ""
 
-    def test_errors_when_source_changed_without_version_bump(
+    def test_errors_when_source_changed_without_unreleased_changelog(
         self, hooks_dir: Path, tmp_path: Path
     ):
-        """Source file changed but plugin.json version unchanged → error."""
+        """Source file changed but CHANGELOG.md has no ## Unreleased section → error."""
         _init_git_repo(tmp_path)
-        # Add a source file and stage it (hook checks staged + unstaged tracked)
+        # Commit a CHANGELOG without ## Unreleased
+        (tmp_path / "CHANGELOG.md").write_text("# Changelog\n\n## v1.0.0\n\n- Init\n")
+        subprocess.run(["git", "add", "CHANGELOG.md"], cwd=tmp_path, capture_output=True, check=True)
+        subprocess.run(["git", "commit", "-m", "add changelog"], cwd=tmp_path, capture_output=True, check=True)
+        # Now add a source file (unstaged/staged change)
         (tmp_path / "main.py").write_text("print('hello')\n")
         subprocess.run(["git", "add", "main.py"], cwd=tmp_path, capture_output=True, check=True)
         result = _run_hook(hooks_dir / "check-version-bump.sh", tmp_path)
         assert result.returncode == 1
-        assert "VERSION_BUMP_REQUIRED" in result.stdout
+        assert "CHANGELOG_ENTRY_REQUIRED" in result.stdout
 
-    def test_passes_when_version_bumped_with_source(
+    def test_errors_when_unreleased_without_bump_comment(
         self, hooks_dir: Path, tmp_path: Path
     ):
-        """Source file changed AND plugin.json changed → pass."""
+        """Source file changed, ## Unreleased exists but no bump comment → error."""
         _init_git_repo(tmp_path)
-        # Modify source and version file
+        # Commit a CHANGELOG with ## Unreleased but no bump comment
+        (tmp_path / "CHANGELOG.md").write_text("# Changelog\n\n## Unreleased\n\n- Something\n")
+        subprocess.run(["git", "add", "CHANGELOG.md"], cwd=tmp_path, capture_output=True, check=True)
+        subprocess.run(["git", "commit", "-m", "add changelog"], cwd=tmp_path, capture_output=True, check=True)
+        # Now add a source file
         (tmp_path / "main.py").write_text("print('hello')\n")
-        pj = tmp_path / ".claude-plugin" / "plugin.json"
-        pj.write_text(json.dumps({"name": "test", "version": "1.1.0"}))
+        subprocess.run(["git", "add", "main.py"], cwd=tmp_path, capture_output=True, check=True)
+        result = _run_hook(hooks_dir / "check-version-bump.sh", tmp_path)
+        assert result.returncode == 1
+        assert "BUMP_TYPE_MISSING" in result.stdout
+
+    def test_passes_when_unreleased_with_bump_comment(
+        self, hooks_dir: Path, tmp_path: Path
+    ):
+        """Source file changed, ## Unreleased with bump comment → pass."""
+        _init_git_repo(tmp_path)
+        # Commit a CHANGELOG with ## Unreleased and bump comment
+        (tmp_path / "CHANGELOG.md").write_text(
+            "# Changelog\n\n## Unreleased\n\n<!-- bump: patch -->\n\n- Fix something\n"
+        )
+        subprocess.run(["git", "add", "CHANGELOG.md"], cwd=tmp_path, capture_output=True, check=True)
+        subprocess.run(["git", "commit", "-m", "add changelog"], cwd=tmp_path, capture_output=True, check=True)
+        # Now add a source file
+        (tmp_path / "main.py").write_text("print('hello')\n")
+        subprocess.run(["git", "add", "main.py"], cwd=tmp_path, capture_output=True, check=True)
         result = _run_hook(hooks_dir / "check-version-bump.sh", tmp_path)
         assert result.returncode == 0
 
@@ -126,32 +151,35 @@ class TestCheckChangelogScript:
         assert script.exists(), f"Script not found: {script}"
         assert script.stat().st_mode & 0o111, "Script must be executable"
 
-    def test_errors_when_version_bumped_without_changelog(
+    def test_passes_when_unreleased_has_bump_comment(
         self, hooks_dir: Path, tmp_path: Path
     ):
-        """plugin.json version changed but no changelog entry → error."""
+        """CHANGELOG with ## Unreleased and bump comment → pass."""
         _init_git_repo(tmp_path)
-        # Bump version in plugin.json without adding changelog
-        pj = tmp_path / ".claude-plugin" / "plugin.json"
-        pj.write_text(json.dumps({"name": "test", "version": "1.1.0"}))
-        result = _run_hook(hooks_dir / "check-changelog.sh", tmp_path)
-        assert result.returncode == 1
-        assert "CHANGELOG_MISSING" in result.stdout
-
-    def test_passes_when_version_bumped_with_changelog(
-        self, hooks_dir: Path, tmp_path: Path
-    ):
-        """plugin.json version changed AND changelog has entry → pass."""
-        _init_git_repo(tmp_path)
-        pj = tmp_path / ".claude-plugin" / "plugin.json"
-        pj.write_text(json.dumps({"name": "test", "version": "1.1.0"}))
-        (tmp_path / "CHANGELOG.md").write_text("# Changelog\n\n## v1.1.0\n\n- Feature\n")
+        (tmp_path / "CHANGELOG.md").write_text(
+            "# Changelog\n\n## Unreleased\n\n<!-- bump: minor -->\n\n- Feature\n"
+        )
         result = _run_hook(hooks_dir / "check-changelog.sh", tmp_path)
         assert result.returncode == 0
 
-    def test_silent_when_no_version_change(self, hooks_dir: Path, tmp_path: Path):
-        """No plugin.json change → pass silently."""
+    def test_errors_when_unreleased_missing_bump_comment(
+        self, hooks_dir: Path, tmp_path: Path
+    ):
+        """CHANGELOG with ## Unreleased but no bump comment → error."""
         _init_git_repo(tmp_path)
+        (tmp_path / "CHANGELOG.md").write_text(
+            "# Changelog\n\n## Unreleased\n\n- Something\n"
+        )
+        result = _run_hook(hooks_dir / "check-changelog.sh", tmp_path)
+        assert result.returncode == 1
+        assert "BUMP_TYPE_MISSING" in result.stdout
+
+    def test_silent_when_no_unreleased(self, hooks_dir: Path, tmp_path: Path):
+        """CHANGELOG with only versioned sections → pass."""
+        _init_git_repo(tmp_path)
+        (tmp_path / "CHANGELOG.md").write_text(
+            "# Changelog\n\n## v1.0.0\n\n- Init\n"
+        )
         result = _run_hook(hooks_dir / "check-changelog.sh", tmp_path)
         assert result.returncode == 0
 

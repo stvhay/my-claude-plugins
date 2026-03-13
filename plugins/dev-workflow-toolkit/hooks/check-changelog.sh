@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Hook: Changelog enforcement.
-# Silent when compliant. Errors if version bumped without changelog section.
+# Hook: Bump comment enforcement for CI-driven version bumping.
+# Silent when compliant. Errors if ## Unreleased exists without
+# a <!-- bump: TYPE --> comment.
 
 set -euo pipefail
 
@@ -11,32 +12,18 @@ if [ ! -f "$PLUGIN_JSON" ]; then
     exit 0
 fi
 
-CHANGED=$(git diff --name-only HEAD 2>/dev/null || true)
-STAGED=$(git diff --cached --name-only 2>/dev/null || true)
-ALL_CHANGED=$(printf '%s\n%s' "$CHANGED" "$STAGED" | sort -u | grep -v '^$' || true)
-
-if ! echo "$ALL_CHANGED" | grep -q 'plugin\.json'; then
+if [ ! -f "$CHANGELOG" ]; then
     exit 0
 fi
 
-if ! VERSION=$(python3 -c "import json; print(json.load(open('$PLUGIN_JSON'))['version'])"); then
-    echo "ERROR: Failed to read version from $PLUGIN_JSON. Ensure python3 is available and $PLUGIN_JSON contains a 'version' field." >&2
-    exit 1
+# Only validate if there's an ## Unreleased section
+if ! grep -q '^## Unreleased' "$CHANGELOG"; then
+    exit 0
 fi
 
-if [ -z "$VERSION" ]; then
-    echo "ERROR: Version field is empty in $PLUGIN_JSON." >&2
-    exit 1
-fi
-
-if [ ! -f "$CHANGELOG" ]; then
-    echo "CHANGELOG_MISSING: Version $VERSION found in $PLUGIN_JSON but no CHANGELOG.md exists."
-    echo "Create CHANGELOG.md with a ## v$VERSION section."
-    exit 1
-fi
-
-if ! grep -qF "## v$VERSION" "$CHANGELOG"; then
-    echo "CHANGELOG_MISSING: Version $VERSION found in $PLUGIN_JSON but CHANGELOG.md has no section for ## v$VERSION."
-    echo "Write a changelog entry for v$VERSION before proceeding."
+# ## Unreleased exists — require bump comment
+if ! grep -qE '<!--\s*bump:\s*(major|minor|patch)\s*-->' "$CHANGELOG"; then
+    echo "BUMP_TYPE_MISSING: ## Unreleased section found but missing <!-- bump: TYPE --> comment."
+    echo "Add <!-- bump: patch -->, <!-- bump: minor -->, or <!-- bump: major -->."
     exit 1
 fi
