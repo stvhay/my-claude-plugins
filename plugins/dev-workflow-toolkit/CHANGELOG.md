@@ -3,6 +3,13 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.13.4
+
+- **fix:** Add plan fidelity guidance to implementer and spec reviewer prompt templates (#61)
+  - Implementer subagents must document divergences from plan's specified approach/tech stack
+  - Spec reviewer checks for undocumented plan divergences and flags them as findings
+  - New "Plan Divergences" field in implementer report format
+
 ## v1.13.3
 
 - **fix:** Move quality gate SessionStart hook from project `settings.json` to plugin `hooks.json`, using `${CLAUDE_PLUGIN_ROOT}` for version-independent path resolution (#83)
