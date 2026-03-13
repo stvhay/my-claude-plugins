@@ -566,3 +566,45 @@ class TestCheckReviewDocumentedScript:
         assert "gh issue" in text or "gh api" in text, (
             "Script must check GitHub issue for review comments"
         )
+
+
+# ---------------------------------------------------------------------------
+# Branch check auto-worktree (issue #97)
+# ---------------------------------------------------------------------------
+
+
+class TestBranchCheckAutoWorktree:
+    """Branch check must auto-create worktree without asking (issue #97)."""
+
+    def test_no_ask_pattern_in_branch_check(self, skills_dir: Path):
+        """Branch check must not ask user if they want a worktree."""
+        text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
+        assert "Want me to run" not in text, (
+            "branch check must auto-create worktree, not ask"
+        )
+
+    def test_auto_create_on_main(self, skills_dir: Path):
+        """Branch check must auto-invoke using-git-worktrees on main."""
+        text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
+        # Find the 1b. Branch Check section
+        section_match = re.search(
+            r"### 1b\. Branch Check.*?(?=\n### |\n## )", text, re.DOTALL
+        )
+        assert section_match, "must have '### 1b. Branch Check' section"
+        section = section_match.group()
+        assert "using-git-worktrees" in section, (
+            "branch check must reference using-git-worktrees"
+        )
+        assert "If yes" not in section, (
+            "branch check must not have conditional 'If yes' for worktree creation"
+        )
+
+    def test_dot_graph_no_create_branch_diamond(self, skills_dir: Path):
+        """Dot graph must not have 'Create branch?' decision diamond."""
+        text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
+        dot_match = re.search(r"```dot\n(.*?)```", text, re.DOTALL)
+        assert dot_match, "brainstorming must have a dot graph"
+        dot = dot_match.group(1)
+        assert '"Create branch?"' not in dot, (
+            "dot graph must not have 'Create branch?' diamond — worktree is auto-created"
+        )
