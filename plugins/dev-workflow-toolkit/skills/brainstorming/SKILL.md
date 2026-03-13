@@ -62,6 +62,18 @@ Run `git branch --show-current` to detect the current branch.
   - If no: allow proceeding with a warning.
 - **If on any other branch:** Proceed to Step 2.
 
+## Work Tracking
+
+**When CLAUDE.md contains a beads work-tracking directive:**
+- Use `bd` for all work tracking. Do not use Claude Code task lists (TaskCreate/TaskUpdate).
+- Task titles follow the slug convention: `<slug>- <description>` (e.g., `design- Write design doc`).
+- If a `bd` command fails, **stop the workflow** and surface the error. Recommend `bd doctor` for diagnosis.
+- Beads is critical infrastructure — do not silently fall back to task lists.
+
+**When no beads directive in CLAUDE.md (fallback):**
+- Use Claude Code task lists (TaskCreate/TaskUpdate) for in-session progress tracking.
+- Use GitHub issues for persistent tracking.
+
 ## Checklist
 
 You MUST create a task for each of these items and complete them in order:

@@ -29,6 +29,17 @@ When invoked as an entry point (user calls `/systematic-debugging` directly), ch
 
 3. **Do not let issue tracking delay debugging.** If `gh` commands fail (auth, network), note it and proceed — debugging is the priority.
 
+## Work Tracking
+
+**When CLAUDE.md contains a beads work-tracking directive:**
+- Use `bd` for all work tracking. Do not use Claude Code task lists.
+- Task titles follow the slug convention: `<slug>- <description>` (e.g., `repro- Reproduce the bug`).
+- If a `bd` command fails, **stop the workflow** and recommend `bd doctor`. Beads is critical infrastructure.
+
+**When no beads directive in CLAUDE.md (fallback):**
+- Use Claude Code task lists for in-session tracking.
+- Use GitHub issues for persistent tracking.
+
 ## The Iron Law
 
 ```
