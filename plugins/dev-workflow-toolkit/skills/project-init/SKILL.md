@@ -21,6 +21,7 @@ Initialize a project with standard scaffolding for Claude Code-driven developmen
 6. `compute-version.sh` + `compute_version.py` — Version management scripts
 7. `.github/workflows/release.yml` — Release automation workflow
 8. Validation hooks for version bump and changelog enforcement
+9. Branch protection on `main` — require CI pass and squash merge
 
 ## Release Infrastructure
 
@@ -37,6 +38,45 @@ After scaffolding the base files, offer to set up release infrastructure:
 The release infrastructure is part of the initial commit with passing CI. The generated scripts are project-specific — the skill generates them based on the detected stack, not from templates.
 
 **Always use shell + Python implementation pattern.** Do not ask about implementation choice.
+
+## Branch Protection
+
+After creating the repository scaffolding and release infrastructure, configure branch protection on `main`:
+
+```bash
+# Get owner/repo from git remote
+REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
+
+gh api "repos/$REPO/branches/main/protection" \
+  --method PUT \
+  --input - <<EOF
+{
+  "required_status_checks": {
+    "strict": true,
+    "contexts": ["test"]
+  },
+  "enforce_admins": false,
+  "required_pull_request_reviews": null,
+  "restrictions": null
+}
+EOF
+```
+
+Then enforce squash-merge-only on the repository:
+
+```bash
+# Enforce squash-merge-only
+gh api "repos/$REPO" \
+  --method PATCH \
+  --field allow_squash_merge=true \
+  --field allow_merge_commit=false \
+  --field allow_rebase_merge=false
+```
+
+Both calls require admin permissions. If either API call fails with a 403:
+> "Branch protection / merge method settings require admin access. You can configure this manually in Settings → Branches → Add rule for `main`, and Settings → General → Pull Requests."
+
+Proceed without branch protection — it's a soft gate during scaffolding.
 
 ## Process
 

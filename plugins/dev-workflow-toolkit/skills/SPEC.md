@@ -72,6 +72,7 @@ Skills compose into a development workflow graph. The primary flow is:
 | INV-9 | Review documentation exists in beads (notes with "Review: PASS/FAIL") and GitHub issue (comment with review summary) for completed tasks | reasoning-required | Ensures review findings are traceable and visible to collaborators |
 | INV-10 | Source changes in a plugin directory require a version bump in that plugin's `plugin.json` | structural | Prevents unversioned changes from shipping to users; hook-enforced via `check-version-bump.sh` |
 | INV-11 | Version bumps in `plugin.json` require a corresponding `## vX.Y.Z` section in `CHANGELOG.md` | structural | Ensures users and agents can discover what changed; hook-enforced via `check-changelog.sh` |
+| INV-12 | CI status checks must pass before PR creation in `finishing-a-development-branch` | structural | Prevents merging code that fails automated tests; enforced by `gh pr checks` hard gate |
 
 **Enforcement classification:**
 - **structural** — enforced by test suite, gitignore structure, or directory convention; pattern-matchable
@@ -107,6 +108,7 @@ INV-5: reasoning-required — verified during code review.
 INV-6: structural — directory convention.
 
 INV-10, INV-11: enforced by Claude Code hooks (`check-version-bump.sh`, `check-changelog.sh`) at session Stop events. Also validated by `test_version_hooks.py`.
+INV-12: enforced by `finishing-a-development-branch` skill prompt (Step 1d hard gate using `gh pr checks`).
 
 Skills are additionally validated via subagent pressure testing — see `/skill-creator`.
 

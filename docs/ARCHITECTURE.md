@@ -104,6 +104,27 @@ Trade-off: generated scripts are per-project (not shared library). Each
 project owns its release tooling and can customize. Cost is duplication;
 benefit is zero coupling between projects.
 
+## Continuous Integration
+
+A repo-root `tests/run-all.sh` discovers each plugin's test runner
+(`plugins/*/tests/run-all.sh`) and executes them in sequence. This gives CI
+a single entry point while allowing each plugin to own its test configuration.
+
+Tests declare resource requirements via pytest markers:
+`@pytest.mark.capability("gpu")`. The `CI_CAPABILITIES` environment variable
+(space-separated) declares which resources are available; `conftest.py`
+auto-skips tests whose required capabilities are missing. GitHub Actions
+runners set `CI_CAPABILITIES=""` — only resource-free tests run in CI.
+
+**Trade-offs.** Capability-based skipping means CI cannot catch regressions in
+resource-dependent tests. The alternative — provisioning GPUs or ollama in
+CI — has disproportionate cost for a personal plugin repository. Local runs
+with `CI_CAPABILITIES="gpu ollama"` cover the gap.
+
+Branch protection (require CI pass, require squash merge) is configured by
+`project-init` via `gh api`, enforcing that no code merges without passing
+tests.
+
 ## Hook-Based Telemetry
 
 The dev-workflow-toolkit plugin registers Claude Code hooks for Langfuse
