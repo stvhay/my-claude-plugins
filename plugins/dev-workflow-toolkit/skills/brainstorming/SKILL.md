@@ -242,10 +242,9 @@ When UX design is required, use **ux-design-agent** (REQUIRED SUB-SKILL) to prod
 - Use writing-clearly-and-concisely skill if available
 - Paste the design into the PR body when you open it
 
-**Implementation (if continuing):**
-- Ask: "Ready to set up for implementation?"
+**Implementation:**
 - If no worktree was created during pre-flight, use using-git-worktrees to create one
-- Use writing-plans to create detailed implementation plan
+- Invoke writing-plans to create detailed implementation plan
 
 ## Key Principles
 
