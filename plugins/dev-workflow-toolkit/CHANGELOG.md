@@ -3,6 +3,17 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.10.0
+
+### Worktree naming convention and review navigation
+
+Codified the worktree naming convention in `using-git-worktrees`: branches
+and worktree paths follow `<type>/<issue>-<slug>` pattern. Updated
+`requesting-code-review` to navigate PR → issue number → worktree path,
+enabling `/review <PR#>` to automatically find the correct worktree.
+
+SPEC.md INV-8 tightened to define the naming contract both skills rely on.
+
 ## v1.9.0
 
 ### Merge strategy & release pipeline
