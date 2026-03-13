@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Read context window utilization percentage from statusline stats.
+#
+# Usage: context-check
+#
+# Reads .claude/.statusline-stats (relative to CWD) and outputs the
+# context_percent value as an integer. Exits 1 if the file is missing
+# or does not contain a context_percent line.
+
+set -euo pipefail
+
+STATS_FILE=".claude/.statusline-stats"
+
+if [ ! -f "$STATS_FILE" ]; then
+    echo "ERROR: $STATS_FILE not found — context awareness unavailable" >&2
+    exit 1
+fi
+
+value=$(grep '^context_percent=' "$STATS_FILE" | cut -d= -f2- || true)
+
+if [ -z "$value" ]; then
+    echo "ERROR: no context_percent in $STATS_FILE — context awareness unavailable" >&2
+    exit 1
+fi
+
+echo "$value"
