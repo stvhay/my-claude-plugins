@@ -40,6 +40,10 @@ Simplifications are categorized by risk. Lower risk = more autonomy.
 | Consolidation | Moderate-High | Auto-apply, atomic commit | Detailed |
 | Structural | High | Flag for approval only | Detailed |
 
+### Parser Preference (Low Risk)
+
+- Regex/sed/grep operating on formats with a formal grammar when a parser exists
+
 ### Deletion (Low Risk)
 
 - Dead code (functions/variables never called)
