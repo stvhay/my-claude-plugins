@@ -3,6 +3,19 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.12.0
+
+### Added
+- `scripts/context-check` — POSIX shell script that reads context window
+  utilization from `.claude/.statusline-stats`
+- Context Gate directives in brainstorming (>20%), writing-plans (>65%),
+  subagent-driven-development (>40%), and executing-plans (>20%)
+- INV-13: context gate invariant in SPEC.md
+- FAIL-9: missing statusline-stats failure mode in SPEC.md
+
+### Changed
+- ARCHITECTURE.md: new "Context-Aware Session Management" section
+
 ## v1.11.0
 
 ### CI integration and capability-based test guards
