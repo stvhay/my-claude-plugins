@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# bd-pipeline: Render one-line pipeline status from beads task JSON.
+#
+# Usage:
+#   bd list --json | bd-pipeline --phase executing --next finishing
+#   bd-pipeline --phase executing --next finishing < tasks.json
+#
+# Input: JSON array of beads issues (from bd list --json) on stdin.
+# Output: <phase> || <active_slugs> | (N more) --> <next_phase>
+#
+# Task title convention: "<slug>- <description>"
+# Slug is extracted as everything before the first "- " delimiter.
+
+set -euo pipefail
+
+phase="executing"
+next_phase="finishing"
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --phase) phase="$2"; shift 2 ;;
+        --next)  next_phase="$2"; shift 2 ;;
+        *)       echo "Unknown arg: $1" >&2; exit 1 ;;
+    esac
+done
+
+python3 -c "
+import json, sys
+
+data = json.load(sys.stdin)
+active = []
+remaining = 0
+
+for item in data:
+    status = item.get('status', '')
+    title = item.get('title', '')
+    slug = title.split('- ', 1)[0] if '- ' in title else title[:8]
+
+    if status == 'in_progress':
+        active.append(slug)
+    elif status == 'open':
+        remaining += 1
+
+if not active and remaining == 0:
+    middle = '(done)'
+elif not active:
+    middle = f'({remaining} more)'
+elif remaining == 0:
+    middle = ' | '.join(active)
+else:
+    middle = ' | '.join(active) + f' | ({remaining} more)'
+
+phase = '$phase'
+next_phase = '$next_phase'
+print(f'{phase} || {middle} --> {next_phase}')
+"
