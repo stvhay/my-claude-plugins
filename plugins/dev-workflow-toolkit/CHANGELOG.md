@@ -3,6 +3,12 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.13.3
+
+- **fix:** Move quality gate SessionStart hook from project `settings.json` to plugin `hooks.json`, using `${CLAUDE_PLUGIN_ROOT}` for version-independent path resolution (#83)
+- **feat:** Add `migrate-quality-gate.sh` hook that removes stale version-pinned quality gate entries from project `.claude/settings.json`
+- **ACTION:** If your project has a quality gate entry in `.claude/settings.json`, it will be automatically removed on next session start. The quality gate now runs via the plugin hook for all projects.
+
 ## v1.13.2
 
 ### Fixed

@@ -127,40 +127,6 @@ Templates are stored in `templates/` relative to this skill. They are generic an
 - Adding standard structure to an existing repo missing these files
 - Triggered by: "init project", "set up repo", "scaffold project", "new project setup"
 
-## Session-Start Hook (Optional)
-
-If the project uses the quality gate, offer to install a session-start hook
-that runs structural checks automatically when a Claude Code session begins.
-
-Resolve the quality gate path first:
-```bash
-QUALITY_GATE="$(cd "${CLAUDE_SKILL_DIR}/../.." && pwd)/scripts/quality-gate.sh"
-```
-
-Then create `.claude/settings.json` (or merge into existing), using the resolved absolute path:
-
-```json
-{
-  "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/absolute/path/to/scripts/quality-gate.sh --path ."
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-Replace `/absolute/path/to/scripts/quality-gate.sh` with the value of `$QUALITY_GATE` resolved above.
-
-> Note: `.claude/settings.json` is a project-level file. If the project
-> gitignores `.claude/`, the hook is local-only. Otherwise commit it.
-
 ## Post-Install
 
 After installing or upgrading the dev-workflow-toolkit plugin, read
