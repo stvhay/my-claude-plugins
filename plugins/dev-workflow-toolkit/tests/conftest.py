@@ -1,3 +1,4 @@
+import os
 import subprocess
 from pathlib import Path
 
@@ -39,3 +40,21 @@ def plugins_dir(repo_root: Path) -> Path:
 @pytest.fixture(scope="session")
 def all_plugin_dirs(plugins_dir: Path) -> list[Path]:
     return sorted(d for d in plugins_dir.iterdir() if d.is_dir())
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    config.addinivalue_line(
+        "markers",
+        "capability(name): mark test as requiring a specific resource capability (e.g., gpu, ollama)",
+    )
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    available = set(os.environ.get("CI_CAPABILITIES", "").split())
+    for item in items:
+        for marker in item.iter_markers("capability"):
+            required = marker.args[0]
+            if required not in available:
+                item.add_marker(
+                    pytest.mark.skip(reason=f"Requires capability: {required}")
+                )
