@@ -21,7 +21,7 @@ if [ -z "$ALL_CHANGED" ]; then
 fi
 
 # Check if any source files changed (exclude docs, config, version files)
-SOURCE_FILES=$(echo "$ALL_CHANGED" | grep -vE '(plugin\.json|pyproject\.toml|package\.json|Cargo\.toml|CHANGELOG\.md|\.md$|\.yml$|\.yaml$)' || true)
+SOURCE_FILES=$(echo "$ALL_CHANGED" | grep -vE '(plugin\.json|pyproject\.toml|package\.json|Cargo\.toml|CHANGELOG\.md|uv\.lock|package-lock\.json|Cargo\.lock|poetry\.lock|\.md$|\.yml$|\.yaml$)' || true)
 if [ -z "$SOURCE_FILES" ]; then
     exit 0
 fi

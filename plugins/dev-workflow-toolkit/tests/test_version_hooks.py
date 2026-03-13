@@ -112,6 +112,17 @@ class TestCheckVersionBumpScript:
         result = _run_hook(hooks_dir / "check-version-bump.sh", tmp_path)
         assert result.returncode == 0
 
+    def test_errors_when_source_changed_without_changelog_file(
+        self, hooks_dir: Path, tmp_path: Path
+    ):
+        """Source file changed but no CHANGELOG.md exists → error."""
+        _init_git_repo(tmp_path)
+        (tmp_path / "main.py").write_text("print('hello')\n")
+        subprocess.run(["git", "add", "main.py"], cwd=tmp_path, capture_output=True, check=True)
+        result = _run_hook(hooks_dir / "check-version-bump.sh", tmp_path)
+        assert result.returncode == 1
+        assert "CHANGELOG_ENTRY_REQUIRED" in result.stdout
+
     def test_passes_when_only_docs_changed(
         self, hooks_dir: Path, tmp_path: Path
     ):
