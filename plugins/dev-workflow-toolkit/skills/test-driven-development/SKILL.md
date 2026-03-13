@@ -182,6 +182,8 @@ Over-engineered
 
 Don't add features, refactor other code, or "improve" beyond the test.
 
+**Formal grammars:** Use parsers (not regex/sed) for any format with a formal grammar. See `requesting-code-review/references/structured-format-parsing.md` for full guidance.
+
 ### Verify GREEN - Watch It Pass
 
 **MANDATORY.**

@@ -35,6 +35,7 @@ Simplifications are categorized by risk. Lower risk = more autonomy.
 | Category | Risk | Behavior | Summary |
 |----------|------|----------|---------|
 | Deletion | Low | Auto-apply | One-liner |
+| Parser Preference | Low | Auto-apply | One-liner |
 | Flattening | Low-Moderate | Auto-apply | One-liner |
 | Derivation | Moderate | Auto-apply | One-liner |
 | Consolidation | Moderate-High | Auto-apply, atomic commit | Detailed |
@@ -46,6 +47,10 @@ Simplifications are categorized by risk. Lower risk = more autonomy.
 - Unused imports
 - Unreachable branches
 - Commented-out code
+
+### Parser Preference (Low Risk)
+
+- Replace regex/sed/grep with parser for formats with formal grammars
 
 ### Flattening (Low-Moderate Risk)
 
