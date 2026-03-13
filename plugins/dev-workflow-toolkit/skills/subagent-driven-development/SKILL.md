@@ -9,6 +9,21 @@ Execute plan by dispatching fresh subagents per task, with two-stage review afte
 
 **Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality at scale. Independent tasks parallelize; dependent tasks wait.
 
+## Context Gate
+
+Before starting, check context utilization:
+
+```bash
+context_pct=$(bash "$(dirname "$CLAUDE_SKILL_DIR")/../scripts/context-check" 2>/dev/null) || true
+```
+
+- If the script errors, warn the user: "Context awareness unavailable — `.claude/.statusline-stats` not found."
+- If `context_pct` is above **40%**, recommend compaction with a directed preservation prompt:
+  > Context is at N%. Recommend compacting before execution. You'll keep the plan and issue context; design and planning dialogue will be summarized.
+  >
+  > Run: `/compact Preserve: implementation plan at <path>, issue #N, branch <name>, beads task IDs. Summarize all prior discussion.`
+- You may recommend compaction at lower percentages if remaining work is substantial (e.g., 5+ plan tasks, multiple subsystem specs to load), but not below **30%**.
+
 ## When to Use
 
 ```dot
