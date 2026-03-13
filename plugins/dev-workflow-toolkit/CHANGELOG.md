@@ -3,11 +3,14 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
-## v1.14.0
+## Unreleased
+<!-- bump: minor -->
 
 ### Added
 
 - `resist-memory-redirect.sh` SessionStart hook — detects when Claude Code writes memory to `~/.claude/projects/` and redirects content to project root `MEMORY.md`
+
+## v1.14.0
 
 ### Fixed
 - Brainstorming auto-creates worktree when on main/master instead of asking (#97)
