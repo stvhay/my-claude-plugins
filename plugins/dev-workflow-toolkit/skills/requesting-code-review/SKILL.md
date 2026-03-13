@@ -82,6 +82,21 @@ Use Task tool with code-reviewer type, fill template at `code-reviewer.md`
 - `{PR_NUMBER}` - PR number (empty for local-only review)
 - `{IS_AUTHOR}` - `true` if current user authored the PR, `false` otherwise
 
+**Beads tracking (when CLAUDE.md directive present):**
+
+Create a review task in beads:
+
+```bash
+bd create "review- Code review for PR #<N>" --type=task --description="Review PR #<N> against spec and quality standards" --external-ref=gh-pr-<N>
+bd update <review-task-id> --claim
+```
+
+Update the parent feature issue:
+
+```bash
+bd update <feature-id> --append-notes "Review requested: PR #<N>"
+```
+
 **4. Act on feedback:**
 - Fix Critical issues immediately
 - Fix Important issues before proceeding
@@ -195,5 +210,17 @@ PR_NUMBER=12, IS_AUTHOR=false
 - Push back with technical reasoning
 - Show code/tests that prove it works
 - Request clarification
+
+## Work Tracking
+
+**When CLAUDE.md contains a beads work-tracking directive:**
+- Create a review task in beads when requesting review.
+- Update the parent feature issue with review status.
+- Task titles follow the slug convention: `<slug>- <description>`.
+- If a `bd` command fails, **stop the workflow** and recommend `bd doctor`. Beads is critical infrastructure.
+
+**When no beads directive in CLAUDE.md (fallback):**
+- Use Claude Code task lists for tracking review progress.
+- GitHub PR comments serve as the review record.
 
 See template at: requesting-code-review/code-reviewer.md
