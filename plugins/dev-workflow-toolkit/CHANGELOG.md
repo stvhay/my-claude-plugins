@@ -10,6 +10,10 @@ read this file and apply retroactive actions marked with **ACTION**.
   utilization from `.claude/.statusline-stats`
 - Context Gate directives in brainstorming (>20%), writing-plans (>65%),
   subagent-driven-development (>40%), and executing-plans (>20%)
+- `hooks/ensure-statusline.sh` — SessionStart hook that installs/updates
+  the `claude-statusline` binary from `stvhay/claude-statusline` GitHub
+  releases. Configures statusLine and UserPromptSubmit hook in
+  `~/.claude/settings.json`. Checks for updates daily.
 - INV-13: context gate invariant in SPEC.md
 - FAIL-9: missing statusline-stats failure mode in SPEC.md
 
