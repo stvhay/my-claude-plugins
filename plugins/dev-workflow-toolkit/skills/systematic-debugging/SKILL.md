@@ -29,6 +29,12 @@ When invoked as an entry point (user calls `/systematic-debugging` directly), ch
 
 3. **Do not let issue tracking delay debugging.** If `gh` commands fail (auth, network), note it and proceed — debugging is the priority.
 
+## Work Tracking
+
+Follow the work-tracking protocol in SPEC.md (INV-14). Skill-specific additions:
+
+- **GitHub projection:** After identifying root cause, post findings as an issue comment: `gh issue comment <N> --body "Root cause: <summary>"`
+
 ## The Iron Law
 
 ```

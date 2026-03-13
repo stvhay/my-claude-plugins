@@ -96,6 +96,17 @@ the user is satisfied with the findings.
   [Relevant details from the session]
   ```
 - Present the draft to the user for approval
+
+**Beads tracking (when CLAUDE.md directive present):**
+
+File upstream improvement issues in beads alongside GitHub:
+
+```bash
+bd create "improve- <improvement summary>" --type=bug --description="<description>" --external-ref=gh-<N>
+```
+
+Task titles follow the slug convention: `<slug>- <description>`.
+
 - Once approved, file:
   ```bash
   gh issue create -R <source-repo> \
@@ -115,6 +126,14 @@ the user is satisfied with the findings.
 ### Step 5: Complete
 
 Report what was saved/filed and end the session.
+
+## Work Tracking
+
+Follow the work-tracking protocol in SPEC.md (INV-14). Skill-specific additions:
+
+- File upstream improvements as beads issues: `bd create "improve- <summary>" --type=bug --external-ref=gh-<N>`
+
+**Fallback note:** File upstream improvements as GitHub issues only.
 
 ## Key Principles
 

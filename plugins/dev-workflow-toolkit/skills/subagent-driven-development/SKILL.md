@@ -24,6 +24,14 @@ context_pct=$(bash "$(dirname "$CLAUDE_SKILL_DIR")/../scripts/context-check" 2>/
   > Run: `/compact Preserve: implementation plan at <path>, issue #N, branch <name>, beads task IDs. Summarize all prior discussion.`
 - You may recommend compaction at lower percentages if remaining work is substantial (e.g., 5+ plan tasks, multiple subsystem specs to load), but not below **30%**.
 
+## Work Tracking
+
+Follow the work-tracking protocol in SPEC.md (INV-14). Skill-specific additions:
+
+- Display pipeline status after each task batch: `bd list --type=task --json | bd-pipeline --phase executing --next finishing`
+
+**Fallback note:** Plan file is the source of truth.
+
 ## When to Use
 
 ```dot

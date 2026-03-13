@@ -85,7 +85,37 @@ Proceed without branch protection — it's a soft gate during scaffolding.
 3. Copy templates from `templates/` directory, adapting project name
 4. Optionally generate CLAUDE.md skeleton with project-specific sections
 5. Create `docs/plans/` directory for implementation plans
-6. Commit scaffolding files
+6. Beads installation (see below)
+7. Commit scaffolding files
+
+### Beads Installation
+
+Install beads for work tracking (default, unless user opts out):
+
+```bash
+# Ask user before installing
+# "Beads provides AI-native work tracking. Install it? (Y/n)"
+
+# If yes (default):
+bd init
+```
+
+After `bd init` succeeds, add the work-tracking directive to the project's CLAUDE.md:
+
+```markdown
+## Work Tracking
+Use beads (`bd`) for all work tracking. Do not use Claude Code task lists.
+Task titles follow the slug convention: `<slug>- <description>`.
+If `bd` fails, stop and run `bd doctor`.
+```
+
+If the user declines beads, do not add the directive. Skills will fall back to task lists.
+
+Create a bootstrap beads issue:
+
+```bash
+bd create "init- Bootstrap project" --type=task --description="Initial project setup and configuration"
+```
 
 ## Templates
 
@@ -136,6 +166,13 @@ Replace `/absolute/path/to/scripts/quality-gate.sh` with the value of `$QUALITY_
 After installing or upgrading the dev-workflow-toolkit plugin, read
 `CHANGELOG.md` in the plugin root. Apply entries marked **ACTION** that
 are relevant to the project.
+
+## Work Tracking
+
+**project-init is the origin of the beads/task-list decision** (see SPEC.md INV-14):
+- By default, install beads (`bd init`) and write the CLAUDE.md work-tracking directive.
+- If the user opts out, no directive is written — skills fall back to Claude Code task lists.
+- If a `bd` command fails during setup, surface the error and recommend `bd doctor`.
 
 ## Key Principles
 

@@ -298,6 +298,106 @@ class TestEntryPointIssueCreation:
             f"{skill} must document graceful handling when issue creation fails (FAIL-6)"
         )
 
+
+# ---------------------------------------------------------------------------
+# Beads work-tracking integration (INV-14)
+# ---------------------------------------------------------------------------
+
+# Skills that track work and must support beads when CLAUDE.md directive present
+WORK_TRACKING_SKILLS = [
+    "brainstorming",
+    "writing-plans",
+    "executing-plans",
+    "subagent-driven-development",
+    "finishing-a-development-branch",
+    "systematic-debugging",
+    "verification-before-completion",
+    "project-init",
+    "requesting-code-review",
+    "receiving-code-review",
+    "retrospective",
+]
+
+# Skills that create beads tasks (must document slug convention)
+TASK_CREATING_SKILLS = [
+    "brainstorming",
+    "writing-plans",
+    "executing-plans",
+    "subagent-driven-development",
+    "systematic-debugging",
+    "requesting-code-review",
+    "retrospective",
+]
+
+# Skills that should project state to GitHub
+GITHUB_PROJECTION_SKILLS = {
+    "writing-plans": "gh issue comment",
+    "executing-plans": "gh issue comment",
+    "systematic-debugging": "gh issue comment",
+    "finishing-a-development-branch": "gh pr comment",
+}
+
+
+class TestBeadsWorkTracking:
+    """Work-tracking skills must support beads with task-list fallback."""  # Tests INV-14
+
+    @pytest.mark.parametrize("skill", WORK_TRACKING_SKILLS)
+    def test_skill_references_protocol(self, skills_dir: Path, skill: str):
+        """Every work-tracking skill must reference the SPEC.md protocol or document bd usage."""  # Tests INV-14
+        skill_file = skills_dir / skill / "SKILL.md"
+        assert skill_file.exists(), f"Skill file not found: {skill}"
+        text = skill_file.read_text().lower()
+        assert "inv-14" in text or "spec.md" in text or "bd " in text, (
+            f"{skill} must reference work-tracking protocol (INV-14) or document bd usage"
+        )
+
+    @pytest.mark.parametrize("skill", WORK_TRACKING_SKILLS)
+    def test_skill_documents_fallback_path(self, skills_dir: Path, skill: str):
+        """Every work-tracking skill must document task-list fallback."""  # Tests INV-14
+        skill_file = skills_dir / skill / "SKILL.md"
+        assert skill_file.exists(), f"Skill file not found: {skill}"
+        text = skill_file.read_text().lower()
+        assert ("fallback" in text) or ("inv-14" in text and "spec.md" in text), (
+            f"{skill} must document fallback behavior or reference SPEC.md INV-14 (INV-14)"
+        )
+
+    @pytest.mark.parametrize("skill", WORK_TRACKING_SKILLS)
+    def test_skill_treats_bd_failure_as_blocker(self, skills_dir: Path, skill: str):
+        """bd failure must block workflow — either directly or via SPEC.md protocol reference."""  # Tests INV-14
+        skill_file = skills_dir / skill / "SKILL.md"
+        assert skill_file.exists(), f"Skill file not found: {skill}"
+        text = skill_file.read_text().lower()
+        assert any(phrase in text for phrase in [
+            "block", "stop", "bd doctor", "critical", "inv-14",
+        ]), (
+            f"{skill} must treat bd failure as a blocker or reference INV-14 protocol (INV-14)"
+        )
+
+    @pytest.mark.parametrize("skill", TASK_CREATING_SKILLS)
+    def test_skill_documents_slug_convention(self, skills_dir: Path, skill: str):
+        """Skills creating tasks must document the slug title convention."""  # Tests INV-14
+        skill_file = skills_dir / skill / "SKILL.md"
+        assert skill_file.exists(), f"Skill file not found: {skill}"
+        text = skill_file.read_text().lower()
+        assert "slug" in text or "inv-14" in text, (
+            f"{skill} must document slug convention or reference INV-14 (INV-14)"
+        )
+
+    @pytest.mark.parametrize(
+        "skill,pattern",
+        list(GITHUB_PROJECTION_SKILLS.items()),
+        ids=list(GITHUB_PROJECTION_SKILLS.keys()),
+    )
+    def test_skill_projects_to_github(self, skills_dir: Path, skill: str, pattern: str):
+        """Skills with projection points must include gh comment commands."""  # Tests INV-14
+        skill_file = skills_dir / skill / "SKILL.md"
+        assert skill_file.exists(), f"Skill file not found: {skill}"
+        text = skill_file.read_text().lower()
+        assert pattern in text, (
+            f"{skill} must project state to GitHub via '{pattern}' (INV-14)"
+        )
+
+
 # ---------------------------------------------------------------------------
 # Epic scope check in brainstorming and finishing
 # ---------------------------------------------------------------------------

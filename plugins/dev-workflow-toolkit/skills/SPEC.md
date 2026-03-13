@@ -74,10 +74,28 @@ Skills compose into a development workflow graph. The primary flow is:
 | INV-11 | Version bumps in `plugin.json` require a corresponding `## vX.Y.Z` section in `CHANGELOG.md` | structural | Ensures users and agents can discover what changed; hook-enforced via `check-changelog.sh` |
 | INV-12 | CI status checks must pass before PR creation in `finishing-a-development-branch` | structural | Prevents merging code that fails automated tests; enforced by `gh pr checks` hard gate |
 | INV-13 | Pipeline skills with context gates check `.claude/.statusline-stats` at skill load and recommend compaction or `/clear` when context exceeds the skill's threshold | reasoning-required | Prevents context exhaustion during long pipelines; thresholds are calibrated heuristics, not hard limits |
+| INV-14 | When a project's CLAUDE.md includes a beads work-tracking directive, all work-tracking skills use `bd` instead of Claude Code task lists. Task titles follow the slug convention (`<slug>- <description>`). `bd` failure blocks the workflow with a `bd doctor` recommendation. Skills reference this protocol and document only skill-specific additions. Skills with GitHub projection points post state transitions as issue or PR comments | reasoning-required | Ensures consistent work tracking across all skills; single-source protocol prevents boilerplate drift |
 
 **Enforcement classification:**
 - **structural** — enforced by test suite, gitignore structure, or directory convention; pattern-matchable
 - **reasoning-required** — needs architectural understanding; verified during code review
+
+## Work Tracking Protocol
+
+When a project's CLAUDE.md contains a beads work-tracking directive (written by
+project-init), all work-tracking skills follow this protocol:
+
+**Beads path (directive present):**
+- Use `bd` for all work tracking. Do not use Claude Code task lists (TaskCreate/TaskUpdate).
+- Task titles follow the slug convention: `<slug>- <description>` (e.g., `auth- Implement authentication`).
+- If a `bd` command fails, **stop the workflow** and recommend `bd doctor`. Beads is critical infrastructure — do not silently fall back to task lists.
+
+**Fallback path (no directive):**
+- Use Claude Code task lists for in-session progress tracking.
+- Use GitHub issues for persistent tracking.
+
+Skills reference this section and document only their skill-specific additions
+(GitHub projection points, pipeline status, verification logging, etc.).
 
 ## Failure Modes
 
@@ -111,6 +129,7 @@ INV-6: structural — directory convention.
 
 INV-10, INV-11: enforced by Claude Code hooks (`check-version-bump.sh`, `check-changelog.sh`) at session Stop events. Also validated by `test_version_hooks.py`.
 INV-12: enforced by `finishing-a-development-branch` skill prompt (Step 1d hard gate using `gh pr checks`).
+INV-14: enforced by `TestBeadsWorkTracking` in `test_integration.py` — verifies all work-tracking skills reference the protocol, document fallback, treat `bd` failure as a blocker, and include GitHub projection where required.
 
 Skills are additionally validated via subagent pressure testing — see `/skill-creator`.
 

@@ -223,6 +223,16 @@ You understand 1,2,3,6. Unclear on 4,5.
 
 When replying to inline review comments on GitHub, reply in the comment thread (`gh api repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/pulls/{pr}/comments/{id}/replies`), not as a top-level PR comment.
 
+## Work Tracking
+
+Follow the work-tracking protocol in SPEC.md (INV-14). Skill-specific additions:
+
+- Log reviewer feedback: `bd update <review-task-id> --append-notes "Feedback received: <summary>"`
+- After fixes: `bd update <review-task-id> --append-notes "Review: PASS — all feedback addressed"`
+- Close: `bd close <review-task-id> --reason "Feedback addressed in <commit-sha>"`
+
+**Fallback note:** GitHub PR thread replies serve as the feedback record.
+
 ## The Bottom Line
 
 **External feedback = suggestions to evaluate, not orders to follow.**

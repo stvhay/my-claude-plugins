@@ -62,6 +62,10 @@ Run `git branch --show-current` to detect the current branch.
   - If no: allow proceeding with a warning.
 - **If on any other branch:** Proceed to Step 2.
 
+## Work Tracking
+
+Follow the work-tracking protocol in SPEC.md (INV-14).
+
 ## Checklist
 
 You MUST create a task for each of these items and complete them in order:

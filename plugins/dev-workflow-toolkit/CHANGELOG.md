@@ -3,6 +3,20 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.13.2
+
+### Fixed
+- Complete beads integration across all work-tracking skills (#78)
+  - All 11 work-tracking skills now document beads-primary and task-list-fallback paths
+  - Task title slug convention (`<slug>- <description>`) for pipeline status display
+  - GitHub projection at key lifecycle points (plan summaries, batch progress, review findings)
+  - `bd` failure treated as workflow blocker with `bd doctor` recommendation
+  - project-init installs beads by default and writes CLAUDE.md work-tracking directive
+  - SPEC.md INV-7 expanded to cover all work-tracking skills
+
+### Added
+- `bd-pipeline` script for one-line pipeline status from beads task JSON
+
 ## v1.13.1
 
 Remove unnecessary `from __future__ import annotations` from all Python scripts

@@ -45,6 +45,14 @@ echo "Verified: on branch $branch in $(pwd)"
 
 **Re-verify CWD at the start of each batch** — agents can lose track of their working directory between batches.
 
+## Work Tracking
+
+Follow the work-tracking protocol in SPEC.md (INV-14). Skill-specific additions:
+
+- Display pipeline status after each batch: `bd list --type=task --json | bd-pipeline --phase executing --next finishing`
+
+**Fallback note:** Plan file is the source of truth.
+
 ## The Process
 
 ### Step 1: Load and Review Plan
@@ -63,6 +71,24 @@ Run `bd ready --json` to find unblocked tasks. For each task in the batch:
 3. Follow each step exactly (plan has bite-sized steps)
 4. Run verifications as specified
 5. Complete it: `bd close <id> --reason "Implemented"`
+
+After closing completed tasks in a batch, update the parent feature issue:
+
+```bash
+# Count progress
+total=$(bd list --type=task --json | python3 -c "import json,sys; print(len(json.load(sys.stdin)))")
+closed=$(bd list --type=task --status=closed --json | python3 -c "import json,sys; print(len(json.load(sys.stdin)))")
+bd update <feature-id> --append-notes "Batch complete: $closed/$total tasks done"
+
+# GitHub projection: post progress
+gh issue comment <N> --body "Progress: $closed/$total tasks complete"
+```
+
+**Pipeline status:** After each batch, display pipeline status:
+
+```bash
+bd list --type=task --json | bd-pipeline --phase executing --next finishing
+```
 
 ### Step 3: Report
 When batch complete:

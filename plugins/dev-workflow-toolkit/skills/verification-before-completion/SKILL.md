@@ -141,6 +141,12 @@ Run the command. Read the output. THEN claim the result.
 
 This is non-negotiable.
 
+## Work Tracking
+
+Follow the work-tracking protocol in SPEC.md (INV-14). Skill-specific additions:
+
+- Log verification results: `bd update <task-id> --notes "Review: PASS — verification ✅, quality gate ✅"`
+
 ## Integration with Code Simplification
 
 After verification passes, invoke the code-simplification skill:

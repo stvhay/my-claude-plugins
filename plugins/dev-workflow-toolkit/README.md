@@ -54,6 +54,12 @@ Select `dev-workflow-toolkit` from the plugin list.
 | `codify-subsystem` | Encode subsystem knowledge as SPEC.md |
 | `retrospective` | Post-completion session analysis and upstream feedback |
 
+## Work Tracking
+
+Beads handles granular work tracking across the skill lifecycle. GitHub
+receives issue/PR-level projections at key state transitions. When beads is
+not installed, skills fall back to Claude Code task lists.
+
 ## Hooks
 
 The plugin registers hooks via `hooks/hooks.json` for Langfuse tracing:
@@ -110,7 +116,7 @@ cd plugins/dev-workflow-toolkit
 ./tests/run-all.sh
 ```
 
-**197 tests**[^stat-test-count] across 9 modules[^stat-suite-count]:
+**250 tests**[^stat-test-count] across 10 modules[^stat-suite-count]:
 - Structure — frontmatter validation, SPEC.md checks, project-init templates, setup-rag config, cross-plugin validation
 - Integration — skill loading, dependency resolution, trigger patterns, reference files
 - Quality gate — smoke tests, negative fixtures, doc-stats validation
