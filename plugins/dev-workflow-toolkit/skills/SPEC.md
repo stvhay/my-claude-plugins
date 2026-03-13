@@ -73,6 +73,7 @@ Skills compose into a development workflow graph. The primary flow is:
 | INV-10 | Source changes in a plugin directory require a version bump in that plugin's `plugin.json` | structural | Prevents unversioned changes from shipping to users; hook-enforced via `check-version-bump.sh` |
 | INV-11 | Version bumps in `plugin.json` require a corresponding `## vX.Y.Z` section in `CHANGELOG.md` | structural | Ensures users and agents can discover what changed; hook-enforced via `check-changelog.sh` |
 | INV-12 | CI status checks must pass before PR creation in `finishing-a-development-branch` | structural | Prevents merging code that fails automated tests; enforced by `gh pr checks` hard gate |
+| INV-13 | Pipeline skills with context gates check `.claude/.statusline-stats` at skill load and recommend compaction or `/clear` when context exceeds the skill's threshold | reasoning-required | Prevents context exhaustion during long pipelines; thresholds are calibrated heuristics, not hard limits |
 
 **Enforcement classification:**
 - **structural** — enforced by test suite, gitignore structure, or directory convention; pattern-matchable
@@ -90,6 +91,7 @@ Skills compose into a development workflow graph. The primary flow is:
 | FAIL-6 | Silent issue creation skipped | Entry-point skill fails to create issue (network error, auth failure) without informing the user | Surface the error, proceed without issue tracking, warn user that the work is untracked |
 | FAIL-7 | Review documentation missing at branch completion | `finishing-a-development-branch` runs `check-review-documented.sh` but no review comments found in beads or GitHub issue | Post review summaries during development via `bd update` and `gh issue comment` |
 | FAIL-8 | `compute-version.sh --update` errors with VERSION_DRIFT | Version files (`plugin.json` and `pyproject.toml`) have different version strings | Run `compute-version.sh` without `--update` to see current state, then manually align the files |
+| FAIL-9 | Context gate warns "context awareness unavailable" | `.claude/.statusline-stats` not found (statusline not configured or not running) | Ensure claude-statusline is configured for the project; `context-check` script exits with error, agent warns user and proceeds |
 
 ## Decision Framework
 

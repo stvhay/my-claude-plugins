@@ -61,6 +61,20 @@ reference — no shared code, no imports.
 modification. This preserves the option to split the mono-repo later without
 a rewrite.
 
+## Context-Aware Session Management
+
+Pipeline skills check context window utilization at load time via
+`scripts/context-check`. Each gate has a threshold tuned to the remaining
+pipeline budget: brainstorming (20%), writing-plans (65%),
+subagent-driven-development (40%), executing-plans (20%). Gates recommend
+`/clear` or directed `/compact` — they are advisory, not blocking.
+
+Thresholds were calibrated from Langfuse session traces (issue #50): the full
+pipeline splits roughly 50/50 between pre-execution and execution phases.
+Above 80%, coding performance degrades, so execution-entry gates are more
+aggressive. The agent may use discretion to trigger compaction earlier for
+large plans, but not below 30%.
+
 ## Quality Gate Automation
 
 `scripts/quality-gate.sh` ships inside dev-workflow-toolkit and runs six
