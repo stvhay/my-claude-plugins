@@ -18,9 +18,10 @@ Initialize a project with standard scaffolding for Claude Code-driven developmen
 3. `.github/pull_request_template.md` — PR template with checklist
 4. `CONTRIBUTING.md` — Contribution workflow guide
 5. `CLAUDE.md` (optional) — Project configuration for Claude Code
-6. `compute-version.sh` + `compute_version.py` — Version management scripts
-7. `.github/workflows/release.yml` — Release automation workflow
-8. Validation hooks for version bump and changelog enforcement
+6. `compute-version.sh` + `compute_version.py` — Version management scripts (supports `--ci` mode for CI-driven version bumping)
+7. `.github/workflows/release.yml` — Release automation workflow with CI-driven version bumping and concurrency serialization
+8. `.github/workflows/ci.yml` version-check job — Pre-merge validation of bump label/changelog consistency
+9. Validation hooks for changelog entry and bump type enforcement
 9. Branch protection on `main` — require CI pass and squash merge
 
 ## Release Infrastructure
@@ -31,9 +32,10 @@ After scaffolding the base files, offer to set up release infrastructure:
 2. **Research conventions** — for the detected stack, research community-standard release practices (npm version, cargo release, Python versioning tools, etc.)
 3. **Confirm with user** — present findings and proposed approach
 4. **Generate compute-version.sh** — thin Bash wrapper that checks dependencies and delegates to Python
-5. **Generate compute_version.py** — Python implementation using stdlib `json` + `tomllib` for reading, regex-based writes for TOML. Tailored to the project's version file locations.
-6. **Generate release.yml** — GitHub Actions workflow: on push to main, create timestamp git tag (`YYYY-MM-DDTHHMMSSZ`), create GitHub Release with changelog content
-7. **Register hooks** — add `check-version-bump.sh` and `check-changelog.sh` to the project's Claude Code hook configuration
+5. **Generate compute_version.py** — Python implementation using stdlib `json` + `tomllib` for reading, regex-based writes for TOML. Include `--ci` mode that reads bump type from `<!-- bump: TYPE -->` in CHANGELOG.md and rewrites `## Unreleased` to `## vX.Y.Z`. Tailored to the project's version file locations.
+6. **Generate release.yml** — GitHub Actions workflow: on push to main, detect plugins with `## Unreleased` sections, run `compute-version.sh --ci --update`, commit version bumps, create timestamp git tag (`YYYY-MM-DDTHHMMSSZ`), create GitHub Release with changelog content. Include `concurrency: { group: version-bump, cancel-in-progress: false }` to serialize parallel merges.
+7. **Generate ci.yml version-check job** — Pre-merge CI job that validates `bump:TYPE` PR label matches `<!-- bump: TYPE -->` changelog comment for changed plugins
+8. **Register hooks** — add `check-version-bump.sh` (validates `## Unreleased` + bump comment on source changes) and `check-changelog.sh` (validates bump comment when `## Unreleased` exists) to the project's Claude Code hook configuration
 
 The release infrastructure is part of the initial commit with passing CI. The generated scripts are project-specific — the skill generates them based on the detected stack, not from templates.
 

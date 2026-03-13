@@ -3,6 +3,27 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## Unreleased
+<!-- bump: minor -->
+
+### Changed
+- **Version bumping is now CI-driven.** Branches write `## Unreleased` changelog
+  entries with `<!-- bump: TYPE -->` comments instead of bumping version files
+  directly. CI validates PR label consistency pre-merge and bumps versions
+  post-merge with concurrency serialization.
+- `check-version-bump.sh` validates `## Unreleased` + bump comment instead of
+  version file changes
+- `check-changelog.sh` validates bump comment in `## Unreleased` instead of
+  `## vX.Y.Z` section
+- `compute-version.sh` gains `--ci` mode for CI-driven execution
+- `finishing-a-development-branch` Step 2b writes changelog + applies label
+  (no longer runs `compute-version.sh --update`)
+- `release.yml` performs version bump post-merge with concurrency group
+- `ci.yml` gains `version-check` job for pre-merge label/changelog validation
+
+**ACTION:** PR labels `bump:patch`, `bump:minor`, `bump:major` are now required
+on PRs with source changes. The version bump happens automatically at merge time.
+
 ## v1.13.3
 
 - **fix:** Move quality gate SessionStart hook from project `settings.json` to plugin `hooks.json`, using `${CLAUDE_PLUGIN_ROOT}` for version-independent path resolution (#83)
