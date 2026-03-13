@@ -2,6 +2,7 @@ name: CI
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   push:
     branches: [main]
 
@@ -23,3 +24,89 @@ jobs:
       - name: Run quality gate
         working-directory: plugins/dev-workflow-toolkit
         run: uv run python scripts/quality_gate.py --path ${{ github.workspace }}
+
+  version-check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check version bump labels match changelog
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          ERRORS=0
+          CHECKED=0
+
+          for plugin_dir in plugins/*/; do
+            plugin_name=$(basename "$plugin_dir")
+
+            # Check if plugin has source file changes (exclude docs, config, locks)
+            SOURCE_CHANGES=$(git diff --name-only "$BASE_SHA"...HEAD -- "$plugin_dir" \
+              | grep -v -E '\.(md|yml|yaml)$' \
+              | grep -v -E '(uv\.lock|plugin\.json)$' \
+              || true)
+
+            if [ -z "$SOURCE_CHANGES" ]; then
+              continue
+            fi
+
+            CHECKED=$((CHECKED + 1))
+            echo "Plugin '$plugin_name' has source changes"
+
+            CHANGELOG="$plugin_dir/CHANGELOG.md"
+            if [ ! -f "$CHANGELOG" ]; then
+              echo "::error::Plugin '$plugin_name' has source changes but no CHANGELOG.md"
+              ERRORS=$((ERRORS + 1))
+              continue
+            fi
+
+            # Check for ## Unreleased section
+            if ! grep -q '^## Unreleased' "$CHANGELOG"; then
+              echo "::error::Plugin '$plugin_name' CHANGELOG.md missing '## Unreleased' section"
+              ERRORS=$((ERRORS + 1))
+              continue
+            fi
+
+            # Extract bump type from changelog comment
+            CHANGELOG_BUMP=$(grep -oP '<!-- bump: \K(patch|minor|major)(?= -->)' "$CHANGELOG" || true)
+            if [ -z "$CHANGELOG_BUMP" ]; then
+              echo "::error::Plugin '$plugin_name' CHANGELOG.md missing '<!-- bump: TYPE -->' comment"
+              ERRORS=$((ERRORS + 1))
+              continue
+            fi
+
+            # Check PR label
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+            LABEL_BUMP=$(gh pr view "$PR_NUMBER" --json labels -q '.labels[].name' \
+              | grep -oP '^bump:\K(patch|minor|major)$' || true)
+
+            if [ -z "$LABEL_BUMP" ]; then
+              echo "::error::PR is missing a 'bump:TYPE' label (expected 'bump:$CHANGELOG_BUMP')"
+              ERRORS=$((ERRORS + 1))
+              continue
+            fi
+
+            if [ "$CHANGELOG_BUMP" != "$LABEL_BUMP" ]; then
+              echo "::error::Bump mismatch for '$plugin_name': changelog says '$CHANGELOG_BUMP', PR label says '$LABEL_BUMP'"
+              ERRORS=$((ERRORS + 1))
+              continue
+            fi
+
+            echo "Plugin '$plugin_name': bump type '$CHANGELOG_BUMP' matches"
+          done
+
+          if [ "$CHECKED" -eq 0 ]; then
+            echo "No plugin source changes detected — skipping version check"
+            exit 0
+          fi
+
+          if [ "$ERRORS" -gt 0 ]; then
+            echo "::error::Version check failed with $ERRORS error(s)"
+            exit 1
+          fi
+
+          echo "All version checks passed ($CHECKED plugin(s) checked)"
