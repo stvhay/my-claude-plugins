@@ -34,6 +34,7 @@ Simplifications are categorized by risk. Lower risk = more autonomy.
 
 | Category | Risk | Behavior | Summary |
 |----------|------|----------|---------|
+| Parser Preference | Low | Auto-apply | One-liner |
 | Deletion | Low | Auto-apply | One-liner |
 | Flattening | Low-Moderate | Auto-apply | One-liner |
 | Derivation | Moderate | Auto-apply | One-liner |
