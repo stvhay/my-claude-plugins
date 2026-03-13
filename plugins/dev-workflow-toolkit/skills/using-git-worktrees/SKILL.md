@@ -48,6 +48,24 @@ No worktree directory found. Where should I create worktrees?
 Which would you prefer?
 ```
 
+## Naming Convention
+
+Branch names and worktree paths follow a strict pattern that enables cross-skill navigation (e.g., `/review <PR#>` locating the correct worktree).
+
+**Branch:** `<type>/<issue>-<slug>`
+- `type` is one of: `feature`, `fix`, `docs`
+- `issue` is the GitHub issue number
+- `slug` is a short hyphenated description
+
+**Worktree path:** `.worktrees/<type>/<issue>-<slug>` — mirrors the branch name exactly.
+
+Examples:
+- Branch `feature/63-worktree-naming` → `.worktrees/feature/63-worktree-naming`
+- Branch `fix/42-broken-auth` → `.worktrees/fix/42-broken-auth`
+- Branch `docs/39-token-efficiency` → `.worktrees/docs/39-token-efficiency`
+
+**Why this matters:** `requesting-code-review` navigates PR → issue number → worktree path. It scans `git worktree list` for paths containing `/<issue>-`. If the worktree path doesn't follow this convention, `/review <PR#>` cannot find it.
+
 ## Safety Verification
 
 ### For Project-Local Directories (.worktrees or worktrees)
@@ -195,11 +213,11 @@ You: I'm using the using-git-worktrees skill to set up an isolated workspace.
 
 [Check .worktrees/ - exists]
 [Verify ignored - git check-ignore confirms .worktrees/ is ignored]
-[Create worktree: git worktree add .worktrees/auth -b feature/auth]
+[Create worktree: git worktree add .worktrees/feature/47-auth -b feature/47-auth]
 [Run npm install]
 [Run npm test - 47 passing]
 
-Worktree ready at /Users/jesse/myproject/.worktrees/auth
+Worktree ready at /Users/jesse/myproject/.worktrees/feature/47-auth
 Tests passing (47 tests, 0 failures)
 Ready to implement auth feature
 ```
