@@ -15,7 +15,8 @@ a parser — not regex, sed, grep, or string manipulation.
 ## Common Examples
 
 This table is non-exhaustive. The rule applies to any format with a formal
-grammar, not just these.
+grammar, not just these. Examples are Python/Shell-centric; equivalent parsers
+exist in all major languages.
 
 | Format | Stdlib Parser | Third-Party |
 |--------|--------------|-------------|

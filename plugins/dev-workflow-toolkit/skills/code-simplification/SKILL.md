@@ -43,7 +43,7 @@ Simplifications are categorized by risk. Lower risk = more autonomy.
 
 ### Parser Preference (Low Risk)
 
-- Regex/sed/grep operating on formats with a formal grammar when a parser exists
+- Replace regex/sed/grep with parser for formats with formal grammars
 
 ### Deletion (Low Risk)
 
