@@ -110,11 +110,14 @@ cd plugins/dev-workflow-toolkit
 ./tests/run-all.sh
 ```
 
-**130 tests**[^stat-test-count] across 4 modules[^stat-suite-count]:
+**166 tests**[^stat-test-count] across 7 modules[^stat-suite-count]:
 - Structure — frontmatter validation, SPEC.md checks, project-init templates, setup-rag config, cross-plugin validation
 - Integration — skill loading, dependency resolution, trigger patterns, reference files
 - Quality gate — smoke tests, negative fixtures, doc-stats validation
 - Direnv hooks — post-checkout behavior, SessionStart installer, idempotency, trust inheritance
+- Compute version — semver computation, file updates, consistency checks
+- Compute version shell — shell wrapper integration tests
+- Version hooks — version bump and changelog enforcement hooks
 
 See `tests/README.md` for details.
 
