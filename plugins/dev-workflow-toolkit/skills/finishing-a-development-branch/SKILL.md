@@ -213,6 +213,35 @@ bd close <feature-id> --reason "PR #<N> created"
 
 > **If the PR is rejected or needs rework:** Reopen the beads feature with `bd reopen <feature-id>` and continue working.
 
+### Step 5b: Post-PR CI Verification
+
+<HARD-GATE>
+Do NOT proceed to cleanup or merge until CI checks pass on the newly created PR.
+</HARD-GATE>
+
+This closes the gap from Step 1d when no PR existed at that point.
+
+```bash
+# Wait for CI to start and complete
+gh pr checks "$PR_NUM" --watch
+
+# Verify all checks passed
+gh pr checks "$PR_NUM" --fail-on-error
+```
+
+**If checks pass:** Continue to Step 6.
+
+**If checks fail:**
+```
+CI checks failing on PR #<N>:
+
+[Show failing checks]
+
+Cannot proceed until CI passes. Fix the failing checks and re-run.
+```
+
+Stop. Don't proceed to Step 6.
+
 Then: Cleanup worktree (Step 6)
 
 ### Step 6: Cleanup Worktree
@@ -263,7 +292,7 @@ improvements, and files GitHub issues for upstream items once the user approves.
 
 ## Quick Reference
 
-**Workflow:** Verify tests → Quality gate → Review docs check → CI check → Validate docs → Version bump → Determine base → Push + squash merge PR → Cleanup → Beads sync → Retrospective
+**Workflow:** Verify tests → Quality gate → Review docs check → CI check → Validate docs → Version bump → Determine base → Push + squash merge PR → Post-PR CI verify → Cleanup → Beads sync → Retrospective
 
 ## Common Mistakes
 
@@ -298,7 +327,7 @@ improvements, and files GitHub issues for upstream items once the user approves.
 - **documentation-standards** — Validate mode, hard gate after test verification
 - **retrospective** — Step 8, non-blocking session analysis after PR creation
 
-**Workflow:** Verify → CI check → Validate → Version bump → Determine base → Push + squash merge PR → Cleanup → Beads sync → Retrospective
+**Workflow:** Verify → CI check → Validate → Version bump → Determine base → Push + squash merge PR → Post-PR CI verify → Cleanup → Beads sync → Retrospective
 
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete

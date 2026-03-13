@@ -9,6 +9,7 @@ import re
 from pathlib import Path
 
 import pytest
+from markdown_it import MarkdownIt
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -162,19 +163,35 @@ class TestReferenceFiles:
 
     def test_reference_dirs_exist(self, skills_dir: Path):
         missing = []
-        ref_path_re = re.compile(r"`(?:([a-z-]+)/)?references/([a-z0-9._-]+)`")
+        md = MarkdownIt()
         for skill in SKILLS_WITH_REFS:
             skill_file = skills_dir / skill / "SKILL.md"
             if not skill_file.exists():
                 continue
             text = skill_file.read_text()
-            for match in ref_path_re.finditer(text):
-                owner = match.group(1) or skill  # cross-skill or self
-                ref_file = skills_dir / owner / "references" / match.group(2)
-                if not ref_file.exists():
-                    missing.append(f"{owner}/references/{match.group(2)}")
-            # Also check for bare references/ (no backtick path) → own dir
-            if "references/" in text and not ref_path_re.search(text):
+            tokens = md.parse(text)
+            # Extract inline code spans containing "references/"
+            code_spans: list[str] = []
+            for token in tokens:
+                if token.children:
+                    for child in token.children:
+                        if child.type == "code_inline" and "references/" in child.content:
+                            code_spans.append(child.content)
+            for span in code_spans:
+                # Resolve path: if there's a "/" before "references/", it's a cross-skill ref
+                ref_idx = span.find("references/")
+                prefix = span[:ref_idx]
+                ref_file_name = span[ref_idx + len("references/"):]
+                if prefix and "/" not in prefix.rstrip("/"):
+                    # Cross-skill reference like "other-skill/references/file.md"
+                    owner = prefix.rstrip("/")
+                else:
+                    owner = skill
+                ref_path = skills_dir / owner / "references" / ref_file_name
+                if not ref_path.exists():
+                    missing.append(f"{owner}/references/{ref_file_name}")
+            # Also check for bare references/ mention (not in code spans) → own dir
+            if "references/" in text and not code_spans:
                 refs_dir = skills_dir / skill / "references"
                 if not refs_dir.is_dir():
                     missing.append(f"{skill}/references")

@@ -62,8 +62,19 @@ gh api "repos/$REPO/branches/main/protection" \
 EOF
 ```
 
-This requires admin permissions. If the API call fails with a 403:
-> "Branch protection requires admin access. You can configure this manually in Settings → Branches → Add rule for `main`."
+Then enforce squash-merge-only on the repository:
+
+```bash
+# Enforce squash-merge-only
+gh api "repos/$REPO" \
+  --method PATCH \
+  --field allow_squash_merge=true \
+  --field allow_merge_commit=false \
+  --field allow_rebase_merge=false
+```
+
+Both calls require admin permissions. If either API call fails with a 403:
+> "Branch protection / merge method settings require admin access. You can configure this manually in Settings → Branches → Add rule for `main`, and Settings → General → Pull Requests."
 
 Proceed without branch protection — it's a soft gate during scaffolding.
 

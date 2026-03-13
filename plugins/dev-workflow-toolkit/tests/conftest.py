@@ -50,7 +50,8 @@ def pytest_configure(config: pytest.Config) -> None:
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    available = set(os.environ.get("CI_CAPABILITIES", "").split())
+    raw = os.environ.get("CI_CAPABILITIES", "")
+    available = set(raw.split()) if raw.strip() else set()
     for item in items:
         for marker in item.iter_markers("capability"):
             required = marker.args[0]
