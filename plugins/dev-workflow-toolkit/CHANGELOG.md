@@ -8,7 +8,7 @@ read this file and apply retroactive actions marked with **ACTION**.
 
 ### Fixed
 - Brainstorming auto-creates worktree when on main/master instead of asking (#97)
-- Release workflow blocked by branch protection — switch from classic branch protection to ruleset with bot bypass (#104)
+- Release workflow blocked by branch protection — use GitHub App token + ruleset bypass for version bump push (#104)
 
 ### Changed
 - **Version bumping is now CI-driven.** Branches write `## Unreleased` changelog
