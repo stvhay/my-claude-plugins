@@ -96,6 +96,8 @@ This is a **soft warning** — the user decides. If they choose to keep as one, 
 
 Each task must be self-contained — a subagent receiving only this task text has everything needed to implement it.
 
+> **Slug convention:** When creating beads tasks, title format is `<slug>- <description>` (e.g., `auth- Implement authentication`). The slug is a short (1-8 char) identifier used by the pipeline status display.
+
 ````markdown
 ### Task N: [Component Name]
 
@@ -170,6 +172,17 @@ Mark each task's dependencies explicitly. Independent tasks can be dispatched to
 - Anchor tests to SPEC.md item IDs (INV-N, FAIL-N) with inline `# Tests INV-N` comments on declaration lines
 - DRY, YAGNI, TDD, frequent commits
 
+## Work Tracking
+
+**When CLAUDE.md contains a beads work-tracking directive:**
+- Use `bd` for all work tracking. Do not use Claude Code task lists.
+- Task titles follow the slug convention: `<slug>- <description>`.
+- If a `bd` command fails, **stop the workflow** and recommend `bd doctor`. Beads is critical infrastructure.
+
+**When no beads directive in CLAUDE.md (fallback):**
+- Use Claude Code task lists for in-session tracking.
+- Plan file is the source of truth.
+
 ## Beads Conversion
 
 After saving the plan, convert it to beads issues for cross-session tracking:
@@ -180,6 +193,31 @@ bd create -f docs/plans/<filename>.md
 ```
 
 This creates task issues from the plan's markdown structure. Dependencies between tasks are preserved.
+
+After conversion, link child tasks to the parent feature issue:
+
+```bash
+# Get the feature issue ID (from brainstorming phase)
+feature_id=$(bd list --type=feature --json | python3 -c "import json,sys; issues=json.load(sys.stdin); print(issues[0]['id'] if issues else '')")
+
+# Link each plan task as a dependency of the feature
+for task_id in $(bd list --type=task --json | python3 -c "import json,sys; [print(i['id']) for i in json.load(sys.stdin)]"); do
+    bd dep add "$feature_id" "$task_id"
+done
+```
+
+**GitHub projection:** Post plan summary as an issue comment:
+
+```bash
+gh issue comment <N> --body "## Implementation Plan
+
+$(bd list --type=task --json | python3 -c "
+import json, sys
+for t in json.load(sys.stdin):
+    print(f'- [ ] {t[\"title\"]}')")
+
+Plan: \`docs/plans/<filename>.md\`"
+```
 
 **If `bd` is unavailable or `bd create -f` fails:** Skip beads conversion — plans work without it. The plan file itself is the source of truth.
 
