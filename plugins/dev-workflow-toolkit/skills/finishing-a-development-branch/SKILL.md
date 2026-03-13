@@ -192,6 +192,23 @@ Proceed anyway, or split?
 
 **If clean:** Proceed to Step 4.
 
+### Step 3c: Beads Preflight
+
+If beads is configured:
+
+```bash
+bd preflight --check
+```
+
+If preflight fails, surface the failures and stop. Do not proceed to PR creation with failing preflight.
+
+Post preflight results as a PR comment after PR creation:
+
+```bash
+gh pr comment <PR#> --body "## Preflight Results
+$(bd preflight --check 2>&1)"
+```
+
 ### Step 4: Create Pull Request
 
 **Always create a PR and attach it to the relevant GitHub issue.** Do not ask the user to choose — PRs are the default workflow.
@@ -331,6 +348,16 @@ improvements, and files GitHub issues for upstream items once the user approves.
 ## Quick Reference
 
 **Workflow:** Verify tests → Quality gate → Review docs check → CI check → Validate docs → Version bump → Determine base → Scope check → Push + squash merge PR → Post-PR CI verify → Cleanup → Beads sync → Retrospective
+
+## Work Tracking
+
+**When CLAUDE.md contains a beads work-tracking directive:**
+- Use `bd` for all work tracking. Do not use Claude Code task lists.
+- Beads is critical infrastructure — if `bd` fails, stop and recommend `bd doctor`.
+- Task titles follow the slug convention: `<slug>- <description>`.
+
+**When no beads directive in CLAUDE.md (fallback):**
+- Use GitHub PR body and comments for tracking completion steps.
 
 ## Common Mistakes
 

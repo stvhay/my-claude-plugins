@@ -141,6 +141,16 @@ Run the command. Read the output. THEN claim the result.
 
 This is non-negotiable.
 
+## Work Tracking
+
+**When CLAUDE.md contains a beads work-tracking directive:**
+- Use `bd` for all work tracking. Do not use Claude Code task lists.
+- Log verification results: `bd update <task-id> --notes "Review: PASS — verification ✅, quality gate ✅"`
+- If a `bd` command fails, **stop the workflow** and recommend `bd doctor`. Beads is critical infrastructure.
+
+**When no beads directive in CLAUDE.md (fallback):**
+- Use Claude Code task lists for tracking verification steps.
+
 ## Integration with Code Simplification
 
 After verification passes, invoke the code-simplification skill:

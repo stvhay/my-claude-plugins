@@ -24,6 +24,18 @@ context_pct=$(bash "$(dirname "$CLAUDE_SKILL_DIR")/../scripts/context-check" 2>/
   > Run: `/compact Preserve: implementation plan at <path>, issue #N, branch <name>, beads task IDs. Summarize all prior discussion.`
 - You may recommend compaction at lower percentages if remaining work is substantial (e.g., 5+ plan tasks, multiple subsystem specs to load), but not below **30%**.
 
+## Work Tracking
+
+**When CLAUDE.md contains a beads work-tracking directive:**
+- Use `bd` for all work tracking. Do not use Claude Code task lists (TaskCreate/TaskUpdate).
+- Task titles follow the slug convention: `<slug>- <description>`.
+- If a `bd` command fails, **stop the workflow** and recommend `bd doctor`. Beads is critical infrastructure.
+- Display pipeline status after each task batch: `bd list --type=task --json | bd-pipeline --phase executing --next finishing`
+
+**When no beads directive in CLAUDE.md (fallback):**
+- Use Claude Code task lists for in-session progress and coordination.
+- Plan file is the source of truth.
+
 ## When to Use
 
 ```dot
