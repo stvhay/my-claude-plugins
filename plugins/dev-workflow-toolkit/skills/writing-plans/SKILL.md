@@ -99,7 +99,7 @@ Each task must be self-contained — a subagent receiving only this task text ha
 > **Slug convention:** When creating beads tasks, title format is `<slug>- <description>` (e.g., `auth- Implement authentication`). The slug is a short (1-8 char) identifier used by the pipeline status display.
 
 ````markdown
-## Task N: [Component Name]
+### Task N: [Component Name]
 
 **Context:** [What this task builds, where it fits in the system, any relevant architectural decisions. Include enough that a fresh subagent understands the landscape without reading other tasks.]
 
@@ -154,9 +154,9 @@ git commit -m "feat: add specific feature"
 Mark each task's dependencies explicitly. Independent tasks can be dispatched to subagents in parallel. Dependent tasks run sequentially.
 
 ```markdown
-## Task 1: Data model          [Independent]
-## Task 2: API endpoint        [Independent]
-## Task 3: Integration tests   [Depends on: Task 1, Task 2]
+### Task 1: Data model          [Independent]
+### Task 2: API endpoint        [Independent]
+### Task 3: Integration tests   [Depends on: Task 1, Task 2]
 ```
 
 ## Remember
@@ -181,23 +181,13 @@ Follow the work-tracking protocol in SPEC.md (INV-14). Plan file is the fallback
 After saving the plan, convert it to beads issues for cross-session tracking:
 
 ```bash
-# Create beads issues from the plan markdown
-bd create -f docs/plans/<filename>.md
+# Create beads issues from plan's ### Task N: headings
+bash "$(dirname "$CLAUDE_SKILL_DIR")/../scripts/plan-to-beads.sh" docs/plans/<filename>.md --parent <beads-id>
 ```
 
-This creates task issues from the plan's markdown structure. Dependencies between tasks are preserved.
+This parses `### Task N:` headings (skipping code fences), creates one `bd` issue per task, and wires up `**Depends on:**` fields as beads dependencies. The `--parent` flag links all tasks as children of the feature issue from brainstorming.
 
-After conversion, link child tasks to the parent feature issue:
-
-```bash
-# Get the feature issue ID (from brainstorming phase)
-feature_id=$(bd list --type=feature --json | python3 -c "import json,sys; issues=json.load(sys.stdin); print(issues[0]['id'] if issues else '')")
-
-# Link each plan task as a dependency of the feature
-for task_id in $(bd list --type=task --json | python3 -c "import json,sys; [print(i['id']) for i in json.load(sys.stdin)]"); do
-    bd dep add "$feature_id" "$task_id"
-done
-```
+> **Why not `bd create -f`?** The built-in parser uses `##` (h2) as task boundaries and does not skip code fences. Plans that embed file content with h2 headings (READMEs, changelogs) produce spurious tasks.
 
 **GitHub projection:** Post plan summary as an issue comment:
 
@@ -212,7 +202,7 @@ for t in json.load(sys.stdin):
 Plan: \`docs/plans/<filename>.md\`"
 ```
 
-**If `bd` is unavailable or `bd create -f` fails:** Skip beads conversion — plans work without it. The plan file itself is the source of truth.
+**If `bd` is unavailable or `plan-to-beads.sh` fails:** Skip beads conversion — plans work without it. The plan file itself is the source of truth.
 
 ## Execution Handoff
 
