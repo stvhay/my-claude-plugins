@@ -13,6 +13,18 @@ Load plan, review critically, execute tasks in batches, report for review betwee
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
+## Context Gate
+
+Before starting, check context utilization:
+
+```bash
+context_pct=$(bash "$(dirname "$CLAUDE_SKILL_DIR")/../scripts/context-check" 2>/dev/null) || true
+```
+
+- If the script errors, warn the user: "Context awareness unavailable — `.claude/.statusline-stats` not found."
+- If `context_pct` is above **20%**, recommend:
+  > Context is at N%. For best results, start fresh: `/clear`
+
 ## Worktree Guard
 
 **Before starting, verify you are NOT on main/master:**

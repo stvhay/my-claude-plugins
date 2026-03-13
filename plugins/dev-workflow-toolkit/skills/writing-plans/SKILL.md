@@ -13,6 +13,21 @@ DRY. YAGNI. TDD. Frequent commits.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
+## Context Gate
+
+Before starting, check context utilization:
+
+```bash
+context_pct=$(bash "$(dirname "$CLAUDE_SKILL_DIR")/../scripts/context-check" 2>/dev/null) || true
+```
+
+- If the script errors, warn the user: "Context awareness unavailable — `.claude/.statusline-stats` not found."
+- If `context_pct` is above **65%**, recommend compaction with a directed preservation prompt:
+  > Context is at N%. Recommend compacting before planning. You'll keep the design doc and issue context; brainstorming dialogue will be summarized.
+  >
+  > Run: `/compact Preserve: design doc at <path>, issue #N, branch <name>. Summarize all prior discussion.`
+- You may recommend compaction at lower percentages if remaining work is substantial (e.g., 5+ plan tasks, multiple subsystem specs to load), but not below **30%**.
+
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>-plan.md`
