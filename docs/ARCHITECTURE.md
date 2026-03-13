@@ -92,9 +92,10 @@ structural checks against any project using the plugin:
    installed and working.
 
 The script is invoked by verification-before-completion (pre-merge gate),
-finishing-a-development-branch (pre-PR gate), and documentation-standards
-(on-demand audit). This converts several reasoning-required invariants into
-structural ones enforced by automation.
+finishing-a-development-branch (pre-PR gate), documentation-standards
+(on-demand audit), and as a SessionStart hook registered in the plugin's
+`hooks.json` — running automatically on every session for all projects
+using the plugin.
 
 ## Work Tracking
 
