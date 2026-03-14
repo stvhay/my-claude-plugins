@@ -719,3 +719,36 @@ class TestStructuredQuestionPreference:
         assert "AskUserQuestion" in text, (
             "documentation-standards must reference AskUserQuestion (INV-15)"
         )
+
+
+# ---------------------------------------------------------------------------
+# Beads-aware worktree operations
+# ---------------------------------------------------------------------------
+
+
+class TestBeadsWorktreeInvariant:
+    """Worktree skills must use bd worktree when .beads/ exists."""  # Tests INV-16
+
+    def test_worktree_skill_detects_beads(self, skills_dir: Path):  # Tests INV-16
+        """using-git-worktrees must detect .beads/ and use bd worktree create."""
+        text = (skills_dir / "using-git-worktrees" / "SKILL.md").read_text()
+        assert ".beads/" in text, (
+            "using-git-worktrees must detect .beads/ directory (INV-16)"
+        )
+        assert "bd worktree create" in text, (
+            "using-git-worktrees must use bd worktree create when beads is configured (INV-16)"
+        )
+
+    def test_worktree_skill_has_bd_remove(self, skills_dir: Path):  # Tests INV-16
+        """using-git-worktrees must reference bd worktree remove for cleanup."""
+        text = (skills_dir / "using-git-worktrees" / "SKILL.md").read_text()
+        assert "bd worktree remove" in text, (
+            "using-git-worktrees must reference bd worktree remove (INV-16)"
+        )
+
+    def test_finishing_skill_has_bd_worktree_remove(self, skills_dir: Path):  # Tests INV-16
+        """finishing-a-development-branch must use bd worktree remove when beads exists."""
+        text = (skills_dir / "finishing-a-development-branch" / "SKILL.md").read_text()
+        assert "bd worktree remove" in text, (
+            "finishing-a-development-branch must reference bd worktree remove (INV-16)"
+        )
