@@ -3,6 +3,15 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## Unreleased
+
+<!-- bump: patch -->
+
+### Added
+- **INV-16:** New SPEC.md invariant requiring beads-aware worktree operations — skills must detect `.beads/` and use `bd worktree create`/`bd worktree remove` instead of raw `git worktree` (#113)
+- **FAIL-10:** Failure mode documenting orphaned Dolt server from plain `git worktree add`
+- Structural tests enforcing INV-16 in `TestBeadsWorktreeInvariant`
+
 ## v1.16.0
 
 ### Added
