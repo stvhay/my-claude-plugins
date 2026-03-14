@@ -166,7 +166,7 @@ the project, and proposes fixes for failures.
 - **Expected:** Changelog present; unreleased changes use `## Unreleased` header with `<!-- bump: patch|minor|major -->` comment
 - **Severity when failing:** MISSING
 - **Remediation:** Create CHANGELOG.md with `## Unreleased` section and bump comment
-- **Since:** v1.5.0
+- **Since:** v1.5.0 (bump comment convention since v1.14.0)
 
 ---
 
