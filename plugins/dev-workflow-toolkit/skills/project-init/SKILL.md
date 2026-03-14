@@ -48,7 +48,7 @@ Used in **Update** and **First adoption** modes. Skipped for **Fresh init**.
 
 ### Step 1: Determine Audit Scope
 
-- **Update mode:** Diff the plugin changelog from the version recorded in `.project-init` to current. Audit only items affected by changes.
+- **Update mode:** Diff the plugin's `CHANGELOG.md` from the version recorded in `.project-init` to current. Audit only items affected by changes.
 - **First adoption mode:** Full audit — evaluate every item in the checklist.
 
 ### Step 2: Walk the Audit Checklist
@@ -98,7 +98,7 @@ Apply? [all / 1,2 / none]:
 
 - Re-run audit to confirm all items pass
 - Present summary of changes made
-- Update `.project-init` marker with current plugin version
+- Update `.project-init` marker with current plugin version (read from `.claude-plugin/plugin.json`)
 - Commit changes
 
 ## What It Creates
