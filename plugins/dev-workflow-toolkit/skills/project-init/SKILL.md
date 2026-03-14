@@ -62,7 +62,7 @@ Group results by layer. Show OK items. DRIFT items offer `[expand?]` for details
 ```
 Audit Results
 ─────────────
-Layer: GitHub Templates
+Layer: Scaffolding
   [OK]    Bug report template
   [OK]    Feature request template
   [DRIFT] PR template — missing required checklist items [expand?]
