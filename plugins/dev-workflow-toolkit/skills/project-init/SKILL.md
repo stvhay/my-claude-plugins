@@ -83,16 +83,13 @@ Proceed without branch protection — it's a soft gate during scaffolding.
 ## Process
 
 1. Check which files already exist — skip any that do (warn user)
-2. **Batch setup questions** using `AskUserQuestion` and/or grouped free-text:
-   - Project name and purpose (free-text — present as numbered questions in the same message)
-   - "Install beads for work tracking?" (structured: Yes (Recommended) / No)
-   - "Generate CLAUDE.md skeleton?" (structured: Yes (Recommended) / No)
-
-   Present all in a single round-trip. Structured questions via `AskUserQuestion`, free-text alongside.
+2. **Batch setup questions** — choose one modality based on confidence:
+   - If you can propose good defaults (e.g., project name is obvious from the repo): use `AskUserQuestion` with up to 4 structured questions including "Install beads?" (Yes (Recommended) / No) and "Generate CLAUDE.md?" (Yes (Recommended) / No)
+   - If project name/purpose need open-ended input: present all questions as numbered items in a single free-text message (include beads and CLAUDE.md as yes/no items in the same list)
 3. Copy templates from `templates/` directory, adapting project name
 4. Optionally generate CLAUDE.md skeleton with project-specific sections
 5. Create `docs/plans/` directory for implementation plans
-6. **Worktree directory:** Create `.worktrees/` in the project root and add to `.gitignore`. This establishes the default worktree location so using-git-worktrees never needs to ask.
+6. **Worktree directory:** Create `.worktrees/` in the project root. Add `.worktrees/` to `.gitignore` (append if `.gitignore` exists, create if not). This establishes the default worktree location so using-git-worktrees never needs to ask.
 7. Beads installation (see below)
 8. Commit scaffolding files
 

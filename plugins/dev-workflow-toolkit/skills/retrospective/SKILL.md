@@ -99,12 +99,14 @@ the user is satisfied with the findings.
   ```
 - Present the draft to the user for approval
 
-**Batch wrap-up decisions** using `AskUserQuestion`:
+**Batch wrap-up decisions** after presenting the analysis:
+
+First, present the full structured analysis (Step 2) as a regular message so the user can read it. Then, in a follow-up, use `AskUserQuestion` to batch the three decisions:
 1. "Analysis accurate?" — Confirm / Correct / Add context
 2. "Save local improvements to?" — CLAUDE.md / Memory / Skip
 3. "Approve upstream issue draft?" — Approve / Edit / Skip
 
-Present the full analysis alongside the `AskUserQuestion` call so the user has context for all three decisions at once.
+This two-step sequence ensures the user can read the analysis before the question UI appears.
 
 **Beads tracking (when CLAUDE.md directive present):**
 

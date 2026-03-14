@@ -354,7 +354,11 @@ The retrospective opt-in is collected in the Pre-PR Batch (Step 3d). If the user
 
 ## Quick Reference
 
-**Workflow:** Verify tests → Quality gate → Review docs check → CI check → Validate docs → Changelog + label → Determine base → Scope check → Beads preflight → Pre-PR Batch → Push + squash merge PR → Post-PR CI verify → Cleanup → Beads sync → Retrospective
+**Workflow:**
+1. Verify tests → Quality gate → Review docs check → CI check
+2. Validate docs → Changelog → Base branch → Scope check → Beads preflight
+3. **Pre-PR Batch** (release type + scope + base + retrospective opt-in)
+4. Push → Squash merge PR → Post-PR CI verify → Cleanup → Beads sync → Retrospective
 
 ## Work Tracking
 
@@ -395,7 +399,7 @@ Follow the work-tracking protocol in SPEC.md (INV-14).
 - **documentation-standards** — Validate mode, hard gate after test verification
 - **retrospective** — Step 8, non-blocking session analysis after PR creation
 
-**Workflow:** Verify → CI check → Validate → Changelog + label → Determine base → Scope check → Beads preflight → Pre-PR Batch → Push + squash merge PR → Post-PR CI verify → Cleanup → Beads sync → Retrospective
+**Workflow:** Verify → CI check → Validate → Changelog → Base → Scope → Beads preflight → Pre-PR Batch → Push + squash merge PR → Post-PR CI verify → Cleanup → Beads sync → Retrospective
 
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete
