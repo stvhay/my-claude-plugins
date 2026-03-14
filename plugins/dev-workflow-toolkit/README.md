@@ -25,7 +25,7 @@ Select `dev-workflow-toolkit` from the plugin list.
 | `executing-plans` | Execute plans with checkpoints between tasks |
 | `subagent-driven-development` | Multi-agent plan execution with two-stage review |
 | `dispatching-parallel-agents` | Run independent tasks in parallel |
-| `project-init` | Scaffold new projects with GitHub templates and CONTRIBUTING.md |
+| `project-init` | Scaffold new projects or audit/update existing ones against current standards |
 | `setup-rag` | Configure local-rag for project-isolated RAG indexing |
 
 ### Quality

@@ -3,6 +3,15 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## Unreleased
+
+<!-- bump: patch -->
+
+### Added
+
+- **project-init update workflow:** Auto-detects project state (fresh, first adoption, or update) via `.project-init` marker file. In update and first-adoption modes, runs a deep audit across 5 layers (scaffolding, CLAUDE.md, release infrastructure, spec compliance, hooks) using `references/audit-checklist.md`. Presents findings with severity levels and a numbered remediation plan for selective approval.
+- `references/audit-checklist.md` — Machine-readable audit checklist with ~25 items across 5 layers, each with `Since` version for changelog-driven scoping
+
 ## v1.16.1
 
 
