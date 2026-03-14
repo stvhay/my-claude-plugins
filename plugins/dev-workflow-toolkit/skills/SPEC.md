@@ -75,6 +75,7 @@ Skills compose into a development workflow graph. The primary flow is:
 | INV-12 | CI status checks must pass before PR creation in `finishing-a-development-branch` | structural | Prevents merging code that fails automated tests; enforced by `gh pr checks` hard gate |
 | INV-13 | Pipeline skills with context gates check `.claude/.statusline-stats` at skill load and recommend compaction or `/clear` when context exceeds the skill's threshold | reasoning-required | Prevents context exhaustion during long pipelines; thresholds are calibrated heuristics, not hard limits |
 | INV-14 | When a project's CLAUDE.md includes a beads work-tracking directive, all work-tracking skills use `bd` instead of Claude Code task lists. Task titles follow the slug convention (`<slug>- <description>`). `bd` failure blocks the workflow with a `bd doctor` recommendation. Skills reference this protocol and document only skill-specific additions. Skills with GitHub projection points post state transitions as issue or PR comments | reasoning-required | Ensures consistent work tracking across all skills; single-source protocol prevents boilerplate drift |
+| INV-15 | Skills MUST use `AskUserQuestion` for decisions with enumerable options. When 2+ independent questions exist in sequence, they MUST be batched into a single call (max 4). Free-text questions that are independent SHOULD be presented together in a single message. Agent chooses modality (structured vs free-text) based on what is most appropriate for the question type. Delegation: design-heavy workflows SHOULD open with a delegation question ("approval or information?") to control flow topology. CLAUDE.md workflow defaults, when present, pre-answer recurring questions without prompting | reasoning-required | Reduces round-trips and token waste; each round-trip re-sends full conversation context |
 
 **Enforcement classification:**
 - **structural** — enforced by test suite, gitignore structure, or directory convention; pattern-matchable
@@ -118,6 +119,9 @@ Skills reference this section and document only their skill-specific additions
 | Adding a skill derived from upstream | Maintainer: add entry to UPSTREAM-*.md with "identical" status and sync date | INV-4 |
 | Modifying a skill that originated from upstream | Maintainer: update status to "diverged" in UPSTREAM-*.md with change notes | INV-4 |
 | Referencing another skill from within a SKILL.md | Use skill name in Integration section (e.g., "writing-plans"), never file paths | INV-5 |
+| Asking user a question with enumerable answers | Use `AskUserQuestion` with recommendation as first option. Batch with other independent questions if pending | INV-15 |
+| Multiple independent questions pending | Batch into single `AskUserQuestion` (max 4) or single free-text message. Choose modality based on question type | INV-15 |
+| Starting a design-heavy workflow | Ask delegation question: "Design for approval or information?" | INV-15 |
 
 ## Testing
 
@@ -130,6 +134,7 @@ INV-6: structural — directory convention.
 INV-10, INV-11: INV-10 enforced by Claude Code hook (`check-version-bump.sh`) at session Stop events. INV-11 enforced by CI pre-merge workflow (`ci.yml` version-check job). Both validated by `test_version_hooks.py`.
 INV-12: enforced by `finishing-a-development-branch` skill prompt (Step 1d hard gate using `gh pr checks`).
 INV-14: enforced by `TestBeadsWorkTracking` in `test_integration.py` — verifies all work-tracking skills reference the protocol, document fallback, treat `bd` failure as a blocker, and include GitHub projection where required.
+INV-15: reasoning-required — verified by `test_inv15_structured_question_preference` and during code review of SKILL.md updates.
 
 Skills are additionally validated via subagent pressure testing — see `/skill-creator`.
 

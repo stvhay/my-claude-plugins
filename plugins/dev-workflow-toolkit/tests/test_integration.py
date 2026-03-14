@@ -608,3 +608,22 @@ class TestBranchCheckAutoWorktree:
         assert '"Create branch?"' not in dot, (
             "dot graph must not have 'Create branch?' diamond — worktree is auto-created"
         )
+
+
+# ---------------------------------------------------------------------------
+# Structured question preference (INV-15)
+# ---------------------------------------------------------------------------
+
+
+class TestStructuredQuestionPreference:
+    """SPEC.md must define INV-15 for AskUserQuestion and batching."""  # Tests INV-15
+
+    def test_inv15_structured_question_preference(self, skills_dir: Path):
+        """SPEC.md must contain INV-15 requiring AskUserQuestion for structured choices."""
+        spec_path = skills_dir / "SPEC.md"
+        content = spec_path.read_text()
+        assert "INV-15" in content, "SPEC.md missing INV-15"
+        inv15_start = content.index("INV-15")
+        inv15_section = content[inv15_start:inv15_start + 500]
+        assert "AskUserQuestion" in inv15_section, "INV-15 must reference AskUserQuestion"
+        assert "batch" in inv15_section.lower(), "INV-15 must reference batching"
