@@ -3,9 +3,8 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
-## Unreleased
+## v1.16.1
 
-<!-- bump: patch -->
 
 ### Added
 - **INV-16:** New SPEC.md invariant requiring beads-aware worktree operations — skills must detect `.beads/` and use `bd worktree create`/`bd worktree remove` instead of raw `git worktree` (#113)
