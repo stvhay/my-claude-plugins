@@ -48,7 +48,7 @@ After the user approves a design, brainstorming invokes this skill to identify w
 
 4. **Present to user:**
    - Show which documents need updating and the drafted content
-   - User approves, modifies, or defers each update
+   - Present all documents needing updates together. Use `AskUserQuestion` to batch approve/modify/defer decisions (up to 4 per call). For each document, options: "Approve (Recommended)" / "Modify" / "Defer (reason required)". If user selects "Modify" or "Defer", handle those in a follow-up round-trip.
 
 5. **Include in design doc:**
    - Add approved drafts to the design doc under a "## Documentation Updates" section
