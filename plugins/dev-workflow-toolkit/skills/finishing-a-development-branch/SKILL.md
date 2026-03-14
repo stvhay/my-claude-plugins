@@ -134,9 +134,8 @@ Invoke documentation-standards in validate mode. The skill will:
 If the project has a `CHANGELOG.md` (created by project-init):
 
 1. **Analyze changes** — review the diff against the base branch
-2. **Recommend release type** — based on changes, recommend patch (bug fix), minor (new feature, backward compatible), or major (breaking change). Always present the recommendation with rationale:
-   > "This adds a new scaffolding step to project-init — new capability, backward compatible. I'd recommend **minor**. Patch, minor, or major?"
-3. **Write changelog entry** — add an `## Unreleased` section in `CHANGELOG.md` with a `<!-- bump: TYPE -->` comment and migration-relevant details. Include `**ACTION**` markers for any changes users need to apply.
+2. **Recommend release type** — based on changes, recommend patch (bug fix), minor (new feature, backward compatible), or major (breaking change). Present recommendation in Pre-PR Batch (Step 3d) using `AskUserQuestion`.
+3. **Write changelog entry after Pre-PR Batch** — once the user confirms the release type in Step 3d, add an `## Unreleased` section in `CHANGELOG.md` with a `<!-- bump: TYPE -->` comment and migration-relevant details. Include `**ACTION**` markers for any changes users need to apply.
 4. **Commit changelog** — separate commit for the changelog entry
 5. **Note PR label** — remind to apply `bump:TYPE` label when creating PR (or apply via `gh pr create --label bump:TYPE`)
 
@@ -152,7 +151,7 @@ This is a **soft warning** — proceed without changelog if the project hasn't a
 git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 ```
 
-Or ask: "This branch split from main - is that correct?"
+If auto-detection is ambiguous, include in Pre-PR Batch (Step 3d). Otherwise proceed with detected base.
 
 ### Step 3b: Scope Check
 
@@ -168,9 +167,7 @@ git log main..HEAD --oneline
 git diff main...HEAD --stat
 ```
 
-**Ask:**
-
-> Did implementation reveal scope that justifies splitting this into multiple PRs?
+**Evaluate scope using the criteria below.** If drift detected, include in Pre-PR Batch (Step 3d). If clean, auto-proceed.
 
 **Signs of scope drift:**
 - Commits that address unrelated issues or features
@@ -208,6 +205,18 @@ Post preflight results as a PR comment after PR creation:
 gh pr comment <PR#> --body "## Preflight Results
 $(bd preflight --check 2>&1)"
 ```
+
+### Step 3d: Pre-PR Batch
+
+After completing all analysis (documentation validation, changelog analysis, base branch detection, scope review, beads preflight), present all pending decisions in a single `AskUserQuestion` call:
+
+Use `AskUserQuestion` with up to 4 questions:
+1. **Release type** — present recommendation with rationale, options: Patch / Minor / Major (only if CHANGELOG.md exists)
+2. **Scope** — present analysis, options: "Looks clean (Recommended)" / "Split into multiple PRs" (only if scope drift detected, otherwise auto-proceed)
+3. **Base branch** — options: "main (Recommended)" / Other (only if auto-detection is ambiguous, otherwise auto-proceed)
+4. **Retrospective** — "Run a retrospective after PR?" options: "Yes (Recommended)" / "No"
+
+Skip questions where the answer is unambiguous (clean scope, clear base branch). The agent should fill as many slots as possible with questions that genuinely need user input.
 
 ### Step 4: Create Pull Request
 
@@ -341,13 +350,15 @@ Only close beads scoped to the current branch's work. If no Dolt remote is confi
 
 **After all other steps complete,** invoke the retrospective skill.
 
-This step is non-blocking — if the user declines, skip it. The retrospective
-analyzes the session, categorizes findings as project-local or upstream skill
-improvements, and files GitHub issues for upstream items once the user approves.
+The retrospective opt-in is collected in the Pre-PR Batch (Step 3d). If the user opted in, invoke retrospective — skip its entry gate question (already answered). If they declined, skip entirely.
 
 ## Quick Reference
 
-**Workflow:** Verify tests → Quality gate → Review docs check → CI check → Validate docs → Changelog + label → Determine base → Scope check → Push + squash merge PR → Post-PR CI verify → Cleanup → Beads sync → Retrospective
+**Workflow:**
+1. Verify tests → Quality gate → Review docs check → CI check
+2. Validate docs → Changelog → Base branch → Scope check → Beads preflight
+3. **Pre-PR Batch** (release type + scope + base + retrospective opt-in)
+4. Push → Squash merge PR → Post-PR CI verify → Cleanup → Beads sync → Retrospective
 
 ## Work Tracking
 
@@ -388,7 +399,7 @@ Follow the work-tracking protocol in SPEC.md (INV-14).
 - **documentation-standards** — Validate mode, hard gate after test verification
 - **retrospective** — Step 8, non-blocking session analysis after PR creation
 
-**Workflow:** Verify → CI check → Validate → Changelog + label → Determine base → Scope check → Push + squash merge PR → Post-PR CI verify → Cleanup → Beads sync → Retrospective
+**Workflow:** Verify → CI check → Validate → Changelog → Base → Scope → Beads preflight → Pre-PR Batch → Push + squash merge PR → Post-PR CI verify → Cleanup → Beads sync → Retrospective
 
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete

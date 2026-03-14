@@ -12,6 +12,28 @@ read this file and apply retroactive actions marked with **ACTION**.
 - **project-init update workflow:** Auto-detects project state (fresh, first adoption, or update) via `.project-init` marker file. In update and first-adoption modes, runs a deep audit across 5 layers (scaffolding, CLAUDE.md, release infrastructure, spec compliance, hooks) using `references/audit-checklist.md`. Presents findings with severity levels and a numbered remediation plan for selective approval.
 - `references/audit-checklist.md` — Machine-readable audit checklist with ~25 items across 5 layers, each with `Since` version for changelog-driven scoping
 
+## v1.16.1
+
+
+### Added
+- **INV-16:** New SPEC.md invariant requiring beads-aware worktree operations — skills must detect `.beads/` and use `bd worktree create`/`bd worktree remove` instead of raw `git worktree` (#113)
+- **FAIL-10:** Failure mode documenting orphaned Dolt server from plain `git worktree add`
+- Structural tests enforcing INV-16 in `TestBeadsWorktreeInvariant`
+
+## v1.16.0
+
+### Added
+- **INV-15:** New SPEC.md invariant requiring `AskUserQuestion` for structured choices and batching of independent questions
+- **brainstorming:** Delegation pattern ("approval or information?"), question batching, eliminated unnecessary questions (epic scope auto-ask, "ready for implementation?")
+- **finishing-a-development-branch:** Pre-PR Batch combining release type, scope check, base branch, and retrospective opt-in into single `AskUserQuestion` call
+- **codify-subsystem:** Adaptive modality for interview — structured confirmations for high-confidence, batched free-text for open-ended, dependency-grouped batches
+- **project-init:** Batched setup questions, `.worktrees/` default directory creation
+- **documentation-standards:** Batched per-document approval decisions
+- **retrospective:** Batched wrap-up decisions (analysis review + local improvements + upstream approval)
+
+### Changed
+- **ACTION:** Skills now use `AskUserQuestion` for structured choices. If you have custom skills that follow the "one question at a time" pattern, consider updating them per INV-15.
+
 ## v1.15.0
 
 ### Added

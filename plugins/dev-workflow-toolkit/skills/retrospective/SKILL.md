@@ -20,6 +20,8 @@ and beads are synced. Non-blocking — if the user declines, skip entirely.
 
 Ask: "Would you like a brief retrospective on this session? (Takes ~2 minutes)"
 
+If invoked from finishing-a-development-branch with opt-in already collected, skip this question.
+
 If no: "Skipping retrospective. Session complete."
 
 ## The Process
@@ -96,6 +98,15 @@ the user is satisfied with the findings.
   [Relevant details from the session]
   ```
 - Present the draft to the user for approval
+
+**Batch wrap-up decisions** after presenting the analysis:
+
+First, present the full structured analysis (Step 2) as a regular message so the user can read it. Then, in a follow-up, use `AskUserQuestion` to batch the three decisions:
+1. "Analysis accurate?" — Confirm / Correct / Add context
+2. "Save local improvements to?" — CLAUDE.md / Memory / Skip
+3. "Approve upstream issue draft?" — Approve / Edit / Skip
+
+This two-step sequence ensures the user can read the analysis before the question UI appears.
 
 **Beads tracking (when CLAUDE.md directive present):**
 
