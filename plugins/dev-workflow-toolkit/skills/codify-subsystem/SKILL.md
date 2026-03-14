@@ -28,7 +28,7 @@ You MUST complete these steps in order:
 1. **Identify target directory** — confirm with user which directory to codify
 2. **Analyze code** — read all files, identify patterns, entry points, exports
 3. **Draft initial spec** — produce a first draft from code analysis alone
-4. **Interview developer** — ask about invariants, failure modes, and testing (one question at a time)
+4. **Interview developer** — ask about invariants, failure modes, and testing (batch independent questions, adaptive modality)
 5. **Finalize SPEC.md** — incorporate interview answers into the spec
 6. **Update subsystem map** — create the Subsystem Map section in CLAUDE.md if it doesn't exist, then add entry
 7. **Update MANIFEST.md** — create `docs/specs/MANIFEST.md` if missing, then add entry
@@ -163,38 +163,32 @@ Present the draft to the developer.
 
 ### Step 4: Interview Developer
 
-Ask about each `[NEEDS INPUT]` section plus these critical areas, one question
-at a time:
+Ask about each `[NEEDS INPUT]` section plus these critical areas. Use adaptive
+modality based on your confidence from the code analysis:
 
-**Invariants:** "What must ALWAYS be true about this subsystem? What rules, if
-broken, would cause bugs?" (Examples: "order of operations matters", "this
-value is never null after init", "these two fields must stay in sync")
+**High confidence** (your draft has substantive content for the section): Use
+`AskUserQuestion` to confirm — "I found X. Confirm or correct?" Batch up to 4
+confirmations per call.
 
-**Failure modes:** "What are the known ways this breaks? What symptoms have you
-seen, and what caused them?"
+**Low confidence** (section marked `[NEEDS INPUT]`): Present as numbered
+free-text questions in a single message. Batch all independent open-ended
+questions together.
 
-**Testing:** "How do you verify this subsystem works? What's the exact command?
-Any special setup needed?"
+**Interview batches — group by dependency:**
 
-**Test mapping:** "Are there existing tests for this subsystem? If so, which
-tests verify which invariants or failure modes?" (This informs the inline
-`# Tests INV-N` comments to add on test function declaration lines.)
+**Batch 1 (independent):** Ask these together — answers don't depend on each other:
+- **Invariants:** "What must ALWAYS be true about this subsystem? What rules, if broken, would cause bugs?"
+- **Failure modes:** "What are the known ways this breaks? What symptoms have you seen, and what caused them?"
+- **Testing:** "How do you verify this subsystem works? What's the exact command? Any special setup needed?"
+- **Purpose:** "Anything about *why* this subsystem exists that isn't obvious from the code?"
 
-**Enforcement:** "Which invariants are enforced structurally (type system, API
-design, code structure) vs require architectural reasoning to follow?" (This
-populates the Enforcement column: `structural` or `reasoning-required`.)
+**Batch 2 (depends on Batch 1 — needs invariant list and testing info):**
+- **Test mapping:** "Are there existing tests for this subsystem? If so, which tests verify which invariants or failure modes?"
+- **Enforcement:** "Which invariants are enforced structurally (type system, API design, code structure) vs require architectural reasoning to follow?"
+- **Non-runtime verification:** "Are any spec items verified by non-runtime means (e.g., type checker, code review, operational monitoring)?"
 
-**Decision framework:** "For reasoning-required invariants, what's the
-situation-action recipe an agent should follow?" (e.g., "Need DB writes? →
-Submit IndexJob to queue." Populates the Decision Framework table.)
-
-**Non-runtime verification:** "Are any spec items verified by non-runtime means
-(e.g., type checker, code review, operational monitoring)?" (These get recorded
-in the Testing section so verification gaps aren't rediscovered every session.)
-
-**Purpose:** "Anything about *why* this subsystem exists that isn't obvious from
-the code?" (Sometimes the code shows *what* but not *why* — design decisions,
-alternatives considered, constraints from external systems.)
+**Batch 3 (depends on Batch 2 — needs enforcement classification, conditional):**
+- **Decision framework:** "For reasoning-required invariants, what's the situation-action recipe an agent should follow?" (Only ask if Batch 2 identified reasoning-required invariants.)
 
 ### Step 5: Finalize SPEC.md
 
@@ -251,8 +245,9 @@ section (or append to it if it exists).
 
 ## Key Principles
 
-- **One question at a time** — don't overwhelm the developer
-- **Code analysis first** — draft from code before asking questions
+- **Batch independent questions** — group questions whose answers don't depend on each other
+- **Adaptive modality** — `AskUserQuestion` for confirmations, free-text for open-ended
+- **Code analysis first** — draft from code before asking questions; use draft quality to choose modality
 - **Invariants are the most important section** — push for specifics
 - **80-350 lines** — under 80 means missing detail, over 350 means split
 - **Machine-readable format** — consistent sections, tables for structured data
