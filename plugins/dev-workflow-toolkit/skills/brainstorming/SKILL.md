@@ -9,7 +9,7 @@ description: "Use when creating features, building components, adding functional
 
 Help turn ideas into fully formed designs and specs through natural collaborative dialogue.
 
-Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design and get user approval.
+Start by understanding the current project context, then explore the idea through efficient dialogue. Batch independent questions together using AskUserQuestion (max 4 per call) or grouped free-text. Choose modality based on what fits each question: AskUserQuestion when you can propose good options, free-text when the question is open-ended. Once you understand what you're building, present the design and get user approval.
 
 <HARD-GATE>
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
@@ -70,15 +70,16 @@ You MUST create a task for each of these items and complete them in order:
 
 1. **Pre-flight checks** — verify issue exists and on feature branch (soft gates, see Pre-flight Checks section)
 2. **Explore project context** — check files, docs, recent commits
-3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-4. **Propose 2-3 approaches** — with trade-offs and your recommendation
-5. **Consider subsystem boundaries** — does this fit in one subsystem or cross boundaries? If it crosses, note which SPEC.md files are relevant and flag that the plan should be split by subsystem. If a new subsystem boundary is identified that lacks a SPEC.md, recommend `/codify-subsystem` after implementation
-6. **Present design** — in sections scaled to their complexity, get user approval after each section
-7. **Evaluate epic scope** — does this design represent multiple distinct issues? If yes, restructure as epic with child issues (soft gate, see Evaluate Epic Scope section)
-8. **Identify documentation impact** — invoke documentation-standards (draft mode) to draft updates to tracked project docs
-9. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` (local working directory, not committed), include documentation updates section
-10. **Evaluate UX design need** — if user-facing or agentic, recommend ux-design-agent
-11. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+3. **Ask delegation level** — "Design for approval or information?" Controls whether design sections need explicit approval
+4. **Ask clarifying questions** — batch independent questions together, understand purpose/constraints/success criteria
+5. **Propose 2-3 approaches** — with trade-offs and your recommendation
+6. **Consider subsystem boundaries** — does this fit in one subsystem or cross boundaries? If it crosses, note which SPEC.md files are relevant and flag that the plan should be split by subsystem. If a new subsystem boundary is identified that lacks a SPEC.md, recommend `/codify-subsystem` after implementation
+7. **Present design** — in sections scaled to their complexity, get user approval after each section
+8. **Evaluate epic scope** — does this design represent multiple distinct issues? If yes, restructure as epic with child issues (soft gate, see Evaluate Epic Scope section)
+9. **Identify documentation impact** — invoke documentation-standards (draft mode) to draft updates to tracked project docs
+10. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` (local working directory, not committed), include documentation updates section
+11. **Evaluate UX design need** — if user-facing or agentic, recommend ux-design-agent
+12. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
 
@@ -162,9 +163,9 @@ digraph brainstorming {
 **Understanding the idea:**
 - Check out the current project state first (files, docs, recent commits)
 - If prior ideation exists, start from that context
-- Ask questions one at a time to refine the idea
-- Prefer multiple choice questions when possible, but open-ended is fine too
-- Only one question per message - if a topic needs more exploration, break it into multiple questions
+- Batch independent clarifying questions together using `AskUserQuestion` (up to 4) or grouped free-text in a single message
+- Use `AskUserQuestion` when you can propose good options; use free-text when questions are open-ended
+- If you have enough context from the issue, prior ideation, or SPEC.md to draft design sections, present them alongside remaining questions rather than waiting
 - Focus on understanding: purpose, constraints, success criteria
 
 **Exploring approaches:**
@@ -183,9 +184,7 @@ digraph brainstorming {
 
 After the user approves the design, evaluate whether it represents multiple distinct issues that should be structured as an epic. This is a **soft gate** — recommend restructuring but let the user proceed if they disagree.
 
-**Ask:**
-
-> Does this design represent multiple distinct issues/features that should be an epic?
+**Evaluate using the criteria below.** Only ask the user if converting a non-epic issue to an epic — otherwise, auto-detect and proceed.
 
 **Signs the work should be an epic:**
 - The design has 2+ independently deliverable features
@@ -210,9 +209,7 @@ UX design is always required unless both:
 
 **DO NOT** make exceptions because changes are viewed as "internal" or "infrastructure".
 
-**Ask explicitly:**
-> "This affects [user experience / agent interaction patterns / both / neither].
-> I recommend UX design — proceed, or skip to implementation planning?"
+**Evaluate whether UX design is needed.** If it is, use `AskUserQuestion` to ask: "This requires UX design. Skip?" with options "No, do UX design (Recommended)" and "Yes, skip to implementation planning". Batch this with design approval if in approval mode.
 
 When UX design is required, use **ux-design-agent** (REQUIRED SUB-SKILL) to produce structured requirements, then continue to writing-plans. Otherwise, proceed directly to writing-plans.
 
@@ -243,14 +240,14 @@ When UX design is required, use **ux-design-agent** (REQUIRED SUB-SKILL) to prod
 - Paste the design into the PR body when you open it
 
 **Implementation (if continuing):**
-- Ask: "Ready to set up for implementation?"
-- If no worktree was created during pre-flight, use using-git-worktrees to create one
+- Proceed directly to implementation. If no worktree was created during pre-flight, use using-git-worktrees to create one
 - Use writing-plans to create detailed implementation plan
 
 ## Key Principles
 
-- **One question at a time** - Don't overwhelm with multiple questions
-- **Multiple choice preferred** - Easier to answer than open-ended when possible
+- **Batch independent questions** - Use `AskUserQuestion` for up to 4 structured questions per call; group free-text questions in a single message
+- **Adaptive modality** - `AskUserQuestion` when you can propose good options, free-text when open-ended
+- **Delegation** - Ask "approval or information?" at start to control flow
 - **YAGNI ruthlessly** - Remove unnecessary features from all designs
 - **Explore alternatives** - Always propose 2-3 approaches before settling
 - **Incremental validation** - Present design in sections, validate each

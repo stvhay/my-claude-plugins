@@ -627,3 +627,95 @@ class TestStructuredQuestionPreference:
         inv15_section = content[inv15_start:inv15_start + 500]
         assert "AskUserQuestion" in inv15_section, "INV-15 must reference AskUserQuestion"
         assert "batch" in inv15_section.lower(), "INV-15 must reference batching"
+
+    def test_inv15_brainstorming_no_one_question_per_message(self, skills_dir: Path):
+        """Brainstorming must NOT contain the old 'Only one question per message' pattern."""
+        text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
+        assert "Only one question per message" not in text, (
+            "brainstorming must not contain 'Only one question per message' — use batching (INV-15)"
+        )
+
+    def test_inv15_brainstorming_references_askuserquestion(self, skills_dir: Path):
+        """Brainstorming must reference AskUserQuestion for structured choices."""
+        text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
+        assert "AskUserQuestion" in text, (
+            "brainstorming must reference AskUserQuestion (INV-15)"
+        )
+
+    def test_inv15_brainstorming_has_delegation_pattern(self, skills_dir: Path):
+        """Brainstorming must include delegation pattern (approval or information)."""
+        text = (skills_dir / "brainstorming" / "SKILL.md").read_text().lower()
+        assert "approval or information" in text, (
+            "brainstorming must include delegation pattern 'approval or information' (INV-15)"
+        )
+
+    def test_inv15_brainstorming_no_ready_for_implementation(self, skills_dir: Path):
+        """Brainstorming must NOT contain 'Ready to set up for implementation?' prompt."""
+        text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
+        assert "Ready to set up for implementation?" not in text, (
+            "brainstorming must not ask 'Ready to set up for implementation?' — proceed directly (INV-15)"
+        )
+
+    def test_inv15_finishing_references_askuserquestion(self, skills_dir: Path):
+        """finishing-a-development-branch must reference AskUserQuestion for batched decisions."""
+        text = (skills_dir / "finishing-a-development-branch" / "SKILL.md").read_text()
+        assert "AskUserQuestion" in text, (
+            "finishing-a-development-branch must reference AskUserQuestion (INV-15)"
+        )
+
+    def test_inv15_finishing_batches_retrospective(self, skills_dir: Path):
+        """finishing-a-development-branch must batch retrospective opt-in with other questions."""
+        text = (skills_dir / "finishing-a-development-branch" / "SKILL.md").read_text().lower()
+        assert "batch" in text and "retrospective" in text, (
+            "finishing-a-development-branch must batch retrospective opt-in with pre-PR questions (INV-15)"
+        )
+
+    def test_inv15_retrospective_references_askuserquestion(self, skills_dir: Path):
+        """retrospective must reference AskUserQuestion for wrap-up decisions."""
+        text = (skills_dir / "retrospective" / "SKILL.md").read_text()
+        assert "AskUserQuestion" in text, (
+            "retrospective must reference AskUserQuestion (INV-15)"
+        )
+
+    def test_inv15_codify_no_one_question_mandate(self, skills_dir: Path):
+        """codify-subsystem must NOT mandate 'one question at a time' in Key Principles."""
+        text = (skills_dir / "codify-subsystem" / "SKILL.md").read_text()
+        # Extract Key Principles section
+        principles_match = re.search(
+            r"## Key Principles.*?(?=\n## |\Z)", text, re.DOTALL
+        )
+        assert principles_match, "codify-subsystem must have a Key Principles section"
+        principles = principles_match.group().lower()
+        assert "one question at a time" not in principles, (
+            "codify-subsystem Key Principles must not mandate 'one question at a time' — use batching (INV-15)"
+        )
+
+    def test_inv15_codify_references_adaptive_modality(self, skills_dir: Path):
+        """codify-subsystem must reference AskUserQuestion or adaptive modality."""
+        text = (skills_dir / "codify-subsystem" / "SKILL.md").read_text()
+        has_ask = "AskUserQuestion" in text
+        has_adaptive = "adaptive" in text.lower()
+        assert has_ask or has_adaptive, (
+            "codify-subsystem must reference AskUserQuestion or adaptive modality (INV-15)"
+        )
+
+    def test_inv15_project_init_references_askuserquestion(self, skills_dir: Path):
+        """project-init must reference AskUserQuestion for batched setup questions."""
+        text = (skills_dir / "project-init" / "SKILL.md").read_text()
+        assert "AskUserQuestion" in text, (
+            "project-init must reference AskUserQuestion (INV-15)"
+        )
+
+    def test_inv15_project_init_worktrees_default(self, skills_dir: Path):
+        """project-init must establish .worktrees as default worktree location."""
+        text = (skills_dir / "project-init" / "SKILL.md").read_text()
+        assert ".worktrees" in text, (
+            "project-init must establish .worktrees as default worktree location"
+        )
+
+    def test_inv15_documentation_standards_references_askuserquestion(self, skills_dir: Path):
+        """documentation-standards must reference AskUserQuestion for batched approve/defer decisions."""
+        text = (skills_dir / "documentation-standards" / "SKILL.md").read_text()
+        assert "AskUserQuestion" in text, (
+            "documentation-standards must reference AskUserQuestion (INV-15)"
+        )
