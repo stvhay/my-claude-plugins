@@ -46,6 +46,12 @@ Plans and other working documents go under `.claude/` which is fully gitignored:
 
 - **`.claude/plans/`** — Implementation plans (paste into PR body, not committed)
 
+## Work Tracking
+
+Use beads (`bd`) for all work tracking. Do not use Claude Code task lists.
+Task titles follow the slug convention: `<slug>- <description>`.
+If `bd` fails, stop and run `bd doctor`.
+
 ## Workflow
 
 1. **Create GitHub issue** — All work starts with an issue
