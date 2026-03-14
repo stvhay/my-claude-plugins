@@ -186,6 +186,147 @@ class TestProjectInit:
 
 
 # ---------------------------------------------------------------------------
+# project-init audit/update workflow
+# ---------------------------------------------------------------------------
+
+REQUIRED_CHECKLIST_FIELDS = [
+    "**Layer:**",
+    "**Check:**",
+    "**Expected:**",
+    "**Severity when failing:**",
+    "**Remediation:**",
+    "**Since:**",
+]
+
+CHECKLIST_LAYERS = {"Scaffolding", "CLAUDE.md", "Release Infrastructure", "Spec Compliance", "Hooks"}
+
+VALID_SEVERITIES = {"MISSING", "OUTDATED", "DRIFT"}
+
+
+class TestProjectInitAudit:
+    """Validates the project-init audit checklist and update workflow."""
+
+    @pytest.fixture
+    def checklist_path(self, plugin_root: Path) -> Path:
+        return plugin_root / "skills" / "project-init" / "references" / "audit-checklist.md"
+
+    @pytest.fixture
+    def checklist_text(self, checklist_path: Path) -> str:
+        assert checklist_path.exists(), f"Audit checklist not found: {checklist_path}"
+        return checklist_path.read_text()
+
+    @pytest.fixture
+    def checklist_items(self, checklist_text: str) -> list[str]:
+        """Extract individual checklist items (### headings and their content)."""
+        items = []
+        current = []
+        for line in checklist_text.splitlines():
+            if line.startswith("### ") and not line.startswith("### Step"):
+                if current:
+                    items.append("\n".join(current))
+                current = [line]
+            elif current:
+                current.append(line)
+        if current:
+            items.append("\n".join(current))
+        return items
+
+    @pytest.fixture
+    def project_init_skill(self, plugin_root: Path) -> str:
+        path = plugin_root / "skills" / "project-init" / "SKILL.md"
+        assert path.exists()
+        return path.read_text()
+
+    def test_inv6_audit_checklist_exists(self, checklist_path: Path):  # Tests INV-6
+        assert checklist_path.exists(), (
+            "references/audit-checklist.md must exist inside project-init skill directory"
+        )
+
+    def test_checklist_has_items(self, checklist_items: list[str]):
+        assert len(checklist_items) >= 15, (
+            f"Audit checklist should have at least 15 items, found {len(checklist_items)}"
+        )
+
+    @pytest.mark.parametrize("field", REQUIRED_CHECKLIST_FIELDS)
+    def test_checklist_items_have_required_fields(
+        self, checklist_items: list[str], field: str
+    ):
+        missing = []
+        for item in checklist_items:
+            header = item.splitlines()[0]
+            if field not in item:
+                missing.append(header)
+        assert not missing, (
+            f"Checklist items missing '{field}':\n" + "\n".join(missing)
+        )
+
+    def test_checklist_covers_all_layers(self, checklist_text: str):
+        for layer in CHECKLIST_LAYERS:
+            assert f"**Layer:** {layer}" in checklist_text, (
+                f"Audit checklist missing layer: {layer}"
+            )
+
+    def test_checklist_severities_are_valid(self, checklist_items: list[str]):
+        invalid = []
+        for item in checklist_items:
+            for line in item.splitlines():
+                if line.strip().startswith("**Severity when failing:**"):
+                    severities = line.split(":**", 1)[1].strip()
+                    for sev in severities.split("|"):
+                        sev = sev.strip()
+                        if sev and sev not in VALID_SEVERITIES:
+                            header = item.splitlines()[0]
+                            invalid.append(f"{header}: unknown severity '{sev}'")
+        assert not invalid, "Invalid severities:\n" + "\n".join(invalid)
+
+    def test_checklist_since_versions_are_valid(self, checklist_items: list[str]):
+        version_pattern = re.compile(r"^v\d+\.\d+\.\d+")
+        invalid = []
+        for item in checklist_items:
+            for line in item.splitlines():
+                if line.strip().startswith("**Since:**"):
+                    version = line.split(":**", 1)[1].strip()
+                    # Take first version (some have "v1.9.0 (updated v1.14.0)")
+                    first_version = version.split(" ")[0]
+                    if not version_pattern.match(first_version):
+                        header = item.splitlines()[0]
+                        invalid.append(f"{header}: invalid version '{version}'")
+        assert not invalid, "Invalid Since versions:\n" + "\n".join(invalid)
+
+    def test_skill_references_audit_checklist(self, project_init_skill: str):
+        assert "references/audit-checklist.md" in project_init_skill, (
+            "SKILL.md must reference references/audit-checklist.md"
+        )
+
+    def test_skill_references_project_init_marker(self, project_init_skill: str):
+        assert ".project-init" in project_init_skill, (
+            "SKILL.md must reference .project-init marker file"
+        )
+
+    def test_inv1_description_has_update_keywords(self, plugin_root: Path):  # Tests INV-1
+        skill_md = plugin_root / "skills" / "project-init" / "SKILL.md"
+        text = skill_md.read_text()
+        # Extract frontmatter description
+        end = text.find("\n---", 3)
+        fm = yaml.safe_load(text[3:end].strip())
+        desc = fm.get("description", "")
+        for keyword in ["update", "audit"]:
+            assert keyword in desc.lower(), (
+                f"SKILL.md description must contain '{keyword}' for trigger matching"
+            )
+
+    def test_skill_has_mode_detection_section(self, project_init_skill: str):
+        assert "## Mode Detection" in project_init_skill, (
+            "SKILL.md must have a '## Mode Detection' section"
+        )
+
+    def test_skill_has_audit_flow_section(self, project_init_skill: str):
+        assert "## Audit & Update Flow" in project_init_skill, (
+            "SKILL.md must have an '## Audit & Update Flow' section"
+        )
+
+
+# ---------------------------------------------------------------------------
 # test-setup-rag.sh
 # ---------------------------------------------------------------------------
 
