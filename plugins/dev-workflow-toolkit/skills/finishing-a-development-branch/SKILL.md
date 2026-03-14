@@ -134,9 +134,8 @@ Invoke documentation-standards in validate mode. The skill will:
 If the project has a `CHANGELOG.md` (created by project-init):
 
 1. **Analyze changes** — review the diff against the base branch
-2. **Recommend release type** — based on changes, recommend patch (bug fix), minor (new feature, backward compatible), or major (breaking change).
-   > Analyze changes and determine recommendation. Present in Pre-PR Batch (Step 3d) using `AskUserQuestion`.
-3. **Write changelog entry** — add an `## Unreleased` section in `CHANGELOG.md` with a `<!-- bump: TYPE -->` comment and migration-relevant details. Include `**ACTION**` markers for any changes users need to apply.
+2. **Recommend release type** — based on changes, recommend patch (bug fix), minor (new feature, backward compatible), or major (breaking change). Present recommendation in Pre-PR Batch (Step 3d) using `AskUserQuestion`.
+3. **Write changelog entry after Pre-PR Batch** — once the user confirms the release type in Step 3d, add an `## Unreleased` section in `CHANGELOG.md` with a `<!-- bump: TYPE -->` comment and migration-relevant details. Include `**ACTION**` markers for any changes users need to apply.
 4. **Commit changelog** — separate commit for the changelog entry
 5. **Note PR label** — remind to apply `bump:TYPE` label when creating PR (or apply via `gh pr create --label bump:TYPE`)
 

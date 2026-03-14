@@ -3,6 +3,21 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## Unreleased
+<!-- bump: minor -->
+
+### Added
+- **INV-15:** New SPEC.md invariant requiring `AskUserQuestion` for structured choices and batching of independent questions
+- **brainstorming:** Delegation pattern ("approval or information?"), question batching, eliminated unnecessary questions (epic scope auto-ask, "ready for implementation?")
+- **finishing-a-development-branch:** Pre-PR Batch combining release type, scope check, base branch, and retrospective opt-in into single `AskUserQuestion` call
+- **codify-subsystem:** Adaptive modality for interview — structured confirmations for high-confidence, batched free-text for open-ended, dependency-grouped batches
+- **project-init:** Batched setup questions, `.worktrees/` default directory creation
+- **documentation-standards:** Batched per-document approval decisions
+- **retrospective:** Batched wrap-up decisions (analysis review + local improvements + upstream approval)
+
+### Changed
+- **ACTION:** Skills now use `AskUserQuestion` for structured choices. If you have custom skills that follow the "one question at a time" pattern, consider updating them per INV-15.
+
 ## v1.15.0
 
 ### Added
