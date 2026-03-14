@@ -1,15 +1,105 @@
 ---
 name: project-init
-description: Scaffold a new project with GitHub templates, CONTRIBUTING.md, and CLAUDE.md skeleton. Use when starting a fresh repo or adding standard project structure.
+description: Scaffold new projects or audit/update existing ones against current plugin standards. Use when starting a fresh repo, adding standard project structure, updating project scaffolding, auditing project compliance, or re-initializing after plugin upgrade.
 ---
 
 # Project Init
 
 ## Overview
 
-Initialize a project with standard scaffolding for Claude Code-driven development.
+Initialize a project with standard scaffolding for Claude Code-driven development,
+or audit and update an existing project to match current plugin standards.
 
-**Announce at start:** "I'm using the project-init skill to set up project scaffolding."
+**Announce at start:**
+- Fresh init: "I'm using the project-init skill to set up project scaffolding."
+- Update/audit: "I'm using the project-init skill to audit this project against current standards."
+
+## Mode Detection
+
+On invocation, detect the project's current state to choose the appropriate flow.
+
+### Marker File
+
+The `.project-init` marker file is committed to the project root:
+
+```json
+{
+  "plugin": "dev-workflow-toolkit",
+  "version": "1.15.0",
+  "initialized_at": "2026-03-14T12:00:00Z"
+}
+```
+
+### Detection Logic
+
+| `.project-init` exists | Scaffolding present | Mode              | Behavior                                      |
+|------------------------|---------------------|-------------------|-----------------------------------------------|
+| Yes                    | —                   | **Update**        | Diff changelog from recorded version           |
+| No                     | Yes                 | **First adoption**| Full audit against current standards            |
+| No                     | No                  | **Fresh init**    | Current behavior — scaffold from scratch        |
+
+**Scaffolding present** means at least one of: `CLAUDE.md`, `CONTRIBUTING.md`, `.github/ISSUE_TEMPLATE/`, `.github/pull_request_template.md`.
+
+Only confirm with the user if detection is ambiguous.
+
+## Audit & Update Flow
+
+Used in **Update** and **First adoption** modes. Skipped for **Fresh init**.
+
+### Step 1: Determine Audit Scope
+
+- **Update mode:** Diff the plugin changelog from the version recorded in `.project-init` to current. Audit only items affected by changes.
+- **First adoption mode:** Full audit — evaluate every item in the checklist.
+
+### Step 2: Walk the Audit Checklist
+
+Load `references/audit-checklist.md`. Evaluate each item against the project's current state.
+
+### Step 3: Present Audit Results
+
+Group results by layer. Show OK items. DRIFT items offer `[expand?]` for details.
+
+```
+Audit Results
+─────────────
+Layer: GitHub Templates
+  [OK]    Bug report template
+  [OK]    Feature request template
+  [DRIFT] PR template — missing required checklist items [expand?]
+
+Layer: Release Infrastructure
+  [OK]    compute-version.sh
+  [DRIFT] release.yml — missing concurrency group [expand?]
+  [DRIFT] ci.yml — missing version-check job [expand?]
+```
+
+### Step 4: Present Remediation Plan
+
+Present a numbered table of fixes. Single approval prompt: `[all / 1,2 / none]`.
+
+```
+Remediation Plan
+────────────────
+#  Item                          Action
+1  PR template                   Add missing checklist items
+2  release.yml                   Add concurrency group
+3  ci.yml                        Add version-check job
+
+Apply? [all / 1,2 / none]:
+```
+
+### Step 5: Apply Selected Fixes
+
+- Apply in layer order
+- Apply each fix individually
+- Never overwrite without showing the diff
+
+### Step 6: Post-Remediation
+
+- Re-run audit to confirm all items pass
+- Present summary of changes made
+- Update `.project-init` marker with current plugin version
+- Commit changes
 
 ## What It Creates
 
@@ -88,7 +178,8 @@ Proceed without branch protection — it's a soft gate during scaffolding.
 4. Optionally generate CLAUDE.md skeleton with project-specific sections
 5. Create `docs/plans/` directory for implementation plans
 6. Beads installation (see below)
-7. Commit scaffolding files
+7. Write `.project-init` marker file with current plugin version
+8. Commit scaffolding files
 
 ### Beads Installation
 
@@ -127,7 +218,9 @@ Templates are stored in `templates/` relative to this skill. They are generic an
 
 - Starting a fresh repository
 - Adding standard structure to an existing repo missing these files
-- Triggered by: "init project", "set up repo", "scaffold project", "new project setup"
+- Updating an existing project after plugin upgrade
+- Auditing an existing project for compliance with current standards
+- Triggered by: "init project", "set up repo", "scaffold project", "new project setup", "update project", "audit project", "re-init project", "bring project up to date"
 
 ## Post-Install
 
