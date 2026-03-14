@@ -142,3 +142,18 @@ Branch protection (require CI pass, require squash merge) is part of the
 generated infrastructure. `project-init` configures this via `gh api` during
 initial scaffolding, enforcing the squash-merge-only invariant at the GitHub
 level rather than relying on developer discipline.
+
+## Changelog-Driven Audit
+
+The `project-init` skill uses a changelog-driven approach for update audits.
+Each audit checklist item carries a `Since` field recording the plugin version
+that introduced the requirement. A `.project-init` marker file at the project
+root records the last-run plugin version.
+
+In update mode, the skill parses the plugin's `CHANGELOG.md` from the recorded
+version to current, scoping the audit to items introduced or changed since the
+last run. First-adoption mode (no marker file, but scaffolding present) audits
+all items regardless of version.
+
+This pattern avoids re-verifying stable items on every update while ensuring
+new requirements are always checked.
