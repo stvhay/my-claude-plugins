@@ -5,7 +5,7 @@ read this file and apply retroactive actions marked with **ACTION**.
 
 ## Unreleased
 
-<!-- bump: minor -->
+<!-- bump: patch -->
 
 ### Added
 
