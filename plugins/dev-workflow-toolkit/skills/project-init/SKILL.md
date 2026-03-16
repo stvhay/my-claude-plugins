@@ -174,44 +174,14 @@ Proceed without branch protection — it's a soft gate during scaffolding.
 
 1. Check which files already exist — skip any that do (warn user)
 2. **Batch setup questions** — choose one modality based on confidence:
-   - If you can propose good defaults (e.g., project name is obvious from the repo): use `AskUserQuestion` with up to 4 structured questions including "Install beads?" (Yes (Recommended) / No) and "Generate CLAUDE.md?" (Yes (Recommended) / No)
-   - If project name/purpose need open-ended input: present all questions as numbered items in a single free-text message (include beads and CLAUDE.md as yes/no items in the same list)
+   - If you can propose good defaults (e.g., project name is obvious from the repo): use `AskUserQuestion` with up to 4 structured questions including "Generate CLAUDE.md?" (Yes (Recommended) / No)
+   - If project name/purpose need open-ended input: present all questions as numbered items in a single free-text message (include CLAUDE.md as a yes/no item in the same list)
 3. Copy templates from `templates/` directory, adapting project name
 4. Optionally generate CLAUDE.md skeleton with project-specific sections
 5. Create `docs/plans/` directory for implementation plans
 6. **Worktree directory:** Create `.worktrees/` in the project root. Add `.worktrees/` to `.gitignore` (append if `.gitignore` exists, create if not). This establishes the default worktree location so using-git-worktrees never needs to ask.
-7. Beads installation (see below)
-8. Write `.project-init` marker file with current plugin version
-9. Commit scaffolding files
-
-### Beads Installation
-
-Install beads for work tracking (default, unless user opts out):
-
-```bash
-# Ask user before installing
-# "Beads provides AI-native work tracking. Install it? (Y/n)"
-
-# If yes (default):
-bd init
-```
-
-After `bd init` succeeds, add the work-tracking directive to the project's CLAUDE.md:
-
-```markdown
-## Work Tracking
-Use beads (`bd`) for all work tracking. Do not use Claude Code task lists.
-Task titles follow the slug convention: `<slug>- <description>`.
-If `bd` fails, stop and run `bd doctor`.
-```
-
-If the user declines beads, do not add the directive. Skills will fall back to task lists.
-
-Create a bootstrap beads issue:
-
-```bash
-bd create "init- Bootstrap project" --type=task --description="Initial project setup and configuration"
-```
+7. Write `.project-init` marker file with current plugin version
+8. Commit scaffolding files
 
 ## Templates
 
@@ -233,10 +203,7 @@ are relevant to the project.
 
 ## Work Tracking
 
-**project-init is the origin of the beads/task-list decision** (see SPEC.md INV-14):
-- By default, install beads (`bd init`) and write the CLAUDE.md work-tracking directive.
-- If the user opts out, no directive is written — skills fall back to Claude Code task lists.
-- If a `bd` command fails during setup, surface the error and recommend `bd doctor`.
+GitHub issues provide persistent work tracking. Claude Code task lists handle in-session progress.
 
 ## Key Principles
 

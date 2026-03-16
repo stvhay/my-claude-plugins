@@ -16,7 +16,7 @@ work; the user validates and steers.
 ## When This Runs
 
 Invoked as Step 8 of finishing-a-development-branch, after the PR is created
-and beads are synced. Non-blocking — if the user declines, skip entirely.
+Non-blocking — if the user declines, skip entirely.
 
 Ask: "Would you like a brief retrospective on this session? (Takes ~2 minutes)"
 
@@ -108,16 +108,6 @@ First, present the full structured analysis (Step 2) as a regular message so the
 
 This two-step sequence ensures the user can read the analysis before the question UI appears.
 
-**Beads tracking (when CLAUDE.md directive present):**
-
-File upstream improvement issues in beads alongside GitHub:
-
-```bash
-bd create "improve- <improvement summary>" --type=bug --description="<description>" --external-ref=gh-<N>
-```
-
-Task titles follow the slug convention: `<slug>- <description>`.
-
 - Once approved, file:
   ```bash
   gh issue create -R <source-repo> \
@@ -140,11 +130,7 @@ Report what was saved/filed and end the session.
 
 ## Work Tracking
 
-Follow the work-tracking protocol in SPEC.md (INV-14). Skill-specific additions:
-
-- File upstream improvements as beads issues: `bd create "improve- <summary>" --type=bug --external-ref=gh-<N>`
-
-**Fallback note:** File upstream improvements as GitHub issues only.
+File upstream improvements as GitHub issues.
 
 ## Key Principles
 
@@ -157,6 +143,6 @@ Follow the work-tracking protocol in SPEC.md (INV-14). Skill-specific additions:
 ## Integration
 
 **Called by:**
-- **finishing-a-development-branch** — Step 8, after Beads Sync
+- **finishing-a-development-branch** — Step 8, after PR creation
 
 **Does not invoke other skills.** This is a terminal operation.
