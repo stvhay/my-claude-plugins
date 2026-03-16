@@ -106,8 +106,11 @@ earlier versions of project-init.
 
 Work tracking uses GitHub issues (persistent across sessions) and Claude Code
 task lists (in-session progress). GitHub serves as the external projection
-layer — issues and PRs receive comments at key lifecycle points (plan summaries,
-progress updates, review findings).
+layer — issues and PRs receive comments at key lifecycle points (design
+summaries, plan summaries, progress updates, review findings). INV-15 in the
+dev-workflow-toolkit SPEC.md enumerates which skills must project and to which
+GitHub surface (issue pre-PR, PR post-PR). `check-review-documented.sh`
+validates at branch completion that projection actually occurred.
 
 ## Release Infrastructure
 

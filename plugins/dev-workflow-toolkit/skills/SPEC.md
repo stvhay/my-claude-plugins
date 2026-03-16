@@ -75,6 +75,7 @@ Skills compose into a development workflow graph. The primary flow is:
 | INV-12 | CI status checks must pass before PR creation in `finishing-a-development-branch` | structural | Prevents merging code that fails automated tests; enforced by `gh pr checks` hard gate |
 | INV-13 | Pipeline skills declare their context threshold in `scripts/context-thresholds.json`; the `context-gate-hook.sh` PreToolUse hook enforces automatically. Skills must not contain inline context gate sections. **Known limitation (2026-03):** Claude Code does not yet expose `CLAUDE_SKILL` to hooks, so the hook is a placeholder until upstream support lands | structural | Prevents context exhaustion during long pipelines; hook-based enforcement removes attention burden from skills |
 | INV-14 | Skills MUST use `AskUserQuestion` for decisions with enumerable options when the agent can propose good options with confidence. When 2+ independent questions exist in sequence, they MUST be batched into a single call (max 4). Open-ended questions that are independent SHOULD be presented together in a single free-text message. Agent chooses modality (structured vs free-text) based on confidence in proposed options | reasoning-required | Reduces round-trips and token waste; each round-trip re-sends full conversation context |
+| INV-15 | Skills that produce design documents, review findings, or status artifacts MUST post them as comments to the appropriate GitHub surface: issue (pre-PR) or PR (post-PR). Projection skills are enumerated in `GITHUB_PROJECTION_SKILLS` in test_integration.py | structural | Ensures work artifacts are visible to collaborators and traceable in GitHub; prevents silent local-only results that disappear with the session |
 
 **Enforcement classification:**
 - **structural** — enforced by test suite, gitignore structure, or directory convention; pattern-matchable
@@ -96,9 +97,10 @@ lifecycle points (plan summaries, progress updates, review findings).
 | FAIL-4 | Upstream sync clobbers local customizations | Skill marked "identical" in UPSTREAM tracking but has local changes | Maintainer action: update status to "diverged" with notes on what differs in the plugin source repo |
 | FAIL-5 | Skill references broken after rename | Cross-references use file paths instead of skill names | Update references to use `/skill-name` form |
 | FAIL-6 | Silent issue creation skipped | Entry-point skill fails to create issue (network error, auth failure) without informing the user | Surface the error, proceed without issue tracking, warn user that the work is untracked |
-| FAIL-7 | Review documentation missing at branch completion | `finishing-a-development-branch` runs `check-review-documented.sh` but no review comments found in GitHub issue | Post review summaries during development via `gh issue comment` |
+| FAIL-7 | Review documentation missing at branch completion | `finishing-a-development-branch` runs `check-review-documented.sh` but no review, design, plan, or verification comments found in GitHub issue | Post artifacts during development via `gh issue comment` (design summaries, review findings, plan summaries) |
 | FAIL-8 | `check-version-bump.sh` errors with CHANGELOG_ENTRY_REQUIRED or BUMP_TYPE_MISSING | Source files changed without `## Unreleased` section or without `<!-- bump: TYPE -->` comment | Add `## Unreleased` section with `<!-- bump: patch -->` (or minor/major) comment to CHANGELOG.md |
 | FAIL-9 | Context gate warns "context awareness unavailable" | `.claude/.statusline-stats` not found (statusline not configured or not running) | Ensure claude-statusline is configured for the project; `context-check` script exits with error, agent warns user and proceeds |
+| FAIL-10 | Design, review, or status artifact produced but not posted to GitHub | Skill runs locally without `gh issue comment` or `gh pr comment` | Add projection command to skill; add skill to `GITHUB_PROJECTION_SKILLS` test dict (INV-15) |
 
 ## Decision Framework
 
@@ -124,6 +126,7 @@ INV-6: structural — directory convention.
 INV-10, INV-11: INV-10 enforced by Claude Code hook (`check-version-bump.sh`) at session Stop events. INV-11 enforced by CI pre-merge workflow (`ci.yml` version-check job). Both validated by `test_version_hooks.py`.
 INV-12: enforced by `finishing-a-development-branch` skill prompt (Step 1d hard gate using `gh pr checks`).
 INV-14: reasoning-required — verified by `test_inv14_structured_question_preference` and during code review of SKILL.md updates.
+INV-15: structural — enforced by `TestGitHubProjection` in `test_integration.py`; `GITHUB_PROJECTION_SKILLS` dict enumerates all projection-required skills.
 
 Skills are additionally validated via subagent pressure testing — see `/skill-creator`.
 

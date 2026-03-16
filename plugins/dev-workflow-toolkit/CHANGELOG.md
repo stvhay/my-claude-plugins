@@ -6,8 +6,19 @@ read this file and apply retroactive actions marked with **ACTION**.
 ## Unreleased
 <!-- bump: patch -->
 
+### Added
+
+- **INV-15 (GitHub Projection Principle):** Skills that produce design documents, review findings, or status artifacts must post them as comments to the appropriate GitHub surface (issue pre-PR, PR post-PR). Enforced by `TestGitHubProjection` test.
+- **FAIL-10:** New failure mode for artifacts produced but not posted to GitHub.
+- **brainstorming:** Posts condensed design summary to GitHub issue after design approval (checklist step 9).
+- **finishing-a-development-branch:** Re-integrated Step 1c (Review Documentation Check) as soft gate using `check-review-documented.sh`.
+
 ### Fixed
 
+- **check-review-documented.sh:** Stripped beads references, simplified to GitHub-only check with expanded keyword matching (review, design, plan, verification).
+- **FAIL-7:** Updated to reference expanded keyword matching instead of beads.
+- **DESIGN.md:** Fixed stale Step 8 reference (should be Step 7 post-beads removal).
+- **README.md:** Updated test count (283 → 288).
 - **plansDirectory support:** All skills now resolve `plansDirectory` from `.claude/settings.json` instead of hardcoding `docs/plans/`. Default: `~/.claude/plans`.
 - **Quoted `$PLANS_DIR`** in `finishing-a-development-branch` `ls` command to handle paths with spaces.
 - **`jq` tool-health check** added to `quality_gate.py` (required for plansDirectory resolution).
