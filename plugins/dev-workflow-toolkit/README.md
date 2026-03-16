@@ -56,9 +56,8 @@ Select `dev-workflow-toolkit` from the plugin list.
 
 ## Work Tracking
 
-Beads handles granular work tracking across the skill lifecycle. GitHub
-receives issue/PR-level projections at key state transitions. When beads is
-not installed, skills fall back to Claude Code task lists.
+Work tracking uses GitHub issues (persistent across sessions) and Claude Code
+task lists (in-session progress).
 
 ## Hooks
 
