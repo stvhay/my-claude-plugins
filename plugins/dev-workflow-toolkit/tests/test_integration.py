@@ -294,15 +294,20 @@ class TestEntryPointIssueCreation:
 # GitHub state projection
 # ---------------------------------------------------------------------------
 
-# Skills that should project state to GitHub
+# Skills that must project state to GitHub (INV-15)
 GITHUB_PROJECTION_SKILLS = {
+    "brainstorming": "gh issue comment",
     "writing-plans": "gh issue comment",
     "executing-plans": "gh issue comment",
+    "subagent-driven-development": "gh issue comment",
+    "verification-before-completion": "gh issue comment",
+    "requesting-code-review": "gh pr comment",
+    "receiving-code-review": "gh api repos/",
 }
 
 
 class TestGitHubProjection:
-    """Skills with projection points must include gh comment commands."""
+    """Skills with projection points must include gh comment commands."""  # Tests INV-15
 
     @pytest.mark.parametrize(
         "skill,pattern",
@@ -310,7 +315,7 @@ class TestGitHubProjection:
         ids=list(GITHUB_PROJECTION_SKILLS.keys()),
     )
     def test_skill_projects_to_github(self, skills_dir: Path, skill: str, pattern: str):
-        """Skills with projection points must include gh comment commands."""
+        """Skills with projection points must include gh comment commands."""  # Tests INV-15
         skill_file = skills_dir / skill / "SKILL.md"
         assert skill_file.exists(), f"Skill file not found: {skill}"
         text = skill_file.read_text().lower()
