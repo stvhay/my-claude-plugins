@@ -27,7 +27,7 @@ Before exploring the project, verify the CONTRIBUTING.md workflow prerequisites.
 
 The user's initial message or `/brainstorming` arguments describe the work. Use this to determine or create the issue automatically — do not prompt the user for an issue number unless the description is too vague to search.
 
-**Determine the issue type** from context — use `feature`, `bug`, or `epic` for `bd create --type=`. Map to GitHub labels: `feature`→`enhancement`, `bug`→`bug`, `epic`→`epic`. If the label doesn't exist on the repo, create it first with `gh label create "<label>" --description "<type> work"`.
+**Determine the issue type** from context — `feature`, `bug`, or `epic`. Map to GitHub labels: `feature`→`enhancement`, `bug`→`bug`, `epic`→`epic`. If the label doesn't exist on the repo, create it first with `gh label create "<label>" --description "<type> work"`.
 
 **Resolve the issue** (pick the first matching branch):
 
