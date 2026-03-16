@@ -23,7 +23,7 @@ read this file and apply retroactive actions marked with **ACTION**.
 - **Skill prose compression:** 10 skills compressed by removing argumentation sections, redundant red flags, DOT diagrams, and verbose examples. Net reduction: 1,110 lines across 24 files.
 - **INV-13** updated to reference context-gate hook instead of inline skill logic.
 - **INV-15** renumbered to **INV-14** (AskUserQuestion invariant).
-- Test suite updated: 281 tests (down from 316 — beads-specific tests removed).
+- Test suite updated: 283 tests (down from 316 — beads-specific tests removed).
 
 ## v1.16.2
 
