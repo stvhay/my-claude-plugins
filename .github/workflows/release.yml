@@ -106,7 +106,7 @@ jobs:
           echo "number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
           echo "Created PR #$PR_NUMBER: $PR_URL"
 
-          gh pr merge "$PR_NUMBER" --rebase --auto
+          gh pr merge "$PR_NUMBER" --squash --auto
 
       - name: Wait for PR merge
         if: steps.bump.outputs.bumped == 'true'
