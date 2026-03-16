@@ -105,20 +105,6 @@ Documentation is organized into three tiers by lifecycle:
 3. **Tracked subsystem specs.** `SPEC.md` files inside each plugin's `skills/`
    directory. Define the contract for that plugin's skill set.
 
-## Work Tracking Pattern
-
-**Dual-path design:** Skills document both beads and task-list paths. The
-CLAUDE.md work-tracking directive (written by project-init) determines which
-path agents follow. This avoids runtime detection and keeps the switch
-explicit and project-scoped.
-
-**GitHub projection:** Beads operations that represent externally-visible
-state project to GitHub as issue or PR comments. Individual task granularity
-stays in beads.
-
-**Task title convention:** `<slug>- <description>` — a context-free grammar
-enabling the `bd-pipeline` script to render one-line status from beads JSON.
-
 ## Generated Release Infrastructure
 
 Release tooling (`compute-version.sh`, `release.yml`, validation hooks) is
@@ -142,6 +128,18 @@ Branch protection (require CI pass, require squash merge) is part of the
 generated infrastructure. `project-init` configures this via `gh api` during
 initial scaffolding, enforcing the squash-merge-only invariant at the GitHub
 level rather than relying on developer discipline.
+
+## Hook-Based Enforcement
+
+Guardrails that can be mechanistically determined run as hooks, silent when
+compliant, speaking only on violation. This principle extends beyond release
+infrastructure:
+
+- **Context gates** — Pipeline skill thresholds enforced by PreToolUse hook
+  (`context-gate-hook.sh`), removing attention burden from skill prose.
+- **Changelog enforcement** — Branch-time hook validates `## Unreleased` entry.
+- **Version label consistency** — CI pre-merge check validates PR label matches
+  changelog bump type.
 
 ## Changelog-Driven Audit
 

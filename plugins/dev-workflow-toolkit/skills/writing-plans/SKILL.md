@@ -13,21 +13,6 @@ DRY. YAGNI. TDD. Frequent commits.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-## Context Gate
-
-Before starting, check context utilization:
-
-```bash
-context_pct=$(bash "$(dirname "$CLAUDE_SKILL_DIR")/../scripts/context-check" 2>/dev/null) || true
-```
-
-- If the script errors, warn the user: "Context awareness unavailable — `.claude/.statusline-stats` not found."
-- If `context_pct` is above **65%**, recommend compaction with a directed preservation prompt:
-  > Context is at N%. Recommend compacting before planning. You'll keep the design doc and issue context; brainstorming dialogue will be summarized.
-  >
-  > Run: `/compact Preserve: design doc at <path>, issue #N, branch <name>. Summarize all prior discussion.`
-- You may recommend compaction at lower percentages if remaining work is substantial (e.g., 5+ plan tasks, multiple subsystem specs to load), but not below **30%**.
-
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>-plan.md`
@@ -60,7 +45,6 @@ Size tasks to the work, not to an arbitrary count. A plan may have 2 tasks or 6 
 # [Feature Name] Implementation Plan
 
 **Issue:** #<number> — <title>
-**Beads:** <beads-id>
 **Design:** docs/plans/YYYY-MM-DD-<topic>-design.md
 
 > **For Claude:** Execute this plan using subagent-driven-development (same session) or executing-plans (separate session / teammate).
@@ -81,7 +65,7 @@ Size tasks to the work, not to an arbitrary count. A plan may have 2 tasks or 6 
 ---
 ```
 
-The **Issue**, **Beads**, and **Design** fields carry context from the brainstorming phase. Populate them from the design doc header. If brainstorming was skipped, use `Issue: None` and `Beads: None`.
+The **Issue** and **Design** fields carry context from the brainstorming phase. Populate them from the design doc header. If brainstorming was skipped, use `Issue: None`.
 
 ## Scope Detection
 
@@ -95,8 +79,6 @@ This is a **soft warning** — the user decides. If they choose to keep as one, 
 ## Task Structure
 
 Each task must be self-contained — a subagent receiving only this task text has everything needed to implement it.
-
-> **Slug convention:** When creating beads tasks, title format is `<slug>- <description>` (e.g., `auth- Implement authentication`). The slug is a short (1-8 char) identifier used by the pipeline status display.
 
 ````markdown
 ### Task N: [Component Name]
@@ -172,41 +154,19 @@ Mark each task's dependencies explicitly. Independent tasks can be dispatched to
 - Anchor tests to SPEC.md item IDs (INV-N, FAIL-N) with inline `# Tests INV-N` comments on declaration lines
 - DRY, YAGNI, TDD, frequent commits
 
-## Work Tracking
+## GitHub Projection
 
-Follow the work-tracking protocol in SPEC.md (INV-14). Plan file is the fallback source of truth.
-
-## Beads Conversion
-
-After saving the plan, convert it to beads issues for cross-session tracking:
-
-```bash
-# Create beads issues from plan's ### Task N: headings
-bash "$(dirname "$CLAUDE_SKILL_DIR")/../scripts/plan-to-beads.sh" docs/plans/<filename>.md --parent <beads-id>
-```
-
-This parses `### Task N:` headings (skipping code fences), creates one `bd` issue per task, and wires up `**Depends on:**` fields as beads dependencies. The `--parent` flag links all tasks as children of the feature issue from brainstorming.
-
-> **Why not `bd create -f`?** The built-in parser uses `##` (h2) as task boundaries and does not skip code fences. Plans that embed file content with h2 headings (READMEs, changelogs) produce spurious tasks.
-
-**GitHub projection:** Post plan summary as an issue comment:
+After saving the plan, post a summary as an issue comment:
 
 ```bash
 gh issue comment <N> --body "## Implementation Plan
-
-$(bd list --type=task --json | python3 -c "
-import json, sys
-for t in json.load(sys.stdin):
-    print(f'- [ ] {t[\"title\"]}')")
-
+$(grep '### Task' docs/plans/<filename>.md | sed 's/### /- [ ] /')
 Plan: \`docs/plans/<filename>.md\`"
 ```
 
-**If `bd` is unavailable or `plan-to-beads.sh` fails:** Skip beads conversion — plans work without it. The plan file itself is the source of truth.
-
 ## Execution Handoff
 
-After saving the plan and converting to beads (if available), proceed directly to execution using subagent-driven-development. Do not ask the user to choose an execution approach.
+After saving the plan, proceed directly to execution using subagent-driven-development. Do not ask the user to choose an execution approach.
 
 **"Plan complete and saved to `docs/plans/<filename>.md`. Proceeding with subagent-driven execution."**
 

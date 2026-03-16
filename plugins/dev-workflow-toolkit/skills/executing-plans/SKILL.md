@@ -13,18 +13,6 @@ Load plan, review critically, execute tasks in batches, report for review betwee
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
-## Context Gate
-
-Before starting, check context utilization:
-
-```bash
-context_pct=$(bash "$(dirname "$CLAUDE_SKILL_DIR")/../scripts/context-check" 2>/dev/null) || true
-```
-
-- If the script errors, warn the user: "Context awareness unavailable — `.claude/.statusline-stats` not found."
-- If `context_pct` is above **20%**, recommend:
-  > Context is at N%. For best results, start fresh: `/clear`
-
 ## Worktree Guard
 
 **Before starting, verify you are NOT on main/master:**
@@ -45,14 +33,6 @@ echo "Verified: on branch $branch in $(pwd)"
 
 **Re-verify CWD at the start of each batch** — agents can lose track of their working directory between batches.
 
-## Work Tracking
-
-Follow the work-tracking protocol in SPEC.md (INV-14). Skill-specific additions:
-
-- Display pipeline status after each batch: `bd list --type=task --json | bd-pipeline --phase executing --next finishing`
-
-**Fallback note:** Plan file is the source of truth.
-
 ## The Process
 
 ### Step 1: Load and Review Plan
@@ -60,34 +40,19 @@ Follow the work-tracking protocol in SPEC.md (INV-14). Skill-specific additions:
 2. Review critically — identify questions or concerns
 3. Note acceptance criteria from plan header
 4. If concerns: Raise them before starting
-5. If clear: Run `bd ready --json` to see available beads tasks. If no beads tasks exist, run `bd create -f <plan-file>` to create them. If `bd` is unavailable, proceed without beads tracking.
 
 ### Step 2: Execute Batch
 **Default: First 3 tasks**
 
-Run `bd ready --json` to find unblocked tasks. For each task in the batch:
-1. Claim it: `bd update <id> --claim`
-2. Load nearest SPEC.md for the task's target files (if one exists). Review its Invariants before starting — these are constraints you must not violate. If the task crosses subsystems, load the primary spec in full and only the Public Interface section from adjacent specs.
-3. Follow each step exactly (plan has bite-sized steps)
-4. Run verifications as specified
-5. Complete it: `bd close <id> --reason "Implemented"`
+For each task in the batch:
+1. Load nearest SPEC.md for the task's target files (if one exists). Review its Invariants before starting — these are constraints you must not violate. If the task crosses subsystems, load the primary spec in full and only the Public Interface section from adjacent specs.
+2. Follow each step exactly (plan has bite-sized steps)
+3. Run verifications as specified
 
-After closing completed tasks in a batch, update the parent feature issue:
+Track progress via task lists. After completing a batch, report progress to the GitHub issue:
 
 ```bash
-# Count progress
-total=$(bd list --type=task --json | python3 -c "import json,sys; print(len(json.load(sys.stdin)))")
-closed=$(bd list --type=task --status=closed --json | python3 -c "import json,sys; print(len(json.load(sys.stdin)))")
-bd update <feature-id> --append-notes "Batch complete: $closed/$total tasks done"
-
-# GitHub projection: post progress
-gh issue comment <N> --body "Progress: $closed/$total tasks complete"
-```
-
-**Pipeline status:** After each batch, display pipeline status:
-
-```bash
-bd list --type=task --json | bd-pipeline --phase executing --next finishing
+gh issue comment <N> --body "Progress: batch complete — N/M tasks done"
 ```
 
 ### Step 3: Report
@@ -112,15 +77,6 @@ After all tasks complete:
 After acceptance criteria verified:
 - **REQUIRED SUB-SKILL:** Use finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice
-
-## Agent Teams
-
-For larger efforts or autonomous execution, this skill can be run by a **teammate** rather than in a manual session:
-
-1. Controller spawns teammate using Task tool with `team_name`
-2. Teammate loads and executes the plan
-3. Teammate reports progress via messages
-4. Controller reviews and unblocks as needed
 
 ## When to Stop and Ask for Help
 

@@ -3,6 +3,28 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## Unreleased
+
+<!-- bump: minor -->
+
+### Removed
+
+- **Beads work tracking:** All `bd` references removed from 12 skills, SPEC.md, and CLAUDE.md. Work tracking now uses GitHub issues (persistent) + Claude Code task lists (in-session). **ACTION:** If your project's CLAUDE.md contains a beads work-tracking directive (`Use beads (bd) for all work tracking...`), remove it — skills no longer reference or expect beads.
+- **INV-14** (beads work-tracking protocol) and **INV-16** (beads-aware worktrees) removed from SPEC.md. **FAIL-10** (beads database error) removed.
+- Inline context gate sections removed from 5 pipeline skills (replaced by hook).
+
+### Added
+
+- **Context-gate hook:** `scripts/context-gate-hook.sh` — PreToolUse hook that reads per-skill thresholds from `scripts/context-thresholds.json` and warns when context utilization is too high. Replaces inline context gate logic in brainstorming, writing-plans, subagent-driven-development, and executing-plans. **Known limitation:** Claude Code does not yet expose `CLAUDE_SKILL` to hooks, so the hook is a placeholder until upstream support lands.
+- **Hook-Based Enforcement** section added to `docs/DESIGN.md`.
+
+### Changed
+
+- **Skill prose compression:** 10 skills compressed by removing argumentation sections, redundant red flags, DOT diagrams, and verbose examples. Net reduction: 1,110 lines across 24 files.
+- **INV-13** updated to reference context-gate hook instead of inline skill logic.
+- **INV-15** renumbered to **INV-14** (AskUserQuestion invariant).
+- Test suite updated: 283 tests (down from 316 — beads-specific tests removed).
+
 ## v1.16.2
 
 

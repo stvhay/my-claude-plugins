@@ -122,20 +122,7 @@ AFTER all opportunities processed:
   - Present summary
 ```
 
-### Consolidation Dependency Check
-
-Before applying each consolidation, verify it's still valid:
-
-1. Check if prior consolidations succeeded
-2. Check if this consolidation conflicts with prior changes
-3. If conflict detected: pause, show both, ask for precedence decision
-
-### Ordering Rationale
-
-Low-risk first because:
-- Banks easy wins before attempting riskier changes
-- Simpler changes are less likely to reveal deep issues
-- If a consolidation fails, low-risk changes are already applied
+Before applying each consolidation, verify it doesn't conflict with prior changes.
 
 ## Output Format
 
@@ -175,42 +162,7 @@ Applied N changes, blocked N, skipped N, N opportunities, N escalations.
 - **[Issue type] in [location]**: [Description and recommended action]
 ```
 
-### Summary Levels
-
-**One-liner (Low-Moderate):**
-Action + target + location. Example: "Removed unused `formatTimestamp` import (utils/date.ts)"
-
-**Detailed (Consolidation, Blocked):**
-- Before/after description
-- Scope (files, lines)
-- Impact (call sites affected)
-- Confidence level with reasoning
-- For blocked: attempted action, failure, analysis, recommendation
-
-## Delegation Design
-
-### Autonomy Boundaries
-
-| Situation | Agent Action |
-|-----------|--------------|
-| Low-Moderate simplification | Apply automatically |
-| Consolidation | Apply automatically, atomic commit, detailed summary |
-| Structural opportunity | Flag only, do not apply |
-| Consolidation conflict | Pause, ask for precedence decision |
-| Scope expansion needed | Escalate for discussion |
-| Deeper issue unaddressable | Surface as escalation in report |
-
-### When to Pause
-
-- Consolidation conflict detected (two changes affect same code)
-- Structural change identified (requires approval)
-- Final verification fails after all changes (requires investigation)
-
-### When to Escalate (in report)
-
-- Deeper issue found but exceeds simplification scope
-- Hidden coupling prevents safe change
-- Test infrastructure issues discovered
+**Summary levels:** Low-Moderate changes get one-liners (action + target + location). Consolidation and Blocked items get detailed entries with before/after, scope, impact, and confidence.
 
 ## Integration
 

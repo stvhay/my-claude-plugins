@@ -63,17 +63,20 @@ a rewrite.
 
 ## Context-Aware Session Management
 
-Pipeline skills check context window utilization at load time via
-`scripts/context-check`. Each gate has a threshold tuned to the remaining
-pipeline budget: brainstorming (20%), writing-plans (65%),
-subagent-driven-development (40%), executing-plans (20%). Gates recommend
-`/clear` or directed `/compact` — they are advisory, not blocking.
+A PreToolUse hook (`scripts/context-gate-hook.sh`) checks context window
+utilization against per-skill thresholds defined in
+`scripts/context-thresholds.json`. Each gate has a threshold tuned to the
+remaining pipeline budget: brainstorming (20%), writing-plans (65%),
+subagent-driven-development (40%), executing-plans (20%). The hook emits
+advisory warnings — it does not block execution.
+
+> **Known limitation (2026-03):** Claude Code does not yet expose
+> `CLAUDE_SKILL` to hooks, so the hook is a placeholder until upstream
+> support lands. The infrastructure is in place for when the env var becomes
+> available.
 
 Thresholds were calibrated from Langfuse session traces (issue #50): the full
 pipeline splits roughly 50/50 between pre-execution and execution phases.
-Above 80%, coding performance degrades, so execution-entry gates are more
-aggressive. The agent may use discretion to trigger compaction earlier for
-large plans, but not below 30%.
 
 ## Quality Gate Automation
 
@@ -82,7 +85,7 @@ structural checks against any project using the plugin:
 
 1. **inv-numbering** — INV/FAIL identifiers in SPEC.md are sequentially
    numbered with no gaps or duplicates.
-2. **issue-tracking** — Branch has a linked GitHub issue and beads tracking.
+2. **issue-tracking** — Branch has a linked GitHub issue.
 3. **skill-structure** — Each skill directory contains a SKILL.md with valid
    YAML frontmatter and a `name` matching the directory.
 4. **doc-structure** — Required documents (SPEC.md, README.md) exist at their
@@ -101,18 +104,10 @@ earlier versions of project-init.
 
 ## Work Tracking
 
-Beads is the primary work-tracking system. When configured via project-init,
-a CLAUDE.md directive activates beads for all skills. GitHub serves as the
-external projection layer — issues and PRs receive comments at key lifecycle
-points (plan summaries, progress updates, review findings, preflight results).
-Granular task tracking stays in beads.
-
-When beads is not installed (user opted out during project-init), skills fall
-back to Claude Code task lists and GitHub issues.
-
-Task titles follow a slug convention (`<slug>- <description>`) enabling
-a lightweight pipeline status script (`bd-pipeline`) that renders one-line
-progress: `<phase> || <slugs> | (N more) --> <next_phase>`.
+Work tracking uses GitHub issues (persistent across sessions) and Claude Code
+task lists (in-session progress). GitHub serves as the external projection
+layer — issues and PRs receive comments at key lifecycle points (plan summaries,
+progress updates, review findings).
 
 ## Release Infrastructure
 

@@ -225,13 +225,7 @@ When replying to inline review comments on GitHub, reply in the comment thread (
 
 ## Work Tracking
 
-Follow the work-tracking protocol in SPEC.md (INV-14). Skill-specific additions:
-
-- Log reviewer feedback: `bd update <review-task-id> --append-notes "Feedback received: <summary>"`
-- After fixes: `bd update <review-task-id> --append-notes "Review: PASS — all feedback addressed"`
-- Close: `bd close <review-task-id> --reason "Feedback addressed in <commit-sha>"`
-
-**Fallback note:** GitHub PR thread replies serve as the feedback record.
+GitHub PR thread replies serve as the feedback record.
 
 ## The Bottom Line
 

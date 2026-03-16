@@ -15,21 +15,9 @@ Start by understanding the current project context, then explore the idea throug
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
 </HARD-GATE>
 
-## Context Gate
-
-Before starting, check context utilization:
-
-```bash
-context_pct=$(bash "$(dirname "$CLAUDE_SKILL_DIR")/../scripts/context-check" 2>/dev/null) || true
-```
-
-- If the script errors, warn the user: "Context awareness unavailable — `.claude/.statusline-stats` not found."
-- If `context_pct` is above **20%**, recommend:
-  > Context is at N%. For best results, start fresh: `/clear`
-
 ## Anti-Pattern: "This Is Too Simple To Need A Design"
 
-Every project goes through this process. A todo list, a single-function utility, a config change — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but you MUST present it and get approval.
+Every project goes through this process regardless of perceived simplicity. The design can be short, but you MUST present it and get approval.
 
 ## Pre-flight Checks
 
@@ -39,7 +27,7 @@ Before exploring the project, verify the CONTRIBUTING.md workflow prerequisites.
 
 The user's initial message or `/brainstorming` arguments describe the work. Use this to determine or create the issue automatically — do not prompt the user for an issue number unless the description is too vague to search.
 
-**Determine the issue type** from context — use `feature`, `bug`, or `epic` for `bd create --type=`. Map to GitHub labels: `feature`→`enhancement`, `bug`→`bug`, `epic`→`epic`. If the label doesn't exist on the repo, create it first with `gh label create "<label>" --description "<type> work"`.
+**Determine the issue type** from context — `feature`, `bug`, or `epic`. Map to GitHub labels: `feature`→`enhancement`, `bug`→`bug`, `epic`→`epic`. If the label doesn't exist on the repo, create it first with `gh label create "<label>" --description "<type> work"`.
 
 **Resolve the issue** (pick the first matching branch):
 
@@ -50,8 +38,7 @@ The user's initial message or `/brainstorming` arguments describe the work. Use 
 
 **After issue is resolved:**
 
-1. **Create beads issue:** Run `bd create --title="<summary>" --type=<type> --description="<one-paragraph description>" --external-ref=gh-<N> --json`. Always include `--description` to provide context. If `bd` is unavailable or fails, proceed without beads tracking — the GitHub issue alone is sufficient.
-2. **Record both:** Capture the GH issue number and beads ID (the `id` field from the `--json` response, e.g., `{"id": "beads-NNN", ...}`) for the design doc header.
+1. Record the GH issue number for the design doc header.
 
 ### 1b. Branch Check
 
@@ -59,10 +46,6 @@ Run `git branch --show-current` to detect the current branch.
 
 - **If on `main` or `master`:** Notify: "You're on `<branch>` — creating a worktree." Invoke using-git-worktrees automatically. If worktree creation fails, warn and allow proceeding on main.
 - **If on any other branch:** Proceed to Step 2.
-
-## Work Tracking
-
-Follow the work-tracking protocol in SPEC.md (INV-14).
 
 ## Checklist
 
@@ -80,76 +63,6 @@ You MUST create a task for each of these items and complete them in order:
 10. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` (local working directory, not committed), include documentation updates section
 11. **Evaluate UX design need** — if user-facing or agentic, recommend ux-design-agent
 12. **Transition to implementation** — invoke writing-plans skill to create implementation plan
-
-## Process Flow
-
-```dot
-digraph brainstorming {
-    // Pre-flight: issue check (auto-create)
-    "Pre-flight checks" [shape=box];
-    "Issue number given?" [shape=diamond];
-    "Verify issue exists" [shape=box];
-    "Search for duplicates" [shape=box];
-    "Duplicate found?" [shape=diamond];
-    "Use existing issue" [shape=box];
-    "Create new issue" [shape=box];
-    "Pre-flight checks" -> "Issue number given?";
-    "Issue number given?" -> "Verify issue exists" [label="yes"];
-    "Issue number given?" -> "Search for duplicates" [label="no, description given"];
-    "Issue number given?" -> "Route to ideate" [label="exploratory / no issue"];
-    "Route to ideate" [shape=doublecircle];
-    "Verify issue exists" -> "On feature branch?";
-    "Search for duplicates" -> "Duplicate found?";
-    "Duplicate found?" -> "Use existing issue" [label="yes"];
-    "Duplicate found?" -> "Create new issue" [label="no"];
-    "Use existing issue" -> "On feature branch?";
-    "Create new issue" -> "On feature branch?";
-
-    // Pre-flight: branch check
-    "On feature branch?" [shape=diamond];
-    "Auto-create worktree" [shape=box];
-    "On feature branch?" -> "Explore project context" [label="yes"];
-    "On feature branch?" -> "Auto-create worktree" [label="no"];
-    "Auto-create worktree" -> "Explore project context";
-
-    // Discovery and design
-    "Explore project context" [shape=box];
-    "Prior ideation exists?" [shape=diamond];
-    "Read idea files" [shape=box];
-    "Ask clarifying questions" [shape=box];
-    "Propose 2-3 approaches" [shape=box];
-    "Consider subsystem boundaries" [shape=box];
-    "Present design sections" [shape=box];
-    "User approves design?" [shape=diamond];
-    "Explore project context" -> "Prior ideation exists?";
-    "Prior ideation exists?" -> "Read idea files" [label="yes"];
-    "Prior ideation exists?" -> "Ask clarifying questions" [label="no"];
-    "Read idea files" -> "Ask clarifying questions";
-    "Ask clarifying questions" -> "Propose 2-3 approaches";
-    "Propose 2-3 approaches" -> "Consider subsystem boundaries";
-    "Consider subsystem boundaries" -> "Present design sections";
-    "Present design sections" -> "User approves design?";
-    "User approves design?" -> "Present design sections" [label="no, revise"];
-
-    // Finalization
-    "Evaluate epic scope" [shape=diamond];
-    "Restructure as epic" [shape=box];
-    "Draft doc updates" [shape=box];
-    "Write design doc" [shape=box];
-    "UX design needed?" [shape=diamond];
-    "Invoke ux-design-agent" [shape=box];
-    "Invoke writing-plans skill" [shape=doublecircle];
-    "User approves design?" -> "Evaluate epic scope" [label="yes"];
-    "Evaluate epic scope" -> "Restructure as epic" [label="yes, split"];
-    "Evaluate epic scope" -> "Draft doc updates" [label="no, single issue"];
-    "Restructure as epic" -> "Draft doc updates";
-    "Draft doc updates" -> "Write design doc";
-    "Write design doc" -> "UX design needed?";
-    "UX design needed?" -> "Invoke ux-design-agent" [label="yes"];
-    "UX design needed?" -> "Invoke writing-plans skill" [label="no"];
-    "Invoke ux-design-agent" -> "Invoke writing-plans skill";
-}
-```
 
 **The terminal state is invoking writing-plans.** The only intermediate skills you may invoke are using-git-worktrees (during pre-flight, if on main), documentation-standards (after design approval), and ux-design-agent (when UX design is needed). Do NOT invoke any other implementation skill.
 
@@ -195,9 +108,8 @@ After the user approves the design, evaluate whether it represents multiple dist
 **If yes — restructure:**
 1. Add the `epic` label to the current issue: `gh issue edit <N> --add-label epic`
 2. Create child issues for each distinct unit of work: `gh issue create --title "<child summary>" --body "Part of #<N>" --label enhancement`
-3. Update beads issue type if available: `bd update <id> --type=epic`
-4. Each child issue maps 1:1 to a future PR
-5. Continue with the design doc, noting the epic structure and child issues
+3. Each child issue maps 1:1 to a future PR
+4. Continue with the design doc, noting the epic structure and child issues
 
 **If no:** Proceed to documentation impact.
 
@@ -229,7 +141,6 @@ When UX design is required, use **ux-design-agent** (REQUIRED SUB-SKILL) to prod
   # Design: <topic>
 
   **Issue:** #<number> — <title>
-  **Beads:** <beads-id>
   **Date:** YYYY-MM-DD
   **Branch:** <branch-name>
   ```
@@ -245,13 +156,13 @@ When UX design is required, use **ux-design-agent** (REQUIRED SUB-SKILL) to prod
 
 ## Key Principles
 
-- **Batch independent questions** - Use `AskUserQuestion` for up to 4 structured questions per call; group free-text questions in a single message
-- **Adaptive modality** - `AskUserQuestion` when you can propose good options, free-text when open-ended
-- **Delegation** - Ask "approval or information?" at start to control flow
-- **YAGNI ruthlessly** - Remove unnecessary features from all designs
-- **Explore alternatives** - Always propose 2-3 approaches before settling
-- **Incremental validation** - Present design in sections, validate each
-- **Be flexible** - Go back and clarify when something doesn't make sense
+- **Batch independent questions** — up to 4 per `AskUserQuestion` call
+- **Adaptive modality** — structured questions vs. free-text
+- **Delegation** — ask "approval or information?" at start
+- **YAGNI ruthlessly**
+- **Explore alternatives** — 2-3 approaches before settling
+- **Incremental validation** — present design in sections
+- **Be flexible** — revise when something doesn't fit
 
 ## Integration
 

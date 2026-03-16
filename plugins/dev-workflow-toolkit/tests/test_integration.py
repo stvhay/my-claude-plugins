@@ -278,15 +278,6 @@ class TestEntryPointIssueCreation:
         )
 
     @pytest.mark.parametrize("skill", list(ENTRY_POINT_SKILLS.keys()))
-    def test_entry_point_has_bd_description(self, skills_dir: Path, skill: str):
-        skill_file = skills_dir / skill / "SKILL.md"
-        assert skill_file.exists(), f"Skill file not found: {skill}"
-        text = skill_file.read_text()
-        assert "--description" in text, (
-            f"{skill} must pass --description to bd create"
-        )
-
-    @pytest.mark.parametrize("skill", list(ENTRY_POINT_SKILLS.keys()))
     def test_entry_point_handles_issue_creation_failure(self, skills_dir: Path, skill: str):
         """FAIL-6: Entry-point skills must handle issue creation failure gracefully."""
         skill_file = skills_dir / skill / "SKILL.md"
@@ -300,88 +291,18 @@ class TestEntryPointIssueCreation:
 
 
 # ---------------------------------------------------------------------------
-# Beads work-tracking integration (INV-14)
+# GitHub state projection
 # ---------------------------------------------------------------------------
-
-# Skills that track work and must support beads when CLAUDE.md directive present
-WORK_TRACKING_SKILLS = [
-    "brainstorming",
-    "writing-plans",
-    "executing-plans",
-    "subagent-driven-development",
-    "finishing-a-development-branch",
-    "systematic-debugging",
-    "verification-before-completion",
-    "project-init",
-    "requesting-code-review",
-    "receiving-code-review",
-    "retrospective",
-]
-
-# Skills that create beads tasks (must document slug convention)
-TASK_CREATING_SKILLS = [
-    "brainstorming",
-    "writing-plans",
-    "executing-plans",
-    "subagent-driven-development",
-    "systematic-debugging",
-    "requesting-code-review",
-    "retrospective",
-]
 
 # Skills that should project state to GitHub
 GITHUB_PROJECTION_SKILLS = {
     "writing-plans": "gh issue comment",
     "executing-plans": "gh issue comment",
-    "systematic-debugging": "gh issue comment",
-    "finishing-a-development-branch": "gh pr comment",
 }
 
 
-class TestBeadsWorkTracking:
-    """Work-tracking skills must support beads with task-list fallback."""  # Tests INV-14
-
-    @pytest.mark.parametrize("skill", WORK_TRACKING_SKILLS)
-    def test_skill_references_protocol(self, skills_dir: Path, skill: str):
-        """Every work-tracking skill must reference the SPEC.md protocol or document bd usage."""  # Tests INV-14
-        skill_file = skills_dir / skill / "SKILL.md"
-        assert skill_file.exists(), f"Skill file not found: {skill}"
-        text = skill_file.read_text().lower()
-        assert "inv-14" in text or "spec.md" in text or "bd " in text, (
-            f"{skill} must reference work-tracking protocol (INV-14) or document bd usage"
-        )
-
-    @pytest.mark.parametrize("skill", WORK_TRACKING_SKILLS)
-    def test_skill_documents_fallback_path(self, skills_dir: Path, skill: str):
-        """Every work-tracking skill must document task-list fallback."""  # Tests INV-14
-        skill_file = skills_dir / skill / "SKILL.md"
-        assert skill_file.exists(), f"Skill file not found: {skill}"
-        text = skill_file.read_text().lower()
-        assert ("fallback" in text) or ("inv-14" in text and "spec.md" in text), (
-            f"{skill} must document fallback behavior or reference SPEC.md INV-14 (INV-14)"
-        )
-
-    @pytest.mark.parametrize("skill", WORK_TRACKING_SKILLS)
-    def test_skill_treats_bd_failure_as_blocker(self, skills_dir: Path, skill: str):
-        """bd failure must block workflow — either directly or via SPEC.md protocol reference."""  # Tests INV-14
-        skill_file = skills_dir / skill / "SKILL.md"
-        assert skill_file.exists(), f"Skill file not found: {skill}"
-        text = skill_file.read_text().lower()
-        assert any(phrase in text for phrase in [
-            "block", "stop", "bd doctor", "critical", "inv-14",
-        ]), (
-            f"{skill} must treat bd failure as a blocker or reference INV-14 protocol (INV-14)"
-        )
-
-    @pytest.mark.parametrize("skill", TASK_CREATING_SKILLS)
-    def test_skill_documents_slug_convention(self, skills_dir: Path, skill: str):
-        """Skills creating tasks must document the slug title convention."""  # Tests INV-14
-        skill_file = skills_dir / skill / "SKILL.md"
-        assert skill_file.exists(), f"Skill file not found: {skill}"
-        text = skill_file.read_text().lower()
-        assert "slug" in text or "inv-14" in text, (
-            f"{skill} must document slug convention or reference INV-14 (INV-14)"
-        )
+class TestGitHubProjection:
+    """Skills with projection points must include gh comment commands."""
 
     @pytest.mark.parametrize(
         "skill,pattern",
@@ -389,12 +310,12 @@ class TestBeadsWorkTracking:
         ids=list(GITHUB_PROJECTION_SKILLS.keys()),
     )
     def test_skill_projects_to_github(self, skills_dir: Path, skill: str, pattern: str):
-        """Skills with projection points must include gh comment commands."""  # Tests INV-14
+        """Skills with projection points must include gh comment commands."""
         skill_file = skills_dir / skill / "SKILL.md"
         assert skill_file.exists(), f"Skill file not found: {skill}"
         text = skill_file.read_text().lower()
         assert pattern in text, (
-            f"{skill} must project state to GitHub via '{pattern}' (INV-14)"
+            f"{skill} must project state to GitHub via '{pattern}'"
         )
 
 
@@ -436,16 +357,6 @@ class TestEpicScopeCheck:
         assert "gh issue edit" in text and "epic" in text, (
             "brainstorming scope check must describe epic label conversion via gh issue edit"
         )
-
-    def test_brainstorming_dot_graph_has_epic_scope_edges(self, skills_dir: Path):
-        """Dot graph must wire epic scope between design approval and doc drafting."""
-        text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
-        dot_match = re.search(r"```dot\n(.*?)```", text, re.DOTALL)
-        assert dot_match, "brainstorming must have a dot graph"
-        dot = dot_match.group(1)
-        assert '"Evaluate epic scope"' in dot, "Node must exist in graph"
-        assert '-> "Evaluate epic scope"' in dot, "Must have incoming edge"
-        assert '"Evaluate epic scope" ->' in dot, "Must have outgoing edge"
 
     def test_finishing_scope_check_before_pr_creation(self, skills_dir: Path):
         """Scope check must appear before PR creation step."""
@@ -511,11 +422,11 @@ class TestWorktreeAutoDetection:
 # ---------------------------------------------------------------------------
 
 REVIEW_DOC_SKILLS = {
-    "subagent-driven-development": ["bd update", "gh issue comment"],
-    "verification-before-completion": ["bd update", "gh issue comment"],
+    "subagent-driven-development": ["gh issue comment"],
+    "verification-before-completion": ["gh issue comment"],
     "requesting-code-review": ["gh pr comment", "gh api"],
     "receiving-code-review": ["atomic commit", "fix:"],
-    "finishing-a-development-branch": ["check-review-documented"],
+    "finishing-a-development-branch": ["gh pr create"],
 }
 
 
@@ -599,85 +510,74 @@ class TestBranchCheckAutoWorktree:
             "branch check must not have conditional 'If yes' for worktree creation"
         )
 
-    def test_dot_graph_no_create_branch_diamond(self, skills_dir: Path):
-        """Dot graph must not have 'Create branch?' decision diamond."""
-        text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
-        dot_match = re.search(r"```dot\n(.*?)```", text, re.DOTALL)
-        assert dot_match, "brainstorming must have a dot graph"
-        dot = dot_match.group(1)
-        assert '"Create branch?"' not in dot, (
-            "dot graph must not have 'Create branch?' diamond — worktree is auto-created"
-        )
-
-
 # ---------------------------------------------------------------------------
-# Structured question preference (INV-15)
+# Structured question preference (INV-14)
 # ---------------------------------------------------------------------------
 
 
 class TestStructuredQuestionPreference:
-    """SPEC.md must define INV-15 for AskUserQuestion and batching."""  # Tests INV-15
+    """SPEC.md must define INV-14 for AskUserQuestion and batching."""  # Tests INV-14
 
-    def test_inv15_structured_question_preference(self, skills_dir: Path):
-        """SPEC.md must contain INV-15 requiring AskUserQuestion for structured choices."""
+    def test_inv14_structured_question_preference(self, skills_dir: Path):
+        """SPEC.md must contain INV-14 requiring AskUserQuestion for structured choices."""
         spec_path = skills_dir / "SPEC.md"
         content = spec_path.read_text()
-        assert "INV-15" in content, "SPEC.md missing INV-15"
-        inv15_start = content.index("INV-15")
-        inv15_section = content[inv15_start:inv15_start + 500]
-        assert "AskUserQuestion" in inv15_section, "INV-15 must reference AskUserQuestion"
-        assert "batch" in inv15_section.lower(), "INV-15 must reference batching"
+        assert "INV-14" in content, "SPEC.md missing INV-14"
+        inv14_start = content.index("INV-14")
+        inv14_section = content[inv14_start:inv14_start + 500]
+        assert "AskUserQuestion" in inv14_section, "INV-14 must reference AskUserQuestion"
+        assert "batch" in inv14_section.lower(), "INV-14 must reference batching"
 
-    def test_inv15_brainstorming_no_one_question_per_message(self, skills_dir: Path):
+    def test_inv14_brainstorming_no_one_question_per_message(self, skills_dir: Path):
         """Brainstorming must NOT contain the old 'Only one question per message' pattern."""
         text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
         assert "Only one question per message" not in text, (
-            "brainstorming must not contain 'Only one question per message' — use batching (INV-15)"
+            "brainstorming must not contain 'Only one question per message' — use batching (INV-14)"
         )
 
-    def test_inv15_brainstorming_references_askuserquestion(self, skills_dir: Path):
+    def test_inv14_brainstorming_references_askuserquestion(self, skills_dir: Path):
         """Brainstorming must reference AskUserQuestion for structured choices."""
         text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
         assert "AskUserQuestion" in text, (
-            "brainstorming must reference AskUserQuestion (INV-15)"
+            "brainstorming must reference AskUserQuestion (INV-14)"
         )
 
-    def test_inv15_brainstorming_has_delegation_pattern(self, skills_dir: Path):
+    def test_inv14_brainstorming_has_delegation_pattern(self, skills_dir: Path):
         """Brainstorming must include delegation pattern (approval or information)."""
         text = (skills_dir / "brainstorming" / "SKILL.md").read_text().lower()
         assert "approval or information" in text, (
-            "brainstorming must include delegation pattern 'approval or information' (INV-15)"
+            "brainstorming must include delegation pattern 'approval or information' (INV-14)"
         )
 
-    def test_inv15_brainstorming_no_ready_for_implementation(self, skills_dir: Path):
+    def test_inv14_brainstorming_no_ready_for_implementation(self, skills_dir: Path):
         """Brainstorming must NOT contain 'Ready to set up for implementation?' prompt."""
         text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
         assert "Ready to set up for implementation?" not in text, (
-            "brainstorming must not ask 'Ready to set up for implementation?' — proceed directly (INV-15)"
+            "brainstorming must not ask 'Ready to set up for implementation?' — proceed directly (INV-14)"
         )
 
-    def test_inv15_finishing_references_askuserquestion(self, skills_dir: Path):
+    def test_inv14_finishing_references_askuserquestion(self, skills_dir: Path):
         """finishing-a-development-branch must reference AskUserQuestion for batched decisions."""
         text = (skills_dir / "finishing-a-development-branch" / "SKILL.md").read_text()
         assert "AskUserQuestion" in text, (
-            "finishing-a-development-branch must reference AskUserQuestion (INV-15)"
+            "finishing-a-development-branch must reference AskUserQuestion (INV-14)"
         )
 
-    def test_inv15_finishing_batches_retrospective(self, skills_dir: Path):
+    def test_inv14_finishing_batches_retrospective(self, skills_dir: Path):
         """finishing-a-development-branch must batch retrospective opt-in with other questions."""
         text = (skills_dir / "finishing-a-development-branch" / "SKILL.md").read_text().lower()
         assert "batch" in text and "retrospective" in text, (
-            "finishing-a-development-branch must batch retrospective opt-in with pre-PR questions (INV-15)"
+            "finishing-a-development-branch must batch retrospective opt-in with pre-PR questions (INV-14)"
         )
 
-    def test_inv15_retrospective_references_askuserquestion(self, skills_dir: Path):
+    def test_inv14_retrospective_references_askuserquestion(self, skills_dir: Path):
         """retrospective must reference AskUserQuestion for wrap-up decisions."""
         text = (skills_dir / "retrospective" / "SKILL.md").read_text()
         assert "AskUserQuestion" in text, (
-            "retrospective must reference AskUserQuestion (INV-15)"
+            "retrospective must reference AskUserQuestion (INV-14)"
         )
 
-    def test_inv15_codify_no_one_question_mandate(self, skills_dir: Path):
+    def test_inv14_codify_no_one_question_mandate(self, skills_dir: Path):
         """codify-subsystem must NOT mandate 'one question at a time' in Key Principles."""
         text = (skills_dir / "codify-subsystem" / "SKILL.md").read_text()
         # Extract Key Principles section
@@ -687,68 +587,37 @@ class TestStructuredQuestionPreference:
         assert principles_match, "codify-subsystem must have a Key Principles section"
         principles = principles_match.group().lower()
         assert "one question at a time" not in principles, (
-            "codify-subsystem Key Principles must not mandate 'one question at a time' — use batching (INV-15)"
+            "codify-subsystem Key Principles must not mandate 'one question at a time' — use batching (INV-14)"
         )
 
-    def test_inv15_codify_references_adaptive_modality(self, skills_dir: Path):
+    def test_inv14_codify_references_adaptive_modality(self, skills_dir: Path):
         """codify-subsystem must reference AskUserQuestion or adaptive modality."""
         text = (skills_dir / "codify-subsystem" / "SKILL.md").read_text()
         has_ask = "AskUserQuestion" in text
         has_adaptive = "adaptive" in text.lower()
         assert has_ask or has_adaptive, (
-            "codify-subsystem must reference AskUserQuestion or adaptive modality (INV-15)"
+            "codify-subsystem must reference AskUserQuestion or adaptive modality (INV-14)"
         )
 
-    def test_inv15_project_init_references_askuserquestion(self, skills_dir: Path):
+    def test_inv14_project_init_references_askuserquestion(self, skills_dir: Path):
         """project-init must reference AskUserQuestion for batched setup questions."""
         text = (skills_dir / "project-init" / "SKILL.md").read_text()
         assert "AskUserQuestion" in text, (
-            "project-init must reference AskUserQuestion (INV-15)"
+            "project-init must reference AskUserQuestion (INV-14)"
         )
 
-    def test_inv15_project_init_worktrees_default(self, skills_dir: Path):
+    def test_inv14_project_init_worktrees_default(self, skills_dir: Path):
         """project-init must establish .worktrees as default worktree location."""
         text = (skills_dir / "project-init" / "SKILL.md").read_text()
         assert ".worktrees" in text, (
             "project-init must establish .worktrees as default worktree location"
         )
 
-    def test_inv15_documentation_standards_references_askuserquestion(self, skills_dir: Path):
+    def test_inv14_documentation_standards_references_askuserquestion(self, skills_dir: Path):
         """documentation-standards must reference AskUserQuestion for batched approve/defer decisions."""
         text = (skills_dir / "documentation-standards" / "SKILL.md").read_text()
         assert "AskUserQuestion" in text, (
-            "documentation-standards must reference AskUserQuestion (INV-15)"
+            "documentation-standards must reference AskUserQuestion (INV-14)"
         )
 
 
-# ---------------------------------------------------------------------------
-# Beads-aware worktree operations
-# ---------------------------------------------------------------------------
-
-
-class TestBeadsWorktreeInvariant:
-    """Worktree skills must use bd worktree when .beads/ exists."""  # Tests INV-16
-
-    def test_worktree_skill_detects_beads(self, skills_dir: Path):  # Tests INV-16
-        """using-git-worktrees must detect .beads/ and use bd worktree create."""
-        text = (skills_dir / "using-git-worktrees" / "SKILL.md").read_text()
-        assert ".beads/" in text, (
-            "using-git-worktrees must detect .beads/ directory (INV-16)"
-        )
-        assert "bd worktree create" in text, (
-            "using-git-worktrees must use bd worktree create when beads is configured (INV-16)"
-        )
-
-    def test_worktree_skill_has_bd_remove(self, skills_dir: Path):  # Tests INV-16
-        """using-git-worktrees must reference bd worktree remove for cleanup."""
-        text = (skills_dir / "using-git-worktrees" / "SKILL.md").read_text()
-        assert "bd worktree remove" in text, (
-            "using-git-worktrees must reference bd worktree remove (INV-16)"
-        )
-
-    def test_finishing_skill_has_bd_worktree_remove(self, skills_dir: Path):  # Tests INV-16
-        """finishing-a-development-branch must use bd worktree remove when beads exists."""
-        text = (skills_dir / "finishing-a-development-branch" / "SKILL.md").read_text()
-        assert "bd worktree remove" in text, (
-            "finishing-a-development-branch must reference bd worktree remove (INV-16)"
-        )
