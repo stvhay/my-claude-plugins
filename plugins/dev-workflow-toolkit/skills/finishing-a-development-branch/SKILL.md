@@ -311,7 +311,7 @@ The retrospective opt-in is collected in the Pre-PR Batch (Step 3d). If the user
 - **documentation-standards** — Validate mode, hard gate after test verification
 - **retrospective** — Step 7, non-blocking session analysis after PR creation
 
-**Workflow:** Verify → CI check → Review doc check → Validate → Changelog → Base → Scope → Pre-PR Batch → Push + squash merge PR → Post-PR CI verify → Cleanup → Retrospective
+**Workflow:** Verify → Quality gate → Review doc check → CI check → Validate → Changelog → Base → Scope → Pre-PR Batch → Push + squash merge PR → Post-PR CI verify → Cleanup → Retrospective
 
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete
