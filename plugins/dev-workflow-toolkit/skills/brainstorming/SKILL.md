@@ -59,10 +59,11 @@ You MUST create a task for each of these items and complete them in order:
 6. **Consider subsystem boundaries** — does this fit in one subsystem or cross boundaries? If it crosses, note which SPEC.md files are relevant and flag that the plan should be split by subsystem. If a new subsystem boundary is identified that lacks a SPEC.md, recommend `/codify-subsystem` after implementation
 7. **Present design** — in sections scaled to their complexity, get user approval after each section
 8. **Evaluate epic scope** — does this design represent multiple distinct issues? If yes, restructure as epic with child issues (soft gate, see Evaluate Epic Scope section)
-9. **Identify documentation impact** — invoke documentation-standards (draft mode) to draft updates to tracked project docs
-10. **Write design doc** — save to `$PLANS_DIR/YYYY-MM-DD-<topic>-design.md` (local working directory, not committed), include documentation updates section
-11. **Evaluate UX design need** — if user-facing or agentic, recommend ux-design-agent
-12. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+9. **Post design summary to issue** — post a condensed design summary as a GitHub issue comment (see GitHub Projection section)
+10. **Identify documentation impact** — invoke documentation-standards (draft mode) to draft updates to tracked project docs
+11. **Write design doc** — save to `$PLANS_DIR/YYYY-MM-DD-<topic>-design.md` (local working directory, not committed), include documentation updates section
+12. **Evaluate UX design need** — if user-facing or agentic, recommend ux-design-agent
+13. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 **The terminal state is invoking writing-plans.** The only intermediate skills you may invoke are using-git-worktrees (during pre-flight, if on main), documentation-standards (after design approval), and ux-design-agent (when UX design is needed). Do NOT invoke any other implementation skill.
 
@@ -132,6 +133,27 @@ When UX design is required, use **ux-design-agent** (REQUIRED SUB-SKILL) to prod
 PLANS_DIR=$(jq -r '.plansDirectory // "~/.claude/plans"' .claude/settings.json 2>/dev/null || echo ~/.claude/plans)
 mkdir -p "$PLANS_DIR"
 ```
+
+**GitHub projection (INV-15):**
+- After the user approves the design and epic scope is evaluated, post a condensed design summary to the issue:
+
+```bash
+gh issue comment <N> --body "$(cat <<'DESIGN_EOF'
+## Design Summary
+<1-3 sentence overview of what the design does>
+
+**Approach:** <chosen approach name>
+**Key decisions:**
+- <decision 1>
+- <decision 2>
+
+Full design: \`$PLANS_DIR/YYYY-MM-DD-<topic>-design.md\` (local)
+DESIGN_EOF
+)"
+```
+
+- This is lightweight — not the full design doc, just enough to make the issue a useful record of what was decided
+- If issue creation was skipped (exploratory work), skip this step
 
 **Documentation impact:**
 - After user approves the design, invoke documentation-standards in draft mode
