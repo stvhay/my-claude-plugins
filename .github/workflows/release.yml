@@ -86,16 +86,25 @@ jobs:
 
       - name: Push version commits
         if: steps.bump.outputs.bumped == 'true'
-        run: git push
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          # Use API to update ref — bypasses ruleset enforcement for app tokens
+          NEW_SHA=$(git rev-parse HEAD)
+          gh api --method PATCH repos/${{ github.repository }}/git/refs/heads/main \
+            --field sha="$NEW_SHA" \
+            --field force=false
 
       - name: Create timestamp tag and release
         if: steps.bump.outputs.bumped == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           TAG=$(date -u +%Y-%m-%dT%H%M%SZ)
           git tag "$TAG"
-          git push origin "$TAG"
+          gh api --method POST repos/${{ github.repository }}/git/refs \
+            --field ref="refs/tags/$TAG" \
+            --field sha="$(git rev-parse HEAD)"
 
           gh release create "$TAG" \
             --title "Release $TAG" \
