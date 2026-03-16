@@ -89,11 +89,19 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          # Use API to update ref — bypasses ruleset enforcement for app tokens
           NEW_SHA=$(git rev-parse HEAD)
-          gh api --method PATCH repos/${{ github.repository }}/git/refs/heads/main \
+          TEMP_BRANCH="release/tmp-$(date -u +%Y%m%d%H%M%S)"
+
+          # Push objects to GitHub via unprotected temp branch
+          git push origin "HEAD:refs/heads/$TEMP_BRANCH"
+
+          # Fast-forward main ref via API (app token bypasses rulesets)
+          gh api --method PATCH "repos/${{ github.repository }}/git/refs/heads/main" \
             --field sha="$NEW_SHA" \
             --field force=false
+
+          # Clean up temp branch
+          git push origin --delete "$TEMP_BRANCH"
 
       - name: Create timestamp tag and release
         if: steps.bump.outputs.bumped == 'true'
@@ -101,8 +109,7 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           TAG=$(date -u +%Y-%m-%dT%H%M%SZ)
-          git tag "$TAG"
-          gh api --method POST repos/${{ github.repository }}/git/refs \
+          gh api --method POST "repos/${{ github.repository }}/git/refs" \
             --field ref="refs/tags/$TAG" \
             --field sha="$(git rev-parse HEAD)"
 
