@@ -60,7 +60,7 @@ You MUST create a task for each of these items and complete them in order:
 7. **Present design** — in sections scaled to their complexity, get user approval after each section
 8. **Evaluate epic scope** — does this design represent multiple distinct issues? If yes, restructure as epic with child issues (soft gate, see Evaluate Epic Scope section)
 9. **Identify documentation impact** — invoke documentation-standards (draft mode) to draft updates to tracked project docs
-10. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md` (local working directory, not committed), include documentation updates section
+10. **Write design doc** — save to `$PLANS_DIR/YYYY-MM-DD-<topic>-design.md` (local working directory, not committed), include documentation updates section
 11. **Evaluate UX design need** — if user-facing or agentic, recommend ux-design-agent
 12. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
@@ -127,6 +127,12 @@ When UX design is required, use **ux-design-agent** (REQUIRED SUB-SKILL) to prod
 
 ## After the Design
 
+**Plans directory resolution:**
+```bash
+PLANS_DIR=$(jq -r '.plansDirectory // "~/.claude/plans"' .claude/settings.json 2>/dev/null || echo ~/.claude/plans)
+mkdir -p "$PLANS_DIR"
+```
+
 **Documentation impact:**
 - After user approves the design, invoke documentation-standards in draft mode
 - The skill reads existing tracked docs (`README.md`, `docs/ARCHITECTURE.md`, `docs/DESIGN.md`, relevant `SPEC.md` files)
@@ -135,7 +141,7 @@ When UX design is required, use **ux-design-agent** (REQUIRED SUB-SKILL) to prod
 - Approved drafts are included in the design doc under a "Documentation Updates" section
 
 **Writing the design doc:**
-- Write the validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md` (local working directory, not committed)
+- Write the validated design to `$PLANS_DIR/YYYY-MM-DD-<topic>-design.md` (local working directory, not committed)
 - Include this header at the top of the design doc:
   ```markdown
   # Design: <topic>

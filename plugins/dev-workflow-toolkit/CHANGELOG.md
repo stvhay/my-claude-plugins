@@ -3,6 +3,17 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## Unreleased
+<!-- bump: patch -->
+
+### Fixed
+
+- **plansDirectory support:** All skills now resolve `plansDirectory` from `.claude/settings.json` instead of hardcoding `docs/plans/`. Default: `~/.claude/plans`.
+- **Quoted `$PLANS_DIR`** in `finishing-a-development-branch` `ls` command to handle paths with spaces.
+- **`jq` tool-health check** added to `quality_gate.py` (required for plansDirectory resolution).
+- **`.project-init` marker** uses `$TIMESTAMP` placeholder instead of synthetic date.
+- **CLAUDE-3 audit check** updated to verify beads directive is absent (v1.17.0 removal).
+
 ## v1.17.0
 
 
