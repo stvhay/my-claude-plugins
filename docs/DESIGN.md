@@ -81,7 +81,7 @@ review-dependent.
 
 ## Retrospective and Upstream Feedback Loop
 
-The `retrospective` skill runs as Step 8 of finishing-a-development-branch,
+The `retrospective` skill runs as Step 7 of finishing-a-development-branch,
 after the PR is created. The agent analyzes the development session and
 categorizes findings into two buckets:
 
