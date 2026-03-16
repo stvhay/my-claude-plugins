@@ -56,25 +56,7 @@ Quality gate failures in `inv-numbering`, `skill-structure`, and `doc-structure`
 must be resolved before proceeding. `tool-health` and `issue-tracking` warnings
 can proceed with a note in the PR body.
 
-### Step 1c: Review Documentation Check
-
-Run the check-review-documented validation:
-
-```bash
-${CLAUDE_SKILL_DIR}/../../scripts/check-review-documented.sh \
-  --issue "$(gh pr view --json body --jq '.body' 2>/dev/null | grep -oE '(Closes|Fixes|Resolves) #[0-9]+' | grep -oE '[0-9]+' | head -1 || echo '')" \
-  --beads-id "$(bd list --type=feature --json 2>/dev/null | jq -r '.[0].id // ""' || echo '')"
-```
-
-This is a **soft gate** — warnings are included in the PR body but do not block:
-
-- If warnings found: include them in PR body under `**Review documentation gaps:**`
-- If no warnings: proceed silently
-- If script not found or fails to run: proceed with a note
-
-> **Why soft gate:** Small changes (typo fixes, doc updates) may not have formal review documentation. The warning surfaces the gap for the PR reviewer to evaluate.
-
-### Step 1d: CI Status Check
+### Step 1c: CI Status Check
 
 <HARD-GATE>
 Do NOT proceed to documentation validation, PR creation, or merge until CI checks pass.
@@ -134,8 +116,8 @@ Invoke documentation-standards in validate mode. The skill will:
 If the project has a `CHANGELOG.md` (created by project-init):
 
 1. **Analyze changes** — review the diff against the base branch
-2. **Recommend release type** — based on changes, recommend patch (bug fix), minor (new feature, backward compatible), or major (breaking change). Present recommendation in Pre-PR Batch (Step 3d) using `AskUserQuestion`.
-3. **Write changelog entry after Pre-PR Batch** — once the user confirms the release type in Step 3d, add an `## Unreleased` section in `CHANGELOG.md` with a `<!-- bump: TYPE -->` comment and migration-relevant details. Include `**ACTION**` markers for any changes users need to apply.
+2. **Recommend release type** — based on changes, recommend patch (bug fix), minor (new feature, backward compatible), or major (breaking change). Present recommendation in Pre-PR Batch (Step 3c) using `AskUserQuestion`.
+3. **Write changelog entry after Pre-PR Batch** — once the user confirms the release type in Step 3c, add an `## Unreleased` section in `CHANGELOG.md` with a `<!-- bump: TYPE -->` comment and migration-relevant details. Include `**ACTION**` markers for any changes users need to apply.
 4. **Commit changelog** — separate commit for the changelog entry
 5. **Note PR label** — remind to apply `bump:TYPE` label when creating PR (or apply via `gh pr create --label bump:TYPE`)
 
@@ -151,7 +133,7 @@ This is a **soft warning** — proceed without changelog if the project hasn't a
 git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 ```
 
-If auto-detection is ambiguous, include in Pre-PR Batch (Step 3d). Otherwise proceed with detected base.
+If auto-detection is ambiguous, include in Pre-PR Batch (Step 3c). Otherwise proceed with detected base.
 
 ### Step 3b: Scope Check
 
@@ -167,7 +149,7 @@ git log main..HEAD --oneline
 git diff main...HEAD --stat
 ```
 
-**Evaluate scope using the criteria below.** If drift detected, include in Pre-PR Batch (Step 3d). If clean, auto-proceed.
+**Evaluate scope using the criteria below.** If drift detected, include in Pre-PR Batch (Step 3c). If clean, auto-proceed.
 
 **Signs of scope drift:**
 - Commits that address unrelated issues or features
@@ -189,26 +171,9 @@ Proceed anyway, or split?
 
 **If clean:** Proceed to Step 4.
 
-### Step 3c: Beads Preflight
+### Step 3c: Pre-PR Batch
 
-If beads is configured:
-
-```bash
-bd preflight --check
-```
-
-If preflight fails, surface the failures and stop. Do not proceed to PR creation with failing preflight.
-
-Post preflight results as a PR comment after PR creation:
-
-```bash
-gh pr comment <PR#> --body "## Preflight Results
-$(bd preflight --check 2>&1)"
-```
-
-### Step 3d: Pre-PR Batch
-
-After completing all analysis (documentation validation, changelog analysis, base branch detection, scope review, beads preflight), present all pending decisions in a single `AskUserQuestion` call:
+After completing all analysis (documentation validation, changelog analysis, base branch detection, scope review), present all pending decisions in a single `AskUserQuestion` call:
 
 Use `AskUserQuestion` with up to 4 questions:
 1. **Release type** — present recommendation with rationale, options: Patch / Minor / Major (only if CHANGELOG.md exists)
@@ -230,29 +195,18 @@ git push -u origin <feature-branch>
 
 # Check CONTRIBUTING.md for PR target repo
 grep -i "\-R \|pr.*target\|target.*repo" CONTRIBUTING.md 2>/dev/null
-# If a -R flag is specified (e.g., -R org/repo), use it with gh pr create
-
-# Gather beads context for PR body
-bd list --status=closed --json   # Closed tasks for summary
-bd list --status=open --json     # Remaining open tasks
-bd list --type=feature --json    # Find feature issue with external-ref
 
 # Check for design doc and plan to include in PR body
 # Convention: *-design.md (from brainstorming), *-plan.md (from writing-plans)
 ls docs/plans/*-design.md docs/plans/*-plan.md 2>/dev/null
 ```
 
-Build the PR body with beads context. If a design doc or plan exists, include it in a collapsible block:
+If a design doc or plan exists, include it in a collapsible block:
 
 ```bash
 gh pr create --title "<title>" --body "$(cat <<'EOF'
 ## Summary
 <2-3 bullets of what changed>
-
-## Beads
-**Epic:** <epic-id>
-**Completed:** <list of closed beads task IDs and titles>
-**Remaining:** <list of open beads task IDs, or "None">
 
 ## Test Plan
 - [ ] <verification steps>
@@ -268,14 +222,7 @@ EOF
 )"
 ```
 
-The `Closes #<N>` line comes from the beads feature issue's `external-ref` field. Strip the `gh-` prefix to get the issue number (e.g., `gh-21` → `Closes #21`). This ensures the GitHub issue is closed when the PR merges.
-
-After PR creation, close the beads feature issue:
-```bash
-bd close <feature-id> --reason "PR #<N> created"
-```
-
-> **If the PR is rejected or needs rework:** Reopen the beads feature with `bd reopen <feature-id>` and continue working.
+The `Closes #<N>` line links to the GitHub issue so it closes when the PR merges.
 
 ### Step 5b: Post-PR CI Verification
 
@@ -283,7 +230,7 @@ bd close <feature-id> --reason "PR #<N> created"
 Do NOT proceed to cleanup or merge until CI checks pass on the newly created PR.
 </HARD-GATE>
 
-This closes the gap from Step 1d when no PR existed at that point.
+This closes the gap from Step 1c when no PR existed at that point.
 
 ```bash
 # Wait for CI to start and complete
@@ -306,8 +253,6 @@ Cannot proceed until CI passes. Fix the failing checks and re-run.
 
 Stop. Don't proceed to Step 6.
 
-Then: Cleanup worktree (Step 6)
-
 ### Step 6: Cleanup Worktree
 
 Check if in worktree:
@@ -317,89 +262,38 @@ git worktree list | grep $(git branch --show-current)
 
 If yes:
 ```bash
-# Use bd worktree remove if .beads/ exists (handles redirect cleanup)
-if [ -d .beads ]; then
-  bd worktree remove <worktree-name>
-else
-  git worktree remove <worktree-path>
-fi
+git worktree remove <worktree-path>
 ```
 
-### Step 7: Beads Sync
-
-**After PR creation**, if a `.beads/` directory exists:
-
-```bash
-# Find the beads feature/epic linked to this branch's GitHub issue
-bd list --status=in_progress --json  # Review unclosed work
-
-# Only close beads that belong to THIS branch:
-# 1. The feature/epic whose external-ref matches the branch's GH issue (e.g., gh-<N>)
-# 2. Tasks that are children of that feature/epic
-# Do NOT close unrelated in-progress beads — they may belong to other branches.
-# If unsure which beads belong to this branch, ask the user before closing.
-bd close <id> --reason "Branch completed"
-
-# Push beads data to remote (if configured)
-bd dolt push 2>/dev/null || echo "Beads remote not configured — data persisted locally."
-```
-
-Only close beads scoped to the current branch's work. If no Dolt remote is configured, beads data is still persisted in the local database.
-
-### Step 8: Retrospective
+### Step 7: Retrospective
 
 **After all other steps complete,** invoke the retrospective skill.
 
-The retrospective opt-in is collected in the Pre-PR Batch (Step 3d). If the user opted in, invoke retrospective — skip its entry gate question (already answered). If they declined, skip entirely.
+The retrospective opt-in is collected in the Pre-PR Batch (Step 3c). If the user opted in, invoke retrospective — skip its entry gate question (already answered). If they declined, skip entirely.
 
 ## Quick Reference
 
 **Workflow:**
-1. Verify tests → Quality gate → Review docs check → CI check
-2. Validate docs → Changelog → Base branch → Scope check → Beads preflight
+1. Verify tests → Quality gate → CI check
+2. Validate docs → Changelog → Base branch → Scope check
 3. **Pre-PR Batch** (release type + scope + base + retrospective opt-in)
-4. Push → Squash merge PR → Post-PR CI verify → Cleanup → Beads sync → Retrospective
+4. Push → Squash merge PR → Post-PR CI verify → Cleanup → Retrospective
 
-## Work Tracking
+## Common Mistakes and Red Flags
 
-Follow the work-tracking protocol in SPEC.md (INV-14).
-
-**Fallback note:** Use GitHub PR body and comments for tracking completion steps.
-
-## Common Mistakes
-
-**Skipping test verification**
-- **Problem:** Merge broken code, create failing PR
-- **Fix:** Always verify tests before offering options
-
-**Skipping changelog entry**
-- **Problem:** Changes ship without changelog, CI can't determine version bump type
-- **Fix:** Step 2b prompts for release type and writes ## Unreleased entry with bump comment
-
-**Automatic worktree cleanup**
-- **Problem:** Remove worktree when might need it
-- **Fix:** Only cleanup after PR creation
-
-## Red Flags
-
-**Never:**
-- Proceed with failing tests
-- Merge without verifying tests on result
-- Delete work without confirmation
-- Force-push without explicit request
-
-**Always:**
-- Verify tests before creating PR
-- Write changelog entry with bump type if CHANGELOG.md exists before creating PR
-- Clean up worktree after PR creation
+- **Skipping test verification** — merge broken code. Always verify tests before offering options.
+- **Skipping changelog entry** — changes ship without changelog, CI can't determine version bump. Step 2b prompts for release type.
+- **Automatic worktree cleanup** — removing worktree when might need it. Only cleanup after PR creation.
+- **Never** proceed with failing tests, merge without verifying, delete work without confirmation, or force-push without explicit request.
+- **Always** verify tests before creating PR, write changelog entry with bump type if CHANGELOG.md exists, and clean up worktree after PR creation.
 
 ## Integration
 
 **Invokes:**
 - **documentation-standards** — Validate mode, hard gate after test verification
-- **retrospective** — Step 8, non-blocking session analysis after PR creation
+- **retrospective** — Step 7, non-blocking session analysis after PR creation
 
-**Workflow:** Verify → CI check → Validate → Changelog → Base → Scope → Beads preflight → Pre-PR Batch → Push + squash merge PR → Post-PR CI verify → Cleanup → Beads sync → Retrospective
+**Workflow:** Verify → CI check → Validate → Changelog → Base → Scope → Pre-PR Batch → Push + squash merge PR → Post-PR CI verify → Cleanup → Retrospective
 
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete

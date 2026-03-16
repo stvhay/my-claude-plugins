@@ -32,10 +32,7 @@ BEFORE claiming any status or expressing satisfaction:
 4. VERIFY: Does output confirm the claim?
    - If NO: State actual status with evidence
    - If YES: State claim WITH evidence
-5. PREFLIGHT: If `bd preflight` is available, run `bd preflight --check` for pre-PR readiness
-   - Reviews tests, lint, formatting, and project-specific checks (varies by project)
-   - Address any failing checks before claiming completion; skipped checks are informational
-6. ONLY THEN: Make the claim
+5. ONLY THEN: Make the claim
 
 Skip any step = lying, not verifying
 ```
@@ -55,26 +52,10 @@ Skip any step = lying, not verifying
 ## Red Flags - STOP
 
 - Using "should", "probably", "seems to"
-- Expressing satisfaction before verification ("Great!", "Perfect!", "Done!", etc.)
+- Expressing satisfaction before verification ("Great!", "Done!")
 - About to commit/push/PR without verification
 - Trusting agent success reports
-- Relying on partial verification
-- Thinking "just this once"
-- Tired and wanting work over
-- **ANY wording implying success without having run verification**
-
-## Rationalization Prevention
-
-| Excuse | Reality |
-|--------|---------|
-| "Should work now" | RUN the verification |
-| "I'm confident" | Confidence ≠ evidence |
-| "Just this once" | No exceptions |
-| "Linter passed" | Linter ≠ compiler |
-| "Agent said success" | Verify independently |
-| "I'm tired" | Exhaustion ≠ excuse |
-| "Partial check is enough" | Partial proves nothing |
-| "Different words so rule doesn't apply" | Spirit over letter |
+- ANY wording implying success without having run verification
 
 ## Key Patterns
 
@@ -108,45 +89,6 @@ Skip any step = lying, not verifying
 ❌ Trust agent report
 ```
 
-## Why This Matters
-
-From 24 failure memories:
-- your human partner said "I don't believe you" - trust broken
-- Undefined functions shipped - would crash
-- Missing requirements shipped - incomplete features
-- Time wasted on false completion → redirect → rework
-- Violates: "Honesty is a core value. If you lie, you'll be replaced."
-
-## When To Apply
-
-**ALWAYS before:**
-- ANY variation of success/completion claims
-- ANY expression of satisfaction
-- ANY positive statement about work state
-- Committing, PR creation, task completion
-- Moving to next task
-- Delegating to agents
-
-**Rule applies to:**
-- Exact phrases
-- Paraphrases and synonyms
-- Implications of success
-- ANY communication suggesting completion/correctness
-
-## The Bottom Line
-
-**No shortcuts for verification.**
-
-Run the command. Read the output. THEN claim the result.
-
-This is non-negotiable.
-
-## Work Tracking
-
-Follow the work-tracking protocol in SPEC.md (INV-14). Skill-specific additions:
-
-- Log verification results: `bd update <task-id> --notes "Review: PASS — verification ✅, quality gate ✅"`
-
 ## Integration with Code Simplification
 
 After verification passes, invoke the code-simplification skill:
@@ -155,7 +97,7 @@ After verification passes, invoke the code-simplification skill:
 verify (this skill) → invoke /code-simplification → re-verify → complete
 ```
 
-**Explicitly invoke** `/code-simplification` after step 6 passes. The simplification skill will:
+**Explicitly invoke** `/code-simplification` after step 5 passes. The simplification skill will:
 - Apply low-risk changes automatically
 - Flag structural changes for approval
 - Analyze failures for deeper issues
@@ -242,7 +184,6 @@ Staleness:
 
 After verification and quality gate pass, document the review:
 
-- **Beads:** `bd update <task-id> --notes "Review: PASS — verification ✅, quality gate ✅"`
 - **GitHub issue:** Post a summary:
   ```bash
   gh issue comment <N> --body "$(cat <<'REVIEW_EOF'
@@ -256,5 +197,3 @@ After verification and quality gate pass, document the review:
   REVIEW_EOF
   )"
   ```
-
-If either `bd` or `gh` is unavailable, use whichever is available. Proceed without documentation if neither is available.
