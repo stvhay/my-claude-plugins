@@ -15,7 +15,13 @@ DRY. YAGNI. TDD. Frequent commits.
 
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
-**Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>-plan.md`
+**Plans directory resolution:**
+```bash
+PLANS_DIR=$(jq -r '.plansDirectory // ".claude/plans"' .claude/settings.json 2>/dev/null || echo ".claude/plans")
+mkdir -p "$PLANS_DIR"
+```
+
+**Save plans to:** `$PLANS_DIR/YYYY-MM-DD-<feature-name>-plan.md`
 
 ## Task Sizing
 
@@ -45,7 +51,7 @@ Size tasks to the work, not to an arbitrary count. A plan may have 2 tasks or 6 
 # [Feature Name] Implementation Plan
 
 **Issue:** #<number> — <title>
-**Design:** docs/plans/YYYY-MM-DD-<topic>-design.md
+**Design:** $PLANS_DIR/YYYY-MM-DD-<topic>-design.md
 
 > **For Claude:** Execute this plan using subagent-driven-development (same session) or executing-plans (separate session / teammate).
 
@@ -160,15 +166,15 @@ After saving the plan, post a summary as an issue comment:
 
 ```bash
 gh issue comment <N> --body "## Implementation Plan
-$(grep '### Task' docs/plans/<filename>.md | sed 's/### /- [ ] /')
-Plan: \`docs/plans/<filename>.md\`"
+$(grep '### Task' $PLANS_DIR/<filename>.md | sed 's/### /- [ ] /')
+Plan: \`$PLANS_DIR/<filename>.md\`"
 ```
 
 ## Execution Handoff
 
 After saving the plan, proceed directly to execution using subagent-driven-development. Do not ask the user to choose an execution approach.
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Proceeding with subagent-driven execution."**
+**"Plan complete and saved to `$PLANS_DIR/<filename>.md`. Proceeding with subagent-driven execution."**
 
 - **REQUIRED SUB-SKILL:** Use subagent-driven-development
 - Stay in this session

@@ -125,7 +125,7 @@ HEAD_SHA=9a0d42a
 
 [Dispatch code-reviewer subagent]:
   WHAT_WAS_IMPLEMENTED: PR-aware review flow with authorship detection
-  PLAN_REFERENCE: Task 2 from docs/plans/optimize-pr-review.md
+  PLAN_REFERENCE: Task 2 from .claude/plans/optimize-pr-review.md
   BASE_SHA: 447c459
   HEAD_SHA: 9a0d42a
   DESCRIPTION: Added context detection, PR commenting, and authorship-based action branching

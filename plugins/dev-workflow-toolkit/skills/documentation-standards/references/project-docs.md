@@ -14,7 +14,7 @@ Every project using dev-workflow-toolkit maintains these tracked documents:
 
 ## Three Tiers of Documentation
 
-1. **Ephemeral** — `docs/plans/` (gitignored working material for PRs)
+1. **Ephemeral** — plans directory (default `.claude/plans/`, configurable via `plansDirectory` in `.claude/settings.json`) — gitignored working material for PRs
 2. **Tracked project docs** — `README.md`, `docs/ARCHITECTURE.md`, `docs/DESIGN.md`, `docs/*.md`
 3. **Tracked subsystem specs** — `SPEC.md` files per VSA (machine-readable contracts)
 

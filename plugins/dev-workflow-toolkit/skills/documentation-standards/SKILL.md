@@ -95,7 +95,7 @@ Do NOT allow the branch to proceed to option presentation, PR creation, or merge
    - Check `CLAUDE.md` for a `## Tracked Documentation` section. If present, use those paths. Otherwise default to `docs/ARCHITECTURE.md` and `docs/DESIGN.md` (uppercase, per project convention).
    - If tracked docs don't exist and the changes warrant them, warn and recommend creating them.
 
-4. **Read the design doc** (if one exists in `docs/plans/`):
+4. **Read the design doc** (if one exists in the plans directory — resolve via `jq -r '.plansDirectory // ".claude/plans"' .claude/settings.json 2>/dev/null || echo ".claude/plans"`):
    - Pull the "Documentation Updates" section drafted during brainstorming
    - Check whether each drafted update was implemented
 

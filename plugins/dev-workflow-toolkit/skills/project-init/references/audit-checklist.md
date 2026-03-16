@@ -55,11 +55,11 @@ the project, and proposes fixes for failures.
 ### SCAFF-5: Plans directory
 
 - **Layer:** Scaffolding
-- **Check:** `docs/plans/` directory exists
+- **Check:** Plans directory exists (read `plansDirectory` from `.claude/settings.json`, default `.claude/plans/`)
 - **Expected:** Directory present (may be empty)
 - **Severity when failing:** MISSING
-- **Remediation:** `mkdir -p docs/plans`
-- **Since:** v1.0.0
+- **Remediation:** `PLANS_DIR=$(jq -r '.plansDirectory // ".claude/plans"' .claude/settings.json 2>/dev/null || echo ".claude/plans") && mkdir -p "$PLANS_DIR"`
+- **Since:** v1.0.0 (updated v1.18.0 — configurable path)
 
 ---
 
@@ -83,14 +83,14 @@ the project, and proposes fixes for failures.
 - **Remediation:** Add `## Workflow` section with standard steps
 - **Since:** v1.0.0
 
-### CLAUDE-3: Work Tracking directive
+### CLAUDE-3: No stale beads directive
 
 - **Layer:** CLAUDE.md
-- **Check:** CLAUDE.md contains a beads work-tracking directive (`bd`)
-- **Expected:** `## Work Tracking` section referencing `bd` for all work tracking
+- **Check:** CLAUDE.md does NOT contain a beads work-tracking directive (`bd`)
+- **Expected:** No `## Work Tracking` section referencing `bd` (removed in v1.17.0)
 - **Severity when failing:** OUTDATED
-- **Remediation:** Add `## Work Tracking` section with `bd` directive per project-init beads installation
-- **Since:** v1.13.2
+- **Remediation:** Remove `## Work Tracking` section that references beads/`bd`
+- **Since:** v1.17.0
 
 ### CLAUDE-4: Writing Standards section
 

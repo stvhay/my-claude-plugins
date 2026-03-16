@@ -32,7 +32,7 @@ Review available context from this session:
 
 - **Commits** — `git log --oneline $(git merge-base HEAD main)..HEAD`
 - **PR** — `gh pr view --json title,body,additions,deletions` (if created)
-- **Plan vs actual** — compare the implementation plan (if one exists in `docs/plans/`) against what was actually built
+- **Plan vs actual** — compare the implementation plan (if one exists in the plans directory — resolve via `jq -r '.plansDirectory // ".claude/plans"' .claude/settings.json 2>/dev/null || echo ".claude/plans"`) against what was actually built
 - **Blockers** — note any workarounds, retries, or skill invocations that failed
 - **Skill usage** — which skills were invoked, which worked smoothly, which caused friction
 
