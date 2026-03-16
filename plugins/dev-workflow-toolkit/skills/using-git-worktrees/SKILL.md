@@ -100,19 +100,6 @@ project=$(basename "$(git rev-parse --show-toplevel)")
 
 ### 2. Create Worktree
 
-**If `.beads/` exists**, use `bd worktree` which auto-configures beads database redirects and gitignore entries:
-
-```bash
-# bd worktree create takes a path (positional) and optional --branch flag
-# Examples:
-#   bd worktree create .worktrees/feature-auth
-#   bd worktree create .worktrees/bugfix --branch fix-123
-bd worktree create "$path" --branch "$BRANCH_NAME"
-cd "$path"
-```
-
-**Otherwise**, use raw git:
-
 ```bash
 # Determine full path
 case $LOCATION in
@@ -184,78 +171,16 @@ Ready to implement <feature-name>
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
 
-## Common Mistakes
+## Common Mistakes and Red Flags
 
-### Skipping ignore verification
-
-- **Problem:** Worktree contents get tracked, pollute git status
-- **Fix:** Always use `git check-ignore` before creating project-local worktree
-
-### Assuming directory location
-
-- **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: existing > CLAUDE.md > ask
-
-### Proceeding with failing tests
-
-- **Problem:** Can't distinguish new bugs from pre-existing issues
-- **Fix:** Report failures, get explicit permission to proceed
-
-### Hardcoding setup commands
-
-- **Problem:** Breaks on projects using different tools
-- **Fix:** Auto-detect from project files (package.json, etc.)
-
-## Example Workflow
-
-```
-You: I'm using the using-git-worktrees skill to set up an isolated workspace.
-
-[Check .worktrees/ - exists]
-[Verify ignored - git check-ignore confirms .worktrees/ is ignored]
-[Create worktree: git worktree add .worktrees/feature/47-auth -b feature/47-auth]
-[Run npm install]
-[Run npm test - 47 passing]
-
-Worktree ready at /Users/jesse/myproject/.worktrees/feature/47-auth
-Tests passing (47 tests, 0 failures)
-Ready to implement auth feature
-```
-
-## CWD Persistence
-
-**After creating a worktree and `cd`-ing into it, agents can lose track of their working directory.** This causes the most common worktree confusion bugs.
-
-**Mitigations:**
-- After `cd "$path"`, immediately verify with `pwd` and `git branch --show-current`
-- If CWD becomes invalid (worktree removed while you're in it), the shell will error on most commands. Run `cd $(git worktree list | head -1 | awk '{print $1}')` to return to the main worktree
-- Skills that execute in worktrees (executing-plans, subagent-driven-development) should re-verify CWD at the start of each task/batch
-- Never remove a worktree that another agent or session is actively using
-
-**Recovery if CWD is lost:**
-```bash
-# List all worktrees to find valid paths
-git worktree list
-# Navigate to the correct one
-cd <worktree-path>
-# Verify
-git branch --show-current && pwd
-```
-
-## Red Flags
-
-**Never:**
-- Create worktree without verifying it's ignored (project-local)
-- Skip baseline test verification
-- Proceed with failing tests without asking
-- Assume directory location when ambiguous
-- Skip CLAUDE.md check
-
-**Always:**
-- Follow directory priority: existing > CLAUDE.md > ask
-- Verify directory is ignored for project-local
-- Auto-detect and run project setup
-- Verify clean test baseline
+- **Skip ignore verification** — worktree contents get tracked. Always `git check-ignore` first.
+- **Assume directory location** — follow priority: existing > CLAUDE.md > ask.
+- **Proceed with failing tests** — report failures, get explicit permission.
+- **Hardcode setup commands** — auto-detect from project files.
+- **Skip CLAUDE.md check** — it may specify a preferred directory.
+- **Forget CWD verification** — after `cd`, verify with `pwd` and `git branch --show-current`.
+- **Lose CWD** — re-verify at start of each task. Recovery: `git worktree list` to find valid paths.
+- **Remove active worktree** — never remove a worktree another agent/session is using.
 
 ## Integration
 
@@ -264,5 +189,5 @@ git branch --show-current && pwd
 - Any skill needing isolated workspace
 
 **Pairs with:**
-- **finishing-a-development-branch** - REQUIRED for cleanup after work complete. Use `bd worktree remove <name>` if beads is present (handles redirect cleanup).
+- **finishing-a-development-branch** - REQUIRED for cleanup after work complete. Use `git worktree remove`.
 - **executing-plans** or **subagent-driven-development** - Work happens in this worktree

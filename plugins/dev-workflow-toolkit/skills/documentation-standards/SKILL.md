@@ -158,14 +158,7 @@ Do NOT allow the branch to proceed to option presentation, PR creation, or merge
 
 ## Stat-Check Footnotes
 
-When documentation includes numeric statistics (test counts, skill counts, component
-counts), use **stat-check footnotes** to enable machine validation via the quality gate.
-This prevents statistics from going stale as the project evolves.
-
-### Convention
-
-Place a markdown footnote reference immediately after the number, with the footnote
-body containing a `stat-check:` directive pointing to a named check:
+Use **stat-check footnotes** to enable machine validation of numeric statistics in docs. Place a footnote reference after the number with a `stat-check:` directive:
 
 ```markdown
 **110 tests**[^stat-test-count] across 4 suites[^stat-suite-count]:
@@ -182,28 +175,9 @@ body containing a `stat-check:` directive pointing to a named check:
 | `test-suite-count` | Number of test modules |
 | `skill-count` | Number of `SKILL.md` files under `skills/` |
 
-### When to add stat-check footnotes
-
-- Any numeric claim in README, SPEC.md, or ARCHITECTURE.md that could go stale
-- Test counts, component counts, check counts, invariant counts
-- Cross-reference counts (e.g., "6 checks" in a description of the quality gate)
-
-### Validation
-
-The quality gate's `doc-stats` check parses all markdown files for stat-check
-footnotes and validates each claimed number against the actual count. Run:
-
-```bash
-${CLAUDE_SKILL_DIR}/../../scripts/quality-gate.sh --check doc-stats --path "$(git rev-parse --show-toplevel)"
-```
-
 ## What Doesn't Trigger the Gate
 
-- Bug fixes that don't change architecture or design
-- Pure refactors that don't alter behavior or contracts
-- Dependency bumps with no design impact
-- Test-only changes
-- Documentation-only changes (already updating docs)
+Bug fixes, pure refactors, dependency bumps, and test-only or doc-only changes skip the gate.
 
 ## Integration
 
