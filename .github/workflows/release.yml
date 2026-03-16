@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     steps:
       - uses: actions/create-github-app-token@v3
         id: app-token
@@ -84,35 +85,73 @@ jobs:
           # Write release body to file to preserve newlines
           echo -e "$RELEASE_BODY" > /tmp/release-body.md
 
-      - name: Push version commits
+      - name: Create version bump PR
+        if: steps.bump.outputs.bumped == 'true'
+        id: pr
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          BRANCH="release/version-bump-$(date -u +%Y%m%d%H%M%S)"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+          git push origin "HEAD:refs/heads/$BRANCH"
+
+          PR_URL=$(gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "chore: automated version bump" \
+            --body "Automated version bump by release workflow. Auto-merges when CI passes.")
+
+          PR_NUMBER=$(gh pr view "$PR_URL" --json number --jq '.number')
+          echo "number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Created PR #$PR_NUMBER: $PR_URL"
+
+          gh pr merge "$PR_NUMBER" --rebase --auto
+
+      - name: Wait for PR merge
         if: steps.bump.outputs.bumped == 'true'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          NEW_SHA=$(git rev-parse HEAD)
-          TEMP_BRANCH="release/tmp-$(date -u +%Y%m%d%H%M%S)"
+          PR_NUMBER=${{ steps.pr.outputs.number }}
+          echo "Waiting for PR #$PR_NUMBER to merge..."
 
-          # Push objects to GitHub via unprotected temp branch
-          git push origin "HEAD:refs/heads/$TEMP_BRANCH"
-
-          # Fast-forward main ref via API (app token bypasses rulesets)
-          gh api --method PATCH "repos/${{ github.repository }}/git/refs/heads/main" \
-            --field sha="$NEW_SHA" \
-            --field force=false
-
-          # Clean up temp branch
-          git push origin --delete "$TEMP_BRANCH"
+          for i in $(seq 1 60); do
+            STATE=$(gh pr view "$PR_NUMBER" --json state --jq '.state')
+            if [ "$STATE" = "MERGED" ]; then
+              echo "PR #$PR_NUMBER merged successfully"
+              exit 0
+            elif [ "$STATE" = "CLOSED" ]; then
+              echo "::error::PR #$PR_NUMBER was closed without merging"
+              exit 1
+            fi
+            echo "  Attempt $i/60: state=$STATE, waiting 10s..."
+            sleep 10
+          done
+          echo "::error::Timed out waiting for PR #$PR_NUMBER to merge (10 minutes)"
+          exit 1
 
       - name: Create timestamp tag and release
         if: steps.bump.outputs.bumped == 'true'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
+          # Get the merge commit on main
+          git fetch origin main
+          MERGE_SHA=$(git rev-parse origin/main)
+
           TAG=$(date -u +%Y-%m-%dT%H%M%SZ)
           gh api --method POST "repos/${{ github.repository }}/git/refs" \
             --field ref="refs/tags/$TAG" \
-            --field sha="$(git rev-parse HEAD)"
+            --field sha="$MERGE_SHA"
 
           gh release create "$TAG" \
             --title "Release $TAG" \
             --notes-file /tmp/release-body.md
+
+      - name: Cleanup temp branch on failure
+        if: failure() && steps.pr.outputs.branch != ''
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          git push origin --delete "${{ steps.pr.outputs.branch }}" 2>/dev/null || true
