@@ -198,8 +198,8 @@ grep -i "\-R \|pr.*target\|target.*repo" CONTRIBUTING.md 2>/dev/null
 
 # Check for design doc and plan to include in PR body
 # Convention: *-design.md (from brainstorming), *-plan.md (from writing-plans)
-PLANS_DIR=$(jq -r '.plansDirectory // ".claude/plans"' .claude/settings.json 2>/dev/null || echo ".claude/plans")
-ls $PLANS_DIR/*-design.md $PLANS_DIR/*-plan.md 2>/dev/null
+PLANS_DIR=$(jq -r '.plansDirectory // "~/.claude/plans"' .claude/settings.json 2>/dev/null || echo ~/.claude/plans)
+ls "$PLANS_DIR"/*-design.md "$PLANS_DIR"/*-plan.md 2>/dev/null
 ```
 
 If a design doc or plan exists, include it in a collapsible block:

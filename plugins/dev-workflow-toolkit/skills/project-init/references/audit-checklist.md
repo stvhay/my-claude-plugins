@@ -55,10 +55,10 @@ the project, and proposes fixes for failures.
 ### SCAFF-5: Plans directory
 
 - **Layer:** Scaffolding
-- **Check:** Plans directory exists (read `plansDirectory` from `.claude/settings.json`, default `.claude/plans/`)
+- **Check:** Plans directory exists (read `plansDirectory` from `.claude/settings.json`, default `~/.claude/plans/`)
 - **Expected:** Directory present (may be empty)
 - **Severity when failing:** MISSING
-- **Remediation:** `PLANS_DIR=$(jq -r '.plansDirectory // ".claude/plans"' .claude/settings.json 2>/dev/null || echo ".claude/plans") && mkdir -p "$PLANS_DIR"`
+- **Remediation:** `PLANS_DIR=$(jq -r '.plansDirectory // "~/.claude/plans"' .claude/settings.json 2>/dev/null || echo ~/.claude/plans) && mkdir -p "$PLANS_DIR"`
 - **Since:** v1.0.0 (updated v1.18.0 — configurable path)
 
 ---

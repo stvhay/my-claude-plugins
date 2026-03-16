@@ -129,7 +129,7 @@ When UX design is required, use **ux-design-agent** (REQUIRED SUB-SKILL) to prod
 
 **Plans directory resolution:**
 ```bash
-PLANS_DIR=$(jq -r '.plansDirectory // ".claude/plans"' .claude/settings.json 2>/dev/null || echo ".claude/plans")
+PLANS_DIR=$(jq -r '.plansDirectory // "~/.claude/plans"' .claude/settings.json 2>/dev/null || echo ~/.claude/plans)
 mkdir -p "$PLANS_DIR"
 ```
 

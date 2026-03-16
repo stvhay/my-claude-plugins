@@ -386,6 +386,18 @@ def check_tool_health(results: Results, project_root: Path) -> None:
     else:
         report(results, "WARN", "tool-health", "gh: not installed (optional)")
 
+    # jq (required for plansDirectory resolution)
+    if shutil.which("jq"):
+        try:
+            ver = subprocess.run(
+                ["jq", "--version"], capture_output=True, text=True, check=True
+            ).stdout.strip()
+            report(results, "PASS", "tool-health", f"jq: {ver}")
+        except subprocess.CalledProcessError:
+            report(results, "PASS", "tool-health", "jq: installed (version unknown)")
+    else:
+        report(results, "WARN", "tool-health", "jq: not installed (required for plansDirectory resolution)")
+
     # bd (beads)
     if shutil.which("bd"):
         try:

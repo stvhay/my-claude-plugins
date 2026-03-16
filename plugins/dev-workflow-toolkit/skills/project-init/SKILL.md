@@ -178,7 +178,7 @@ Proceed without branch protection — it's a soft gate during scaffolding.
    - If project name/purpose need open-ended input: present all questions as numbered items in a single free-text message (include CLAUDE.md as a yes/no item in the same list)
 3. Copy templates from `templates/` directory, adapting project name
 4. Optionally generate CLAUDE.md skeleton with project-specific sections
-5. Create the plans directory (read `plansDirectory` from `.claude/settings.json`, default `.claude/plans/`)
+5. Create the plans directory (read `plansDirectory` from `.claude/settings.json`, default `~/.claude/plans/`)
 6. **Worktree directory:** Create `.worktrees/` in the project root. Add `.worktrees/` to `.gitignore` (append if `.gitignore` exists, create if not). This establishes the default worktree location so using-git-worktrees never needs to ask.
 7. Write `.project-init` marker file with current plugin version
 8. Commit scaffolding files

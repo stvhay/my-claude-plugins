@@ -17,7 +17,7 @@ DRY. YAGNI. TDD. Frequent commits.
 
 **Plans directory resolution:**
 ```bash
-PLANS_DIR=$(jq -r '.plansDirectory // ".claude/plans"' .claude/settings.json 2>/dev/null || echo ".claude/plans")
+PLANS_DIR=$(jq -r '.plansDirectory // "~/.claude/plans"' .claude/settings.json 2>/dev/null || echo ~/.claude/plans)
 mkdir -p "$PLANS_DIR"
 ```
 
