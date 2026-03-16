@@ -15,7 +15,7 @@ read this file and apply retroactive actions marked with **ACTION**.
 
 ### Added
 
-- **Context-gate hook:** `scripts/context-gate-hook.sh` — PreToolUse hook that reads per-skill thresholds from `scripts/context-thresholds.json` and warns when context utilization is too high. Replaces inline context gate logic in brainstorming, writing-plans, subagent-driven-development, and executing-plans.
+- **Context-gate hook:** `scripts/context-gate-hook.sh` — PreToolUse hook that reads per-skill thresholds from `scripts/context-thresholds.json` and warns when context utilization is too high. Replaces inline context gate logic in brainstorming, writing-plans, subagent-driven-development, and executing-plans. **Known limitation:** Claude Code does not yet expose `CLAUDE_SKILL` to hooks, so the hook is a placeholder until upstream support lands.
 - **Hook-Based Enforcement** section added to `docs/DESIGN.md`.
 
 ### Changed

@@ -73,7 +73,7 @@ Skills compose into a development workflow graph. The primary flow is:
 | INV-10 | Source changes in a plugin directory require an `## Unreleased` section in that plugin's `CHANGELOG.md` with a `<!-- bump: TYPE -->` HTML comment | structural | Prevents unversioned changes from shipping to users; hook-enforced via `check-version-bump.sh` |
 | INV-11 | PRs with changelog bump type require a matching `bump:TYPE` PR label; CI validates consistency before merge | structural | Ensures bump intent is visible on the PR and consistent with changelog; CI-enforced via pre-merge workflow |
 | INV-12 | CI status checks must pass before PR creation in `finishing-a-development-branch` | structural | Prevents merging code that fails automated tests; enforced by `gh pr checks` hard gate |
-| INV-13 | Pipeline skills declare their context threshold in `scripts/context-thresholds.json`; the `context-gate-hook.sh` PreToolUse hook enforces automatically. Skills must not contain inline context gate sections | structural | Prevents context exhaustion during long pipelines; hook-based enforcement removes attention burden from skills |
+| INV-13 | Pipeline skills declare their context threshold in `scripts/context-thresholds.json`; the `context-gate-hook.sh` PreToolUse hook enforces automatically. Skills must not contain inline context gate sections. **Known limitation (2026-03):** Claude Code does not yet expose `CLAUDE_SKILL` to hooks, so the hook is a placeholder until upstream support lands | structural | Prevents context exhaustion during long pipelines; hook-based enforcement removes attention burden from skills |
 | INV-14 | Skills MUST use `AskUserQuestion` for decisions with enumerable options when the agent can propose good options with confidence. When 2+ independent questions exist in sequence, they MUST be batched into a single call (max 4). Open-ended questions that are independent SHOULD be presented together in a single free-text message. Agent chooses modality (structured vs free-text) based on confidence in proposed options | reasoning-required | Reduces round-trips and token waste; each round-trip re-sends full conversation context |
 
 **Enforcement classification:**
@@ -123,7 +123,7 @@ INV-6: structural — directory convention.
 
 INV-10, INV-11: INV-10 enforced by Claude Code hook (`check-version-bump.sh`) at session Stop events. INV-11 enforced by CI pre-merge workflow (`ci.yml` version-check job). Both validated by `test_version_hooks.py`.
 INV-12: enforced by `finishing-a-development-branch` skill prompt (Step 1d hard gate using `gh pr checks`).
-INV-14: reasoning-required — verified by `test_inv15_structured_question_preference` and during code review of SKILL.md updates.
+INV-14: reasoning-required — verified by `test_inv14_structured_question_preference` and during code review of SKILL.md updates.
 
 Skills are additionally validated via subagent pressure testing — see `/skill-creator`.
 

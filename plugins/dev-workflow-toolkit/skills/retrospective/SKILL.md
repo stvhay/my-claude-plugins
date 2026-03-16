@@ -15,7 +15,7 @@ work; the user validates and steers.
 
 ## When This Runs
 
-Invoked as Step 8 of finishing-a-development-branch, after the PR is created
+Invoked as Step 7 of finishing-a-development-branch, after the PR is created.
 Non-blocking — if the user declines, skip entirely.
 
 Ask: "Would you like a brief retrospective on this session? (Takes ~2 minutes)"
@@ -143,6 +143,6 @@ File upstream improvements as GitHub issues.
 ## Integration
 
 **Called by:**
-- **finishing-a-development-branch** — Step 8, after PR creation
+- **finishing-a-development-branch** — Step 7, after PR creation
 
 **Does not invoke other skills.** This is a terminal operation.

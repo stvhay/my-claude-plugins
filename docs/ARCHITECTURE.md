@@ -70,6 +70,11 @@ remaining pipeline budget: brainstorming (20%), writing-plans (65%),
 subagent-driven-development (40%), executing-plans (20%). The hook emits
 advisory warnings — it does not block execution.
 
+> **Known limitation (2026-03):** Claude Code does not yet expose
+> `CLAUDE_SKILL` to hooks, so the hook is a placeholder until upstream
+> support lands. The infrastructure is in place for when the env var becomes
+> available.
+
 Thresholds were calibrated from Langfuse session traces (issue #50): the full
 pipeline splits roughly 50/50 between pre-execution and execution phases.
 
