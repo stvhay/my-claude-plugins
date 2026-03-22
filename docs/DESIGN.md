@@ -155,3 +155,23 @@ all items regardless of version.
 
 This pattern avoids re-verifying stable items on every update while ensuring
 new requirements are always checked.
+
+## Instruction-Based Autonomy
+
+The `sprint` skill composes existing pipeline skills autonomously using a
+pre-authorization table. Rather than modifying sub-skills to accept an
+"autonomous mode" flag, the sprint skill instructs the agent how to answer
+each sub-skill's decision points (e.g., answer "information" when brainstorming
+asks "approval or information?", pick the recommended approach).
+
+This preserves sub-skill independence — no skill needs to know it's running
+inside a sprint. The trade-off: pre-authorization is instruction-based (relies
+on the agent following the table) rather than mechanistic (no code enforces it).
+
+## Session Continuity via Turnover Documents
+
+Sprint sessions bridge context through `docs/turnover/YYYY-MM-DD.md` files.
+Each turnover doc captures: the current priority plan, completed work, open
+PRs for review, and notes for the next session. The PR is the session boundary
+— a session ends with all work filed as PRs, and the next session begins with
+independent review of those PRs.

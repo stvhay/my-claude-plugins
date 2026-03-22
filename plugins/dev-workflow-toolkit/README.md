@@ -14,7 +14,7 @@ Select `dev-workflow-toolkit` from the plugin list.
 
 **Recommended companion:** Install `writing-toolkit` for the `writing-clearly-and-concisely` skill referenced by several workflow skills.
 
-## Skills (18)[^stat-skill-count]
+## Skills (19)[^stat-skill-count]
 
 ### Workflow
 
@@ -27,6 +27,7 @@ Select `dev-workflow-toolkit` from the plugin list.
 | `dispatching-parallel-agents` | Run independent tasks in parallel |
 | `project-init` | Scaffold new projects or audit/update existing ones against current standards |
 | `setup-rag` | Configure local-rag for project-isolated RAG indexing |
+| `sprint` | Autonomous development session — multi-issue execution with turnover |
 
 ### Quality
 
@@ -79,6 +80,14 @@ The plugin registers hooks via `hooks/hooks.json` for Langfuse tracing:
 Skills invoke other skills to create workflow orchestration. This prevents circular invocations:
 
 ```
+sprint (entry — session orchestrator)
+  └─> requesting-code-review (Phase 1b, 3x parallel: opus/sonnet/haiku)
+  └─> code-simplification (Phase 1b, after review)
+  └─> dispatching-parallel-agents (Phase 1b, multi-model dispatch)
+  └─> brainstorming (Phase 2, delegation=information)
+       └─> [existing brainstorming subtree]
+  └─> retrospective (Phase 3a, autonomous)
+
 brainstorming (entry)
   └─> using-git-worktrees (pre-flight, if on main)
   └─> documentation-standards (draft mode, after design approval)

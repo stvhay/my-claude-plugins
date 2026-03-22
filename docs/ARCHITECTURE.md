@@ -34,7 +34,7 @@ is external, maintained at [agentskills.io](https://agentskills.io/specification
 
 ## Skill Composition Patterns
 
-Three composition patterns recur across plugins:
+Four composition patterns recur across plugins:
 
 1. **Orchestrator to Specialist.** A hub skill classifies the request and
    delegates to a spoke. Examples: `stamp-base` routes to STPA / STPA-Sec /
@@ -50,6 +50,13 @@ Three composition patterns recur across plugins:
 3. **Cross-cutting technique.** Skills that any other skill may invoke for a
    specific concern: trust-calibration, ux-writing,
    writing-clearly-and-concisely.
+
+4. **Session Orchestrator.** A skill that manages an entire development session,
+   running the pipeline in a loop across multiple issues with pre-authorized
+   decisions. The `sprint` skill wraps the brainstorming → writing-plans →
+   executing-plans → finishing-a-development-branch pipeline, handling session
+   continuity via turnover documents and autonomous decision-making via an
+   instruction-based pre-authorization table.
 
 ## Per-Plugin Isolation
 

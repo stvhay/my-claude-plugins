@@ -3,6 +3,19 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## Unreleased
+
+<!-- bump: minor -->
+
+### Added
+
+- **sprint skill:** Autonomous development session orchestrator with three phases — Orient (turnover + multi-model PR review), Work (issue loop with pre-authorized pipeline), Wrap Up (retrospective + turnover). Supports chaining via `/sprint N`.
+- **INV-16:** Sprint PR reviews must dispatch to fresh-context subagents; multi-model review (opus, sonnet, haiku) via dispatching-parallel-agents.
+- **INV-17:** Turnover doc format (`docs/turnover/YYYY-MM-DD.md`) for session continuity.
+- **FAIL-11/12/13:** Failure modes for review contamination, stale turnover, autonomy drift.
+- **ARCHITECTURE.md:** Session Orchestrator as 4th composition pattern.
+- **DESIGN.md:** Instruction-Based Autonomy and Session Continuity sections.
+
 ## v1.17.1
 
 ### Added
