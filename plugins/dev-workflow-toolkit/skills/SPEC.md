@@ -76,6 +76,8 @@ Skills compose into a development workflow graph. The primary flow is:
 | INV-13 | Pipeline skills declare their context threshold in `scripts/context-thresholds.json`; the `context-gate-hook.sh` PreToolUse hook enforces automatically. Skills must not contain inline context gate sections. **Known limitation (2026-03):** Claude Code does not yet expose `CLAUDE_SKILL` to hooks, so the hook is a placeholder until upstream support lands | structural | Prevents context exhaustion during long pipelines; hook-based enforcement removes attention burden from skills |
 | INV-14 | Skills MUST use `AskUserQuestion` for decisions with enumerable options when the agent can propose good options with confidence. When 2+ independent questions exist in sequence, they MUST be batched into a single call (max 4). Open-ended questions that are independent SHOULD be presented together in a single free-text message. Agent chooses modality (structured vs free-text) based on confidence in proposed options | reasoning-required | Reduces round-trips and token waste; each round-trip re-sends full conversation context |
 | INV-15 | Skills that produce design documents, review findings, or status artifacts MUST post them as comments to the appropriate GitHub surface: issue (pre-PR) or PR (post-PR). Projection skills are enumerated in `GITHUB_PROJECTION_SKILLS` in test_integration.py | structural | Ensures work artifacts are visible to collaborators and traceable in GitHub; prevents silent local-only results that disappear with the session |
+| INV-16 | Sprint PR reviews MUST dispatch to subagents for fresh context; the orchestrator context must not be used for review. Multi-model review (opus, sonnet, haiku) runs in parallel via `dispatching-parallel-agents` | reasoning-required | Prevents context contamination in chained sprints where the orchestrator accumulates prior sprint work; model diversity catches different categories of issues |
+| INV-17 | Sprint turnover docs follow the format `.claude/turnover/YYYY-MM-DD.md` (gitignored) with sections: Plan, Completed this session, Risk Ledger, Open PRs, Notes. Each sprint session must write a turnover doc in Phase 3 | reasoning-required | Enables session continuity — the next sprint reads the most recent turnover to orient without re-evaluating the entire issue board |
 
 **Enforcement classification:**
 - **structural** — enforced by test suite, gitignore structure, or directory convention; pattern-matchable
@@ -101,6 +103,9 @@ lifecycle points (plan summaries, progress updates, review findings).
 | FAIL-8 | `check-version-bump.sh` errors with CHANGELOG_ENTRY_REQUIRED or BUMP_TYPE_MISSING | Source files changed without `## Unreleased` section or without `<!-- bump: TYPE -->` comment | Add `## Unreleased` section with `<!-- bump: patch -->` (or minor/major) comment to CHANGELOG.md |
 | FAIL-9 | Context gate warns "context awareness unavailable" | `.claude/.statusline-stats` not found (statusline not configured or not running) | Ensure claude-statusline is configured for the project; `context-check` script exits with error, agent warns user and proceeds |
 | FAIL-10 | Design, review, or status artifact produced but not posted to GitHub | Skill runs locally without `gh issue comment` or `gh pr comment` | Add projection command to skill; add skill to `GITHUB_PROJECTION_SKILLS` test dict (INV-15) |
+| FAIL-11 | PR merged with issues that multi-model review would have caught | Sprint reviews run with single model or in contaminated orchestrator context | Ensure Phase 1b dispatches 3 parallel subagents (opus, sonnet, haiku) with fresh context per review |
+| FAIL-12 | Sprint starts with stale turnover plan | Turnover doc references closed issues or shifted priorities | Phase 1a must validate turnover against current issue board; update plan if stale |
+| FAIL-13 | Sprint autonomy drift — agent pauses for pre-authorized decisions | Pre-authorization table not followed; agent treats sprint like interactive session | Review pre-authorization table; only pause for items in "When to Pause" section |
 
 ## Decision Framework
 
@@ -114,6 +119,8 @@ lifecycle points (plan summaries, progress updates, review findings).
 | Multiple independent questions pending | Batch into single `AskUserQuestion` (max 4) or single free-text message | INV-14 |
 | Starting a design-heavy workflow | Ask delegation question: "Design for approval or information?" | INV-14 |
 | CLAUDE.md has workflow defaults for a recurring question | Pre-answer the question without prompting | INV-14 |
+| Running autonomous sprint session | Follow pre-authorization table; pause only for genuine uncertainty, scope creep, breaking changes, or blockers | INV-16, INV-17 |
+| Reviewing PR during sprint Phase 1b | Dispatch 3 fresh-context subagents (opus/sonnet/haiku), synthesize findings | INV-16 |
 
 ## Testing
 
@@ -127,6 +134,8 @@ INV-10, INV-11: INV-10 enforced by Claude Code hook (`check-version-bump.sh`) at
 INV-12: enforced by `finishing-a-development-branch` skill prompt (Step 1d hard gate using `gh pr checks`).
 INV-14: reasoning-required — verified by `test_inv14_structured_question_preference` and during code review of SKILL.md updates.
 INV-15: structural — enforced by `TestGitHubProjection` in `test_integration.py`; `GITHUB_PROJECTION_SKILLS` dict enumerates all projection-required skills.
+INV-16: reasoning-required — verified by `test_sprint_dependency_resolution` (SKILL.md references dispatching-parallel-agents) and during code review.
+INV-17: reasoning-required — verified during code review of SKILL.md turnover section.
 
 Skills are additionally validated via subagent pressure testing — see `/skill-creator`.
 

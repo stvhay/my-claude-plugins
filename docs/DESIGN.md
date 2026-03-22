@@ -155,3 +155,40 @@ all items regardless of version.
 
 This pattern avoids re-verifying stable items on every update while ensuring
 new requirements are always checked.
+
+## Instruction-Based Autonomy
+
+The `sprint` skill composes existing pipeline skills autonomously using a
+pre-authorization table. Rather than modifying sub-skills to accept an
+"autonomous mode" flag, the sprint skill instructs the agent how to answer
+each sub-skill's decision points (e.g., answer "information" when brainstorming
+asks "approval or information?", pick the recommended approach).
+
+This preserves sub-skill independence — no skill needs to know it's running
+inside a sprint. The trade-off: pre-authorization is instruction-based (relies
+on the agent following the table) rather than mechanistic (no code enforces it).
+
+## Externalized Risk Accounting
+
+The `sprint` skill tracks cumulative risk using the `total-risk` CLI tool
+(`scripts/total-risk`). The agent classifies each task by category and
+reports conditions; the tool computes the adjusted cost (including modifiers
+for file count, same-module work, CI results, and context degradation at
+×1.05 per prior task) and returns a verdict: ok, caution, skip, or blocked.
+
+This externalizes the accounting that would otherwise run on the agent's
+degrading context. The agent cannot miscalculate the budget because it
+doesn't do the math — and it cannot skip the check because the tool
+maintains its own state file (`.claude/risk-budget.json`). A `check`
+command lets the agent preview cost before committing, enabling it to
+pick cheaper tasks when budget is tight rather than stopping immediately.
+
+## Session Continuity via Turnover Documents
+
+Sprint sessions bridge context through `.claude/turnover/YYYY-MM-DD.md` files
+(gitignored — session state, not project documentation). Each turnover doc
+captures: the current priority plan, completed work with risk costs, the full
+risk ledger, open PRs for review, and notes for the next session. The PR is
+the session boundary — a session ends with all work filed as PRs, and the next
+session begins with independent review of those PRs. Each `/sprint` invocation
+is a single session with fresh context; turnover docs bridge between sessions.

@@ -1,0 +1,300 @@
+#!/usr/bin/env python3
+"""Track cumulative risk budget for autonomous agent sessions.
+
+Usage:
+    total-risk reset <budget>              Reset session, set budget ceiling
+    total-risk check <category> [conds...] Preview cost without logging (for skip/defer decisions)
+    total-risk <category> [conditions...]  Log a task, return updated budget
+    total-risk status                      Show current session state
+
+Categories (base cost):
+    docs (1), style (1), tests (2), new-feature (3), mechanical-refactor (3),
+    structural-refactor (5), modify-feature (5), bug-fix (7), performance (7),
+    security (8), ci-infra (4)
+
+Conditions:
+    4-plus-files      ×1.5 multiplier
+    same-module       ×1.3 multiplier (or pass module:<path> for auto-detect)
+    ci-pass           −1 discount
+    ci-fail           +3 penalty
+    review-clean      −1 discount
+
+Context degradation (×1.05 per prior task) is applied automatically.
+
+State: .claude/risk-budget.json (relative to CWD)
+Output: JSON to stdout
+"""
+
+import json
+import math
+import os
+import sys
+from pathlib import Path
+
+STATE_FILE = Path(".claude/risk-budget.json")
+
+BASE_COSTS = {
+    "docs": 1,
+    "style": 1,
+    "tests": 2,
+    "new-feature": 3,
+    "mechanical-refactor": 3,
+    "ci-infra": 4,
+    "structural-refactor": 5,
+    "modify-feature": 5,
+    "bug-fix": 7,
+    "performance": 7,
+    "security": 8,
+}
+
+COST_FLOOR = 1
+
+
+def load_state():
+    if STATE_FILE.exists():
+        return json.loads(STATE_FILE.read_text())
+    return None
+
+
+def save_state(state):
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    STATE_FILE.write_text(json.dumps(state, indent=2) + "\n")
+
+
+def reset(budget):
+    state = {
+        "budget": budget,
+        "total": 0,
+        "task_count": 0,
+        "tasks": [],
+        "modules_touched": [],
+    }
+    save_state(state)
+    return {
+        "action": "reset",
+        "budget": budget,
+        "total": 0,
+        "remaining": budget,
+        "status": "ok",
+    }
+
+
+def status(state):
+    if state is None:
+        return {"error": "No active session. Run: total-risk reset <budget>"}
+    remaining = state["budget"] - state["total"]
+    s = "ok"
+    if remaining <= 0:
+        s = "checkpoint"
+    elif remaining < state["budget"] * 0.25:
+        s = "warning"
+    return {
+        "action": "status",
+        "budget": state["budget"],
+        "total": round(state["total"], 1),
+        "remaining": round(remaining, 1),
+        "task_count": state["task_count"],
+        "status": s,
+        "tasks": state["tasks"],
+    }
+
+
+def _budget_status(remaining, budget):
+    if remaining <= 0:
+        return "checkpoint"
+    if remaining < budget * 0.25:
+        return "warning"
+    return "ok"
+
+
+def _calculate_cost(state, category, conditions):
+    """Calculate adjusted cost for a task. Returns (cost, base, modifiers, module_paths)."""
+    base = BASE_COSTS[category]
+    cost = base
+    modifiers = []
+
+    # Multiplicative modifiers
+    if "4-plus-files" in conditions:
+        cost *= 1.5
+        modifiers.append("×1.5 files")
+
+    # Same-module detection
+    module_paths = [c.split(":", 1)[1] for c in conditions if c.startswith("module:")]
+    same_module = "same-module" in conditions
+    if not same_module and module_paths and state["modules_touched"]:
+        for mp in module_paths:
+            if mp in state["modules_touched"]:
+                same_module = True
+                break
+    if same_module:
+        cost *= 1.3
+        modifiers.append("×1.3 same-module")
+
+    # Context degradation: ×1.05^(N) where N = tasks already completed
+    n = state["task_count"]
+    if n > 0:
+        degradation = math.pow(1.05, n)
+        cost *= degradation
+        modifiers.append(f"×{degradation:.2f} context(n={n})")
+
+    # Additive modifiers (applied after multiplicative)
+    if "ci-pass" in conditions:
+        cost -= 1
+        modifiers.append("−1 ci-pass")
+    if "ci-fail" in conditions:
+        cost += 3
+        modifiers.append("+3 ci-fail")
+    if "review-clean" in conditions:
+        cost -= 1
+        modifiers.append("−1 review-clean")
+
+    # Floor
+    cost = max(cost, COST_FLOOR)
+    cost = round(cost, 1)
+
+    return cost, base, modifiers, module_paths
+
+
+def check_task(state, category, conditions):
+    """Preview cost without logging. Helps agent decide to skip/defer."""
+    if state is None:
+        return {"error": "No active session. Run: total-risk reset <budget>"}
+
+    if category not in BASE_COSTS:
+        return {
+            "error": f"Unknown category: {category}",
+            "valid_categories": sorted(BASE_COSTS.keys()),
+        }
+
+    cost, base, modifiers, _ = _calculate_cost(state, category, conditions)
+    remaining = state["budget"] - state["total"]
+    remaining_after = remaining - cost
+
+    # Advise the agent
+    if remaining <= 0:
+        advice = "skip"
+        reason = "Budget exhausted. Checkpoint required before any new tasks."
+    elif cost > remaining:
+        advice = "skip"
+        reason = f"Task cost ({cost}) exceeds remaining budget ({round(remaining, 1)}). Pick a cheaper task or checkpoint."
+    elif remaining_after < state["budget"] * 0.15:
+        advice = "caution"
+        reason = f"This would leave only {round(remaining_after, 1)} budget. Consider whether this is the best use of remaining headroom."
+    else:
+        advice = "ok"
+        reason = "Within budget."
+
+    return {
+        "action": "check",
+        "category": category,
+        "base": base,
+        "modifiers": modifiers,
+        "adjusted_cost": cost,
+        "remaining_before": round(remaining, 1),
+        "remaining_after": round(remaining_after, 1),
+        "advice": advice,
+        "reason": reason,
+    }
+
+
+def log_task(state, category, conditions):
+    if state is None:
+        return {"error": "No active session. Run: total-risk reset <budget>"}
+
+    if category not in BASE_COSTS:
+        return {
+            "error": f"Unknown category: {category}",
+            "valid_categories": sorted(BASE_COSTS.keys()),
+        }
+
+    # Check budget before starting
+    remaining = state["budget"] - state["total"]
+    if remaining <= 0:
+        return {
+            "action": "blocked",
+            "reason": "Budget exhausted. Checkpoint required.",
+            "budget": state["budget"],
+            "total": round(state["total"], 1),
+            "remaining": round(remaining, 1),
+            "status": "checkpoint",
+        }
+
+    cost, base, modifiers, module_paths = _calculate_cost(state, category, conditions)
+
+    # Update state
+    state["total"] = round(state["total"] + cost, 1)
+    state["task_count"] += 1
+    if module_paths:
+        for mp in module_paths:
+            if mp not in state["modules_touched"]:
+                state["modules_touched"].append(mp)
+
+    task_entry = {
+        "seq": state["task_count"],
+        "category": category,
+        "base": base,
+        "modifiers": modifiers,
+        "adjusted_cost": cost,
+    }
+    state["tasks"].append(task_entry)
+    save_state(state)
+
+    remaining = state["budget"] - state["total"]
+
+    return {
+        "action": "logged",
+        "task": task_entry,
+        "total": state["total"],
+        "budget": state["budget"],
+        "remaining": round(remaining, 1),
+        "status": _budget_status(remaining, state["budget"]),
+    }
+
+
+def main():
+    if len(sys.argv) < 2:
+        print(__doc__)
+        sys.exit(1)
+
+    cmd = sys.argv[1]
+
+    if cmd == "reset":
+        if len(sys.argv) < 3:
+            print(json.dumps({"error": "Usage: total-risk reset <budget>"}))
+            sys.exit(1)
+        try:
+            budget = float(sys.argv[2])
+        except ValueError:
+            print(json.dumps({"error": f"Budget must be a number, got: {sys.argv[2]}"}))
+            sys.exit(1)
+        result = reset(budget)
+
+    elif cmd == "status":
+        result = status(load_state())
+
+    elif cmd == "check":
+        if len(sys.argv) < 3:
+            print(json.dumps({"error": "Usage: total-risk check <category> [conditions...]"}))
+            sys.exit(1)
+        category = sys.argv[2]
+        conditions = sys.argv[3:]
+        result = check_task(load_state(), category, conditions)
+
+    elif cmd in BASE_COSTS:
+        conditions = sys.argv[2:]
+        result = log_task(load_state(), cmd, conditions)
+
+    else:
+        result = {
+            "error": f"Unknown command or category: {cmd}",
+            "valid_categories": sorted(BASE_COSTS.keys()),
+            "commands": ["reset <budget>", "check <category> [conds...]", "status", "<category> [conditions...]"],
+        }
+
+    print(json.dumps(result, indent=2))
+    if "error" in result:
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

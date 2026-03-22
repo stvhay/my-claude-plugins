@@ -14,7 +14,7 @@ Select `dev-workflow-toolkit` from the plugin list.
 
 **Recommended companion:** Install `writing-toolkit` for the `writing-clearly-and-concisely` skill referenced by several workflow skills.
 
-## Skills (18)[^stat-skill-count]
+## Skills (19)[^stat-skill-count]
 
 ### Workflow
 
@@ -27,6 +27,7 @@ Select `dev-workflow-toolkit` from the plugin list.
 | `dispatching-parallel-agents` | Run independent tasks in parallel |
 | `project-init` | Scaffold new projects or audit/update existing ones against current standards |
 | `setup-rag` | Configure local-rag for project-isolated RAG indexing |
+| `sprint` | Autonomous development session — multi-issue execution with turnover |
 
 ### Quality
 
@@ -79,6 +80,15 @@ The plugin registers hooks via `hooks/hooks.json` for Langfuse tracing:
 Skills invoke other skills to create workflow orchestration. This prevents circular invocations:
 
 ```
+sprint (entry — session orchestrator, disable-model-invocation)
+  └─> total-risk (tool — risk budget tracking, all phases)
+  └─> requesting-code-review (Phase 1b, 3x parallel: opus/sonnet/haiku)
+  └─> code-simplification (Phase 1b, after review)
+  └─> dispatching-parallel-agents (Phase 1b, multi-model dispatch)
+  └─> brainstorming (Phase 2, delegation=information)
+       └─> [existing brainstorming subtree]
+  └─> retrospective (Phase 3a, autonomous)
+
 brainstorming (entry)
   └─> using-git-worktrees (pre-flight, if on main)
   └─> documentation-standards (draft mode, after design approval)
@@ -116,7 +126,7 @@ cd plugins/dev-workflow-toolkit
 ./tests/run-all.sh
 ```
 
-**288 tests**[^stat-test-count] across 13 modules[^stat-suite-count]:
+**324 tests**[^stat-test-count] across 14 modules[^stat-suite-count]:
 - Structure — frontmatter validation, SPEC.md checks, project-init templates, setup-rag config, cross-plugin validation
 - Integration — skill loading, dependency resolution, trigger patterns, reference files
 - Quality gate — smoke tests, negative fixtures, doc-stats validation
