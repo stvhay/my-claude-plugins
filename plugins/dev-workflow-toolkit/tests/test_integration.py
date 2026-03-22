@@ -77,6 +77,11 @@ EXPECTED_DEPS = {
     "verification-before-completion": "code-simplification",
     "requesting-code-review": "code-reviewer",
     "finishing-a-development-branch": "documentation-standards",
+    "sprint": (
+        "requesting-code-review|code-simplification|dispatching-parallel-agents"
+        "|using-git-worktrees|brainstorming|writing-plans"
+        "|executing-plans|finishing-a-development-branch|retrospective"
+    ),
 }
 
 
@@ -303,6 +308,7 @@ GITHUB_PROJECTION_SKILLS = {
     "verification-before-completion": "gh issue comment",
     "requesting-code-review": "gh pr comment",
     "receiving-code-review": "gh api repos/",
+    "sprint": "gh issue comment",
 }
 
 
