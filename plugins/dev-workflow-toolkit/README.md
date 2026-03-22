@@ -80,7 +80,8 @@ The plugin registers hooks via `hooks/hooks.json` for Langfuse tracing:
 Skills invoke other skills to create workflow orchestration. This prevents circular invocations:
 
 ```
-sprint (entry — session orchestrator)
+sprint (entry — session orchestrator, disable-model-invocation)
+  └─> total-risk (tool — risk budget tracking, all phases)
   └─> requesting-code-review (Phase 1b, 3x parallel: opus/sonnet/haiku)
   └─> code-simplification (Phase 1b, after review)
   └─> dispatching-parallel-agents (Phase 1b, multi-model dispatch)
@@ -125,7 +126,7 @@ cd plugins/dev-workflow-toolkit
 ./tests/run-all.sh
 ```
 
-**290 tests**[^stat-test-count] across 13 modules[^stat-suite-count]:
+**324 tests**[^stat-test-count] across 14 modules[^stat-suite-count]:
 - Structure — frontmatter validation, SPEC.md checks, project-init templates, setup-rag config, cross-plugin validation
 - Integration — skill loading, dependency resolution, trigger patterns, reference files
 - Quality gate — smoke tests, negative fixtures, doc-stats validation

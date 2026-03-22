@@ -55,8 +55,9 @@ Four composition patterns recur across plugins:
    running the pipeline in a loop across multiple issues with pre-authorized
    decisions. The `sprint` skill wraps the brainstorming → writing-plans →
    executing-plans → finishing-a-development-branch pipeline, handling session
-   continuity via turnover documents and autonomous decision-making via an
-   instruction-based pre-authorization table.
+   continuity via turnover documents, autonomous decision-making via an
+   instruction-based pre-authorization table, and cumulative risk tracking
+   via the externalized `total-risk` tool.
 
 ## Per-Plugin Isolation
 

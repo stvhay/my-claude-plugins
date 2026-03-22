@@ -9,12 +9,14 @@ read this file and apply retroactive actions marked with **ACTION**.
 
 ### Added
 
-- **sprint skill:** Autonomous development session orchestrator with three phases — Orient (turnover + multi-model PR review), Work (issue loop with pre-authorized pipeline), Wrap Up (retrospective + turnover). Supports chaining via `/sprint N`.
+- **sprint skill:** Autonomous development session orchestrator with three phases — Orient (turnover + multi-model PR review), Work (issue loop with pre-authorized pipeline), Wrap Up (retrospective + turnover). Explicit invocation only (`disable-model-invocation: true`). One session per `/sprint` invocation (fresh context); turnover docs bridge sessions.
+- **total-risk tool:** Externalized risk budget tracking for autonomous sessions. Categories with empirically-calibrated base costs, multiplicative modifiers (file count, same-module, context degradation at ×1.05/task), additive modifiers (CI/review results). `check` command for pre-task cost preview with skip/caution/ok advice. 34 tests.
+- **Risk tolerance levels:** `/sprint supervised|cautious|standard|trusted|autonomous` sets session budget ceiling (8–60).
 - **INV-16:** Sprint PR reviews must dispatch to fresh-context subagents; multi-model review (opus, sonnet, haiku) via dispatching-parallel-agents.
-- **INV-17:** Turnover doc format (`docs/turnover/YYYY-MM-DD.md`) for session continuity.
+- **INV-17:** Turnover doc format (`.claude/turnover/YYYY-MM-DD.md`, gitignored) for session continuity.
 - **FAIL-11/12/13:** Failure modes for review contamination, stale turnover, autonomy drift.
-- **ARCHITECTURE.md:** Session Orchestrator as 4th composition pattern.
-- **DESIGN.md:** Instruction-Based Autonomy and Session Continuity sections.
+- **ARCHITECTURE.md:** Session Orchestrator as 4th composition pattern, with risk tool.
+- **DESIGN.md:** Instruction-Based Autonomy, Externalized Risk Accounting, and Session Continuity sections.
 
 ## v1.17.1
 
