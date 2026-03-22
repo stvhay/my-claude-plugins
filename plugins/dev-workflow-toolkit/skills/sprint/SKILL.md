@@ -1,6 +1,7 @@
 ---
 name: sprint
-description: "Autonomous development session. Use when sprint, autonomous session, work through issues, batch development, or multi-issue session."
+description: "Autonomous development session orchestrator"
+disable-model-invocation: true
 ---
 
 # Sprint
@@ -11,16 +12,77 @@ Autonomous development session. Follows the CONTRIBUTING.md workflow with pre-au
 
 ## Invocation
 
-`/sprint` accepts an optional numeric argument for repetition count (default 1):
+`/sprint` accepts an optional risk tolerance argument (default: standard):
 
 ```
-/sprint        — run 1 sprint
-/sprint 5      — run 5 consecutive sprints
+/sprint              — run 1 sprint at Standard (budget 25)
+/sprint supervised   — budget 8, unfamiliar codebase
+/sprint cautious     — budget 15, production code
+/sprint standard     — budget 25, well-tested codebase (default)
+/sprint trusted      — budget 40, high coverage, proven track record
+/sprint autonomous   — budget 60, prototypes, low blast radius
 ```
 
-Parse the ARGUMENTS value. If numeric, use as sprint count. If non-numeric or absent, default to 1.
+Parse $ARGUMENTS. If it matches a tolerance level name, use that budget. If absent, default to standard (25).
 
-After each sprint cycle completes (Phase 3 done), check if more sprints remain. If so, read the turnover doc just written and start the next cycle. Announce: "Sprint N/M complete. Starting sprint N+1."
+Each `/sprint` invocation is one session. For multiple sprints, invoke `/sprint` again — each invocation gets fresh context. The turnover doc bridges sessions.
+
+## Risk Budget
+
+Sprint tracks cumulative risk using the `total-risk` tool (`${CLAUDE_PLUGIN_ROOT}/scripts/total-risk`). The tool externalizes risk accounting so the agent classifies tasks but doesn't do the math.
+
+### Session lifecycle
+
+```bash
+# Phase 1: initialize
+total-risk reset <budget>
+
+# Phase 2: before each issue, preview cost
+total-risk check <category> [conditions...]
+# → {"advice": "ok|caution|skip", "reason": "...", "adjusted_cost": N}
+
+# Phase 2: after completing each issue, log it
+total-risk <category> [conditions...]
+# → {"status": "ok|warning|checkpoint", "remaining": N, ...}
+
+# Post the result as a comment on the issue
+gh issue comment <N> --body "<formatted risk ledger line>"
+```
+
+### Task categories
+
+| Category | Cost | Examples |
+|----------|------|---------|
+| docs | 1 | README, comments, changelog |
+| style | 1 | Formatting, linting fixes |
+| tests | 2 | New or extended tests |
+| new-feature | 3 | Greenfield with clear spec |
+| mechanical-refactor | 3 | Renames, extract-method, move-file |
+| ci-infra | 4 | CI config, build scripts |
+| structural-refactor | 5 | Changing abstractions, reorganizing modules |
+| modify-feature | 5 | Changing existing behavior |
+| bug-fix | 7 | Fault localization + correction |
+| performance | 7 | Optimization with regression risk |
+| security | 8 | Auth, crypto, input validation, secrets |
+
+### Conditions (pass to total-risk)
+
+- `4-plus-files` — task touches 4+ files (×1.5)
+- `module:<path>` — module path for same-module auto-detection (×1.3 if repeated)
+- `ci-pass` / `ci-fail` — CI result after task (−1 / +3)
+- `review-clean` — fresh-context review found no issues (−1)
+
+Context degradation (×1.05 per prior task) is applied automatically by the tool.
+
+### Acting on the budget
+
+- **`advice: ok`** — proceed with the task
+- **`advice: caution`** — proceed but this is near the limit; prefer cheaper tasks if available
+- **`advice: skip`** — do not start this task; pick a cheaper one or checkpoint
+- **`status: checkpoint`** — budget exhausted; proceed to Phase 3 (Wrap Up)
+- **`status: warning`** — approaching budget; finish current task, then consider wrapping up
+
+When a task is too expensive for remaining budget, **pick a cheaper task from the plan** rather than stopping immediately. Only checkpoint when no affordable tasks remain or the tool returns `blocked`.
 
 ## Session Boundary Model
 
@@ -30,7 +92,7 @@ The seam between sessions is the PR. A session ends with all work filed as PRs, 
 
 ### 1a. Read Turnover
 
-Check for turnover docs in `docs/turnover/`. If the directory exists, read the most recent file (by filename date sort) — this is context from a previous sprint, including the current tier/priority plan.
+Check for turnover docs in `.claude/turnover/`. If the directory exists, read the most recent file (by filename date sort) — this is context from a previous sprint, including the current tier/priority plan.
 
 If no turnover exists, evaluate the issue board and create a plan:
 
@@ -69,19 +131,9 @@ git pull origin main
 
 ### 1c. Sync and Verify
 
-Auto-detect project toolchain from project files and run sync + tests:
+Read CONTRIBUTING.md for project-specific build, test, and quality gate commands. Cross-check against the project structure (look for `pyproject.toml`, `package.json`, `Cargo.toml`, `go.mod`, etc.) to confirm your understanding is correct. If CONTRIBUTING.md and the project structure disagree, pause and surface the discrepancy to the user.
 
-- `pyproject.toml` present → `uv sync --all-extras && uv run pytest`
-- `package.json` present → `npm install && npm test`
-- `Cargo.toml` present → `cargo build && cargo test`
-- `go.mod` present → `go mod download && go test ./...`
-
-Also check CONTRIBUTING.md for project-specific quality gate commands:
-```bash
-grep -A5 -i "quality gate\|quality check\|ci check" CONTRIBUTING.md 2>/dev/null
-```
-
-If tests fail after merges, diagnose and fix before proceeding.
+Run the identified commands. If tests fail after merges, diagnose and fix before proceeding.
 
 ### 1d. Clean Up
 
@@ -98,8 +150,16 @@ Follow the CONTRIBUTING.md workflow for each issue. The sprint pre-authorizes de
 
 ### Issue Selection
 
-Pick from the lowest incomplete tier in the turnover plan. Announce the choice:
-> "Working on #N: <title> — <one-line rationale for picking this issue>"
+Pick from the lowest incomplete tier in the turnover plan. Before starting, preview the risk cost:
+
+```bash
+total-risk check <category> [conditions...]
+```
+
+If advice is `skip`, pick a cheaper task. Sort available tasks by risk cost descending — do the hardest affordable tasks first while context is freshest.
+
+Announce the choice:
+> "Working on #N: <title> (risk: <category>, estimated cost: <N>) — <one-line rationale>"
 
 ### Workflow Per Issue
 
@@ -109,14 +169,15 @@ Pick from the lowest incomplete tier in the turnover plan. Announce the choice:
 4. **Implement**: Invoke `executing-plans` or implement directly. TDD for code changes. Verify for config/infrastructure changes.
 5. **Lint**: Auto-detect and run project linter (ruff, eslint, rustfmt, gofmt, etc.)
 6. **Verify**: Run project test suite — all tests must pass
-7. **PR**: Invoke `finishing-a-development-branch` to push and create PR
-8. **Next issue**: Return to main, pull, pick next issue from plan, repeat
+7. **Log risk**: `total-risk <category> [conditions...]` — post result as `gh issue comment`
+8. **PR**: Invoke `finishing-a-development-branch` to push and create PR
+9. **Next issue**: Return to main, pull, check budget, pick next issue from plan, repeat
 
 ### Pre-Authorization Table
 
 | Step | Decision | Behavior |
 |------|----------|----------|
-| Issue selection | Pick from plan | Announce choice, don't ask |
+| Issue selection | Pick from plan | Check risk budget first. Announce choice, don't ask |
 | Branch creation | Create feature branch | Authorized |
 | brainstorming delegation | "approval or information?" | Answer: information — present design, proceed unless technically uncertain |
 | brainstorming approach | Which approach? | Pick recommended approach. Only pause if trade-offs are genuinely unclear |
@@ -126,6 +187,7 @@ Pick from the lowest incomplete tier in the turnover plan. Announce the choice:
 | Commit messages | Wording | Use imperative mood, explain why. Don't ask for approval |
 | PR creation | Title, body, labels | Write them well. Don't ask for review of PR text |
 | Lint/format | Fix or ignore | Auto-detect and fix all |
+| code-simplification | Structural changes flagged | Apply low-risk changes. For structural changes, create an issue for user approval and move on |
 | finishing-a-development-branch | Release type | Recommend based on change analysis. Default patch unless features added |
 | Retrospective opt-in | Run retrospective? | Always run (pre-authorized) |
 
@@ -137,16 +199,18 @@ Stop and ask the user when encountering:
 - **Scope creep** — you discover the issue is much larger than expected
 - **Breaking changes** — something that would change the API contract or data model in ways not described in the issue
 - **Blocked** — a dependency that prevents progress, or tests failing after repeated fix attempts
+- **Toolchain discrepancy** — CONTRIBUTING.md and project structure disagree on build/test commands
 
 ### Process Rules
 
 - **One PR per issue** — clean traceability
 - **Follow CONTRIBUTING.md** — the sprint optimizes by pre-authorizing decisions, not by skipping steps
 - **Duplicate check before filing issues** — `gh issue list --search "<keywords>"` first
+- **Check risk budget before each task** — never start a task without `total-risk check`
 
 ## Phase 3: Wrap Up
 
-When all planned issues are worked or the user signals done:
+When all planned issues are worked, the budget is exhausted, or the user signals done:
 
 ### 3a. Autonomous Retrospective
 
@@ -165,10 +229,10 @@ Pre-authorized: the agent runs the retrospective and files issues without asking
 
 ### 3c. Write Turnover Doc
 
-Create `docs/turnover/YYYY-MM-DD.md` (append sequence number if file exists for same date):
+Create `.claude/turnover/YYYY-MM-DD.md` (append sequence number if file exists for same date):
 
 ```bash
-mkdir -p docs/turnover
+mkdir -p .claude/turnover
 ```
 
 ```markdown
@@ -178,7 +242,10 @@ mkdir -p docs/turnover
 <current tier/priority plan — what's next, what's blocked, what shifted>
 
 ## Completed this session
-- #N: <what was done>
+- #N: <what was done> (risk cost: X)
+
+## Risk Ledger
+<full output of `total-risk status` — budget, total, all tasks with costs>
 
 ## Open PRs (ready for review/merge next sprint)
 - #N: <branch, status, any notes>
@@ -189,15 +256,16 @@ mkdir -p docs/turnover
 
 Post turnover summary to the most relevant issue:
 ```bash
-gh issue comment <N> --body "Sprint turnover posted to docs/turnover/YYYY-MM-DD.md"
+gh issue comment <N> --body "Sprint turnover posted. Risk budget: <total>/<budget> used."
 ```
 
 ### 3d. Brief Summary
 
 Report to user:
-- Sprint N/M complete
+- Sprint complete
 - Issues worked: #X, #Y
 - PRs filed: #A, #B
+- Risk budget: <used>/<total> (<status>)
 - Tests passing: yes/no
 - Recommended next: <what to work on next>
 
@@ -214,7 +282,10 @@ Report to user:
 - **finishing-a-development-branch** — Phase 2, PR creation and merge
 - **retrospective** — Phase 3a, autonomous session analysis
 
+**Tools:**
+- **total-risk** (`${CLAUDE_PLUGIN_ROOT}/scripts/total-risk`) — risk budget tracking
+
 **Called by:**
-- Directly via `/sprint` or `/sprint N`
+- Directly via `/sprint` or `/sprint <tolerance-level>`
 
 **Standalone entry point.** Sprint is the highest-level orchestrator in the skill graph.
