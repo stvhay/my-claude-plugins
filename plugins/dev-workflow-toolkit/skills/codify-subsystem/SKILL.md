@@ -1,25 +1,35 @@
 ---
 name: codify-subsystem
-description: Use when a subsystem directory needs a SPEC.md — analyzes code, interviews the developer about invariants and failure modes, and produces a machine-readable specification
+description: Use when a subsystem directory OR a top-level module needs a SPEC.md — analyzes code, interviews the developer about invariants and failure modes, and produces a machine-readable specification
 ---
 
 # Codify Subsystem
 
 ## Overview
 
-Create or update a SPEC.md for a subsystem directory. Analyzes the code,
-interviews the developer about purpose, invariants, and failure modes,
-then produces a specification that agents load when working on that subsystem.
+Create or update a SPEC.md for a subsystem — either a **directory** that groups related files, or a **top-level module** that is a single high-value source file (e.g., `store.py`, `server.py`). Analyzes the code, interviews the developer about purpose, invariants, and failure modes, then produces a specification that agents load when working on that subsystem.
 
-**Announce at start:** "I'm using the codify-subsystem skill to create a specification for [directory]."
+**Announce at start:** "I'm using the codify-subsystem skill to create a specification for [target]."
 
 ## When to Use
 
 - A directory has 3+ source files and no SPEC.md
+- A **top-level module** is frequently modified (e.g., `store.py`, `server.py`, `api.py`) and lacks a SPEC.md (#148)
 - A new feature directory is created
 - An agent encounters a subsystem it doesn't understand
 - After significant refactoring that changes a subsystem's invariants
 - During onboarding to document existing subsystems
+
+## Target Types (#148)
+
+The skill accepts either target type:
+
+- **Directory target** — `src/fetcher/` → produces `src/fetcher/SPEC.md`. Default for multi-file subsystems.
+- **File target** — `gist_story_ranker/store.py` → produces a module-level spec. Two placement options:
+  1. **Sibling spec** — `gist_story_ranker/store.SPEC.md` (same directory, file-scoped). Simpler; preserves module layout.
+  2. **Promoted directory** — move the module into `gist_story_ranker/store/` (with `__init__.py` re-exporting), then `gist_story_ranker/store/SPEC.md`. Preferred when the module is outgrowing a single file.
+
+Ask the user which placement to use when the target is a file. Default to **sibling spec** unless the module is clearly growing.
 
 ## Checklist
 
@@ -37,8 +47,10 @@ You MUST complete these steps in order:
 
 ### Step 1: Identify Target
 
-Ask the user which directory to codify, or accept the path they provided.
-Confirm the directory exists and list its files.
+Ask the user which directory OR file to codify, or accept the path they provided.
+
+- **If the path is a directory:** Confirm it exists and list its files.
+- **If the path is a single source file:** Confirm the file exists and ask which placement to use (see "Target Types" above): sibling `module.SPEC.md` or promote to `module/` directory. The rest of the process is identical; read the single file in Step 2 instead of a directory.
 
 ### Step 1b: Check for Parent SPEC.md
 
@@ -64,7 +76,7 @@ Step 6 (Update Subsystem Map).
 
 ### Step 2: Analyze Code
 
-Read all source files in the directory. Identify:
+Read the target source. For a directory target, read all source files; for a file target, read the one module (plus its tests). Identify:
 - Entry points and public API
 - Internal data flow
 - Dependencies (imports, external calls)
