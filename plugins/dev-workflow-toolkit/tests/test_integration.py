@@ -855,3 +855,38 @@ class TestWritingPlansGuidance:
         assert "name-list" in text.lower() or "behavior assertion" in text.lower(), (
             "SKILL.md must offer alternatives to fragile count assertions (#161)"
         )
+
+
+class TestBrainstormingRecommendedDefaults:
+    """#140 + #132: recommended option first + no UX duplication."""
+
+    def test_recommended_option_first_guidance(self, skills_dir: Path):
+        """SKILL.md must instruct that the Recommended option is listed first (#140)."""
+        text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
+        assert "Recommended option must be listed first" in text or "Recommended option is listed first" in text, (
+            "SKILL.md must require Recommended option to be first in AskUserQuestion calls (#140)"
+        )
+
+    def test_ux_design_question_recommended_first(self, skills_dir: Path):
+        """The UX design question must list 'No, do UX design (Recommended)' before Skip."""
+        text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
+        # The UX design question text should have Recommended option first
+        start = text.find("This requires UX design")
+        assert start != -1, "SKILL.md must ask the UX design question"
+        # In the 300 chars after, "No, do UX design" should appear before "Yes, skip"
+        section = text[start:start + 500]
+        recommended_pos = section.find("No, do UX design")
+        skip_pos = section.find("Yes, skip")
+        assert recommended_pos != -1 and skip_pos != -1, (
+            "SKILL.md must list both UX design options"
+        )
+        assert recommended_pos < skip_pos, (
+            "Recommended UX design option must appear before Skip option (#140)"
+        )
+
+    def test_ux_supplement_guidance_present(self, skills_dir: Path):
+        """SKILL.md must warn against re-deriving already-decided UX content (#132)."""
+        text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
+        assert "supplement" in text.lower() and "decided" in text.lower(), (
+            "SKILL.md must instruct ux-design-agent to supplement decided content, not restate (#132)"
+        )

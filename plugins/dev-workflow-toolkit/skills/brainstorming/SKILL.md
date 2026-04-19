@@ -79,6 +79,7 @@ You MUST create a task for each of these items and complete them in order:
 - If prior ideation exists, start from that context
 - Batch independent clarifying questions together using `AskUserQuestion` (up to 4) or grouped free-text in a single message
 - Use `AskUserQuestion` when you can propose good options; use free-text when questions are open-ended
+- **Recommended option must be listed first** in every `AskUserQuestion` call, with the `(Recommended)` suffix on the label. The user should have to actively opt out of the recommendation, not actively opt in (#140)
 - If you have enough context from the issue, prior ideation, or SPEC.md to draft design sections, present them alongside remaining questions rather than waiting
 - Focus on understanding: purpose, constraints, success criteria
 
@@ -122,9 +123,11 @@ UX design is always required unless both:
 
 **DO NOT** make exceptions because changes are viewed as "internal" or "infrastructure".
 
-**Evaluate whether UX design is needed.** If it is, use `AskUserQuestion` to ask: "This requires UX design. Skip?" with options "No, do UX design (Recommended)" and "Yes, skip to implementation planning". Batch this with design approval if in approval mode.
+**Evaluate whether UX design is needed.** If it is, use `AskUserQuestion` to ask: "This requires UX design. Skip?" with the **Recommended option listed first**: "No, do UX design (Recommended)" then "Yes, skip to implementation planning". Batch this with design approval if in approval mode.
 
 When UX design is required, use **ux-design-agent** (REQUIRED SUB-SKILL) to produce structured requirements, then continue to writing-plans. Otherwise, proceed directly to writing-plans.
+
+**Avoid re-deriving already-decided UX content (#132).** If the brainstorming Q&A has already resolved UX decisions in depth (layout approach, interaction patterns, copy, visual hierarchy), pass the decided context to `ux-design-agent` so it **supplements** rather than restates. Ask for the additive layer only: design direction, color/typography system, surface rules. If the Q&A already covered everything structural, consider skipping `ux-design-agent` and noting the coverage in the design doc.
 
 ## After the Design
 

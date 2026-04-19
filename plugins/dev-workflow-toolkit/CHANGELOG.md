@@ -3,6 +3,14 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## Unreleased <!-- bump: patch -->
+
+### Fixed
+
+- **`brainstorming`:** Two UX improvements (#166 tracking).
+  - **#140** — Recommended options must be listed first in every `AskUserQuestion` call; the UX design question now puts "No, do UX design (Recommended)" before the Skip option. Users opt out of recommendations, not into them.
+  - **#132** — When brainstorming Q&A has already decided UX content, pass the decided context to `ux-design-agent` so it supplements (design direction, visual system) rather than restates. Consider skipping `ux-design-agent` entirely if Q&A covered everything structural.
+
 ## v1.18.7
 
 ### Fixed
