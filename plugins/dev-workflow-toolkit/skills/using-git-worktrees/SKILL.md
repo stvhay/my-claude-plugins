@@ -100,6 +100,8 @@ project=$(basename "$(git rev-parse --show-toplevel)")
 
 ### 2. Create Worktree
 
+New branches MUST be created from the repo's default branch (typically `main`) — not from whatever branch is currently checked out. Branching from a feature branch causes add/add merge conflicts when both branches land on `main` (#120).
+
 ```bash
 # Determine full path
 case $LOCATION in
@@ -111,14 +113,29 @@ case $LOCATION in
     ;;
 esac
 
-# Create worktree with new branch
-git worktree add "$path" -b "$BRANCH_NAME"
+# Detect the repo's default branch (main or master) and fetch latest from origin
+DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||')
+DEFAULT_BRANCH=${DEFAULT_BRANCH:-main}
+git fetch origin "$DEFAULT_BRANCH" --quiet
+
+# Create worktree with new branch, always based on origin/<default-branch>
+git worktree add "$path" -b "$BRANCH_NAME" "origin/$DEFAULT_BRANCH"
 cd "$path"
 ```
 
 ### 3. Run Project Setup
 
-Auto-detect and run appropriate setup:
+Before invoking any build or dependency-install command, **isolate the worktree's environment** so it doesn't inherit the parent worktree's state (#160):
+
+```bash
+# Python: detach from parent repo's .venv so the worktree creates its own
+unset VIRTUAL_ENV
+
+# Container/bind-mount filesystems: avoid hardlink failures with uv
+export UV_LINK_MODE=copy
+```
+
+Then auto-detect and run appropriate setup:
 
 ```bash
 # Node.js
@@ -129,7 +146,8 @@ if [ -f Cargo.toml ]; then cargo build; fi
 
 # Python
 if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-if [ -f pyproject.toml ]; then poetry install; fi
+if [ -f pyproject.toml ] && command -v uv >/dev/null; then uv sync; fi
+if [ -f pyproject.toml ] && ! command -v uv >/dev/null; then poetry install; fi
 
 # Go
 if [ -f go.mod ]; then go mod download; fi

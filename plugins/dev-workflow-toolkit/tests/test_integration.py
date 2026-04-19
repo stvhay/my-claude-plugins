@@ -800,3 +800,31 @@ class TestSubagentDrivenDevelopmentContext:
         assert quant_pos < spec_review_pos, (
             "Quantitative criteria check must appear before Spec review step (#122)"
         )
+
+
+class TestUsingGitWorktreesIsolation:
+    """#160 + #120: worktree creation must branch from default branch and isolate env."""
+
+    def test_worktree_branches_from_default_branch(self, skills_dir: Path):
+        """SKILL.md must branch from origin/<default-branch>, not current branch (#120)."""
+        text = (skills_dir / "using-git-worktrees" / "SKILL.md").read_text()
+        assert "symbolic-ref" in text or "DEFAULT_BRANCH" in text, (
+            "SKILL.md must detect the repo's default branch explicitly (#120)"
+        )
+        assert "origin/$DEFAULT_BRANCH" in text or "origin/main" in text, (
+            "SKILL.md must create worktree branch based on origin/<default-branch> (#120)"
+        )
+
+    def test_worktree_unsets_virtual_env(self, skills_dir: Path):
+        """SKILL.md must unset VIRTUAL_ENV before setup to avoid parent .venv bleedthrough (#160)."""
+        text = (skills_dir / "using-git-worktrees" / "SKILL.md").read_text()
+        assert "unset VIRTUAL_ENV" in text, (
+            "SKILL.md must unset VIRTUAL_ENV in setup phase to isolate worktree's Python env (#160)"
+        )
+
+    def test_worktree_sets_uv_link_mode_copy(self, skills_dir: Path):
+        """SKILL.md must set UV_LINK_MODE=copy to avoid hardlink failures in container envs (#160)."""
+        text = (skills_dir / "using-git-worktrees" / "SKILL.md").read_text()
+        assert "UV_LINK_MODE=copy" in text, (
+            "SKILL.md must export UV_LINK_MODE=copy for bind-mount/container environments (#160)"
+        )
