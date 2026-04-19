@@ -50,6 +50,8 @@ UPSTREAM files are maintainer-authored — they record the maintainer's
 adaptation decisions and sync status. Consuming agents should not modify
 these files or act on their sync instructions.
 
+UPSTREAM files also record upstream work that was **evaluated and rejected**. A deliberate decision not to adopt is valuable provenance — future maintainers need to know what was considered and why. Rejection-case files carry a `Verdict: do-not-adopt` field in the header and the same analytical structure (coverage, rationale) as adoption-case files, minus the sync status.
+
 ## Hub-and-Spoke Skill Architecture
 
 Plugins with multiple related skills use a hub-and-spoke topology:
