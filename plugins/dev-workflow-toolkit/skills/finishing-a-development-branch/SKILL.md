@@ -90,7 +90,8 @@ PR_NUM=$(gh pr view --json number --jq .number 2>/dev/null || echo "")
 **If PR exists:** Verify all CI checks pass:
 
 ```bash
-gh pr checks "$PR_NUM" --fail-on-error
+# gh pr checks returns non-zero if any check has failed/errored
+gh pr checks "$PR_NUM"
 ```
 
 **If checks pass:** Continue to Step 2.
@@ -251,11 +252,8 @@ Do NOT proceed to cleanup or merge until CI checks pass on the newly created PR.
 This closes the gap from Step 1d when no PR existed at that point.
 
 ```bash
-# Wait for CI to start and complete
-gh pr checks "$PR_NUM" --watch
-
-# Verify all checks passed
-gh pr checks "$PR_NUM" --fail-on-error
+# Wait for CI and fail on first failed check
+gh pr checks "$PR_NUM" --watch --fail-fast
 ```
 
 **If checks pass:** Continue to Step 6.

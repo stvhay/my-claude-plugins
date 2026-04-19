@@ -636,3 +636,29 @@ class TestStructuredQuestionPreference:
         )
 
 
+class TestFinishingGhFlagCompatibility:
+    """#158: skill must not use nonexistent gh flags."""
+
+    def test_inv18_no_fail_on_error_flag(self, skills_dir: Path):  # Tests INV-18
+        text = (skills_dir / "finishing-a-development-branch" / "SKILL.md").read_text()
+        assert "--fail-on-error" not in text, (
+            "SKILL.md must not reference --fail-on-error (not a valid gh pr checks flag); "
+            "use exit-code check or --watch --fail-fast instead (#158)"
+        )
+
+    def test_ci_check_uses_fail_fast_for_watch(self, skills_dir: Path):
+        """When --watch is used, --fail-fast must accompany it so CI failures exit non-zero."""
+        text = (skills_dir / "finishing-a-development-branch" / "SKILL.md").read_text()
+        # Both CI check points must be retained
+        assert text.count("gh pr checks") >= 2, (
+            "SKILL.md must retain both CI verification points (Step 1d + Step 5b)"
+        )
+        # Any --watch usage must pair with --fail-fast (otherwise checks don't gate)
+        import re
+        for match in re.finditer(r"gh pr checks[^\n`]*", text):
+            snippet = match.group(0)
+            if "--watch" in snippet:
+                assert "--fail-fast" in snippet, (
+                    f"`gh pr checks --watch` must include --fail-fast to error-exit on CI failure; found: {snippet}"
+                )
+
