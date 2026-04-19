@@ -147,6 +147,18 @@ contradictions, 2 tonal tensions.**
   Consistent but not unified. Karpathy's "Think Before Coding" states the
   same rule once and applies it everywhere.
 
+### Evidence caveats
+
+Token counts use a word-split × 1.33 approximation; our-side denominators
+are scoped to behavior-teaching prose, excluding process scaffolding, so
+absolute ratios are directional (order-of-magnitude correct, not precise).
+The trace study is N=3 PRs selected for workflow diversity, not a random
+sample — the 4:3:4:1 tally is illustrative. The Surgical Changes ~2x
+ratio is the softest matrix cell because "teaching Surgical Changes"
+bleeds into teaching YAGNI; the qualitative gap (no "match existing
+style" rule, no "mention but don't delete unrelated dead code" rule in
+our stack) is load-bearing, not the ratio.
+
 ## Trace study
 
 ### PR #152 — `feat: add sprint skill for autonomous development sessions`
