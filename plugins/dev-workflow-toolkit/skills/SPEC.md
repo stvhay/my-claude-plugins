@@ -78,6 +78,9 @@ Skills compose into a development workflow graph. The primary flow is:
 | INV-15 | Skills that produce design documents, review findings, or status artifacts MUST post them as comments to the appropriate GitHub surface: issue (pre-PR) or PR (post-PR). Projection skills are enumerated in `GITHUB_PROJECTION_SKILLS` in test_integration.py | structural | Ensures work artifacts are visible to collaborators and traceable in GitHub; prevents silent local-only results that disappear with the session |
 | INV-16 | Sprint PR reviews MUST dispatch to subagents for fresh context; the orchestrator context must not be used for review. Multi-model review (opus, sonnet, haiku) runs in parallel via `dispatching-parallel-agents` | reasoning-required | Prevents context contamination in chained sprints where the orchestrator accumulates prior sprint work; model diversity catches different categories of issues |
 | INV-17 | Sprint turnover docs follow the format `.claude/turnover/YYYY-MM-DD.md` (gitignored) with sections: Plan, Completed this session, Risk Ledger, Open PRs, Notes. Each sprint session must write a turnover doc in Phase 3 | reasoning-required | Enables session continuity — the next sprint reads the most recent turnover to orient without re-evaluating the entire issue board |
+| INV-18 | Skill prompts must only reference `gh` CLI flags that exist in currently-supported `gh` versions; verified by string-absence tests | structural | Prevents agent detours when `gh` rejects unknown flags; enforced by `test_inv18_no_fail_on_error_flag` |
+| INV-19 | `finishing-a-development-branch` Step 5c detects worktree context and omits `--delete-branch` when inside a worktree, cleaning up the remote branch via `gh api` instead | structural | `gh pr merge --delete-branch` fails from worktrees because its post-merge `git checkout main` collides with the main worktree |
+| INV-20 | `finishing-a-development-branch` Step 5c checks for fast-forward topology (`git merge-base --is-ancestor main HEAD`) before squashing and warns the user | reasoning-required | GitHub silently fast-forwards rebased branches even when `--squash` is requested, defeating the squash-merge intent |
 
 **Enforcement classification:**
 - **structural** — enforced by test suite, gitignore structure, or directory convention; pattern-matchable
@@ -106,6 +109,9 @@ lifecycle points (plan summaries, progress updates, review findings).
 | FAIL-11 | PR merged with issues that multi-model review would have caught | Sprint reviews run with single model or in contaminated orchestrator context | Ensure Phase 1b dispatches 3 parallel subagents (opus, sonnet, haiku) with fresh context per review |
 | FAIL-12 | Sprint starts with stale turnover plan | Turnover doc references closed issues or shifted priorities | Phase 1a must validate turnover against current issue board; update plan if stale |
 | FAIL-13 | Sprint autonomy drift — agent pauses for pre-authorized decisions | Pre-authorization table not followed; agent treats sprint like interactive session | Review pre-authorization table; only pause for items in "When to Pause" section |
+| FAIL-14 | Shell cwd unusable after `git worktree remove` | Current worktree was removed while the shell's cwd was inside it | Step 6 resolves main worktree and `cd`s there before removing the current worktree (#149) |
+| FAIL-15 | `gh pr merge --delete-branch` reports "main is already used by worktree" | Running `gh pr merge --delete-branch` from a worktree triggers a conflicting `git checkout main` | Step 5c detects worktree context, drops `--delete-branch`, and deletes the remote branch via `gh api` (#162) |
+| FAIL-16 | Squash merge preserved all individual commits on main | GitHub fast-forwards rebased branches even when `--squash` is requested | Step 5c checks `git merge-base --is-ancestor` before squashing and warns when fast-forward is imminent (#156) |
 
 ## Decision Framework
 
@@ -137,6 +143,9 @@ INV-14: reasoning-required — verified by `test_inv14_structured_question_prefe
 INV-15: structural — enforced by `TestGitHubProjection` in `test_integration.py`; `GITHUB_PROJECTION_SKILLS` dict enumerates all projection-required skills.
 INV-16: reasoning-required — verified by `test_sprint_dependency_resolution` (SKILL.md references dispatching-parallel-agents) and during code review.
 INV-17: reasoning-required — verified during code review of SKILL.md turnover section.
+INV-18: structural — enforced by `test_inv18_no_fail_on_error_flag` (scans SKILL.md for forbidden flag).
+INV-19: structural — enforced by `test_inv19_worktree_aware_merge` (scans Step 5c for detection + API cleanup).
+INV-20: reasoning-required — verified by `test_inv20_fast_forward_detection` (scans Step 5c for merge-base check) and during code review.
 
 Skills are additionally validated via subagent pressure testing — see `/skill-creator`.
 
