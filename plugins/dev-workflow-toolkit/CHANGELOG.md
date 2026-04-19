@@ -3,6 +3,12 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## Unreleased <!-- bump: patch -->
+
+### Fixed
+
+- **`project-init`:** Install pre-commit checks into `.git/hooks/pre-commit`, not `.claude/settings.json` (#155, #166 tracking). `preCommit` is not a valid Claude Code hook event, so the previous configuration failed silently. Audit checklist HOOK-1/HOOK-2 updated to verify git hooks instead. **ACTION:** if your project has `preCommit` entries in `.claude/settings.json`, remove them and install `check-version-bump.sh` / `check-changelog.sh` into `.git/hooks/pre-commit`.
+
 ## v1.18.8
 
 ### Fixed
