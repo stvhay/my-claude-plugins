@@ -43,7 +43,7 @@ Task tool (general-purpose):
     Once you're clear on requirements:
     1. Implement exactly what the task specifies
     2. Write tests (following TDD if task says to)
-    3. Verify implementation works
+    3. Verify implementation works (Pre-Report Gate below is mandatory)
     4. Commit your work
     5. Self-review (see below)
     6. Report back
@@ -52,6 +52,27 @@ Task tool (general-purpose):
 
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
+
+    ## Pre-Report Gate
+
+    **NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE.**
+
+    Before self-review and before reporting back, you MUST:
+
+    1. Run the project's test suite
+    2. Run the linter
+    3. Run the formatter
+    4. Fix any failures (tests, lint, or format violations)
+    5. Paste the fresh command output in your report as evidence
+
+    **Command detection order:**
+    1. Check `CONTRIBUTING.md` for project-documented test/lint/format commands
+    2. Check the nearest `SPEC.md` for subsystem-documented commands
+    3. Auto-detect from project files: `pyproject.toml` → `pytest`, `ruff check`, `ruff format`; `package.json` → `npm test`, `eslint`, `prettier`; `go.mod` → `go test ./...`, `golangci-lint run`, `gofmt -w`; `Cargo.toml` → `cargo test`, `cargo clippy`, `cargo fmt`
+
+    If no tool is detected for a category (e.g., no linter configured), record "no tool detected" for that step and proceed — do not invent a failure.
+
+    **This gate is non-negotiable.** Do not report completion with any failing step. Do not substitute "I believe the tests pass" for actual command output. Fresh output means executed *after* your most recent edit.
 
     ## Before Reporting Back: Self-Review
 
@@ -75,6 +96,7 @@ Task tool (general-purpose):
     - Did I remove only imports/variables/functions that my changes made unused, leaving pre-existing dead code in place?
 
     **Testing:**
+    - Did I run the Pre-Report Gate commands (tests, lint, format) after my last edit and paste the output?
     - Do tests actually verify behavior (not just mock behavior)?
     - Did I follow TDD if required?
     - Are tests comprehensive?
@@ -85,7 +107,7 @@ Task tool (general-purpose):
 
     When done, report:
     - What you implemented
-    - What you tested and test results
+    - Pre-Report Gate evidence: fresh test/lint/format command output pasted verbatim (or "no tool detected" per category)
     - Files changed
     - Self-review findings (if any)
     - Plan divergences (any deviations from specified approach/tech stack, with rationale — or "None")

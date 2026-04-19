@@ -81,6 +81,7 @@ Independent tasks can be dispatched simultaneously. The per-task review cycle (s
 ## Red Flags
 
 - Never start implementation on main/master branch without explicit user consent
+- Never let implementer report completion without the pre-report gate (tests, lint, format all pass with fresh evidence)
 - Never skip reviews (spec compliance OR code quality)
 - Never proceed with unfixed issues — reviewer found issues means fix then re-review
 - Never make subagent read plan file (provide full text instead)
