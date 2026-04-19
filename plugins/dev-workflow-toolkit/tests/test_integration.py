@@ -755,3 +755,48 @@ class TestRequestingCodeReviewPosting:
         assert "/review" in text, (
             "SKILL.md must reference the built-in /review command to disambiguate (#142)"
         )
+
+
+class TestSubagentDrivenDevelopmentContext:
+    """#159, #153, #122: spec reviewer context + parallel ordering + quantitative checks."""
+
+    def test_spec_reviewer_has_expected_breakage_field(self, skills_dir: Path):
+        """Spec reviewer template must accept cross-task dependency context (#159)."""
+        text = (skills_dir / "subagent-driven-development" / "spec-reviewer-prompt.md").read_text()
+        assert "Known Expected Breakage" in text, (
+            "spec-reviewer-prompt.md must have an Expected Breakage field so orchestrator can pass cross-task context (#159)"
+        )
+        assert "handled by Task" in text or "handled there" in text, (
+            "spec-reviewer-prompt.md must instruct reviewer how to mark cross-task findings (#159)"
+        )
+
+    def test_sdd_skill_instructs_populating_breakage_field(self, skills_dir: Path):
+        """SKILL.md Step 6 must instruct the orchestrator to populate the Expected Breakage field."""
+        text = (skills_dir / "subagent-driven-development" / "SKILL.md").read_text()
+        assert "Known Expected Breakage" in text or "Expected Breakage" in text, (
+            "SKILL.md must instruct orchestrator to populate the Expected Breakage field (#159)"
+        )
+
+    def test_sdd_parallel_commit_ordering_note(self, skills_dir: Path):
+        """SKILL.md parallel dispatch section must warn about nondeterministic commit ordering (#153)."""
+        text = (skills_dir / "subagent-driven-development" / "SKILL.md").read_text()
+        start = text.index("Parallel dispatch")
+        section = text[start:start + 1500]
+        assert "nondeterministic" in section.lower() or "order" in section.lower(), (
+            "Parallel dispatch section must discuss commit ordering nondeterminism (#153)"
+        )
+        assert "commit" in section.lower(), (
+            "Parallel dispatch section must reference commit ordering specifically (#153)"
+        )
+
+    def test_sdd_has_quantitative_criteria_step(self, skills_dir: Path):
+        """SKILL.md must have a step to verify quantitative task criteria before review (#122)."""
+        text = (skills_dir / "subagent-driven-development" / "SKILL.md").read_text()
+        assert "quantitative" in text.lower(), (
+            "SKILL.md must reference quantitative criteria check (#122)"
+        )
+        quant_pos = text.lower().index("quantitative")
+        spec_review_pos = text.index("Spec review.")
+        assert quant_pos < spec_review_pos, (
+            "Quantitative criteria check must appear before Spec review step (#122)"
+        )
