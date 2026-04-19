@@ -81,6 +81,7 @@ Skills compose into a development workflow graph. The primary flow is:
 | INV-18 | Skill prompts must only reference `gh` CLI flags that exist in currently-supported `gh` versions; verified by string-absence tests | structural | Prevents agent detours when `gh` rejects unknown flags; enforced by `test_inv18_no_fail_on_error_flag` |
 | INV-19 | `finishing-a-development-branch` Step 5c detects worktree context and omits `--delete-branch` when inside a worktree, cleaning up the remote branch via `gh api` instead | structural | `gh pr merge --delete-branch` fails from worktrees because its post-merge `git checkout main` collides with the main worktree |
 | INV-20 | `finishing-a-development-branch` Step 5c checks for fast-forward topology (`git merge-base --is-ancestor main HEAD`) before squashing and warns the user | reasoning-required | GitHub silently fast-forwards rebased branches even when `--squash` is requested, defeating the squash-merge intent |
+| INV-21 | Implementer subagents dispatched by `subagent-driven-development` run tests, lint, and format before reporting completion, and paste fresh command output as evidence | reasoning-required | Shifts quality enforcement left — reviewers catch meaningful issues instead of basic compilation/lint failures; prevents wasted review cycles |
 
 **Enforcement classification:**
 - **structural** — enforced by test suite, gitignore structure, or directory convention; pattern-matchable
@@ -112,6 +113,7 @@ lifecycle points (plan summaries, progress updates, review findings).
 | FAIL-14 | Shell cwd unusable after `git worktree remove` | Current worktree was removed while the shell's cwd was inside it | Step 6 resolves main worktree and `cd`s there before removing the current worktree (#149) |
 | FAIL-15 | `gh pr merge --delete-branch` reports "main is already used by worktree" | Running `gh pr merge --delete-branch` from a worktree triggers a conflicting `git checkout main` | Step 5c detects worktree context, drops `--delete-branch`, and deletes the remote branch via `gh api` (#162) |
 | FAIL-16 | Squash merge preserved all individual commits on main | GitHub fast-forwards rebased branches even when `--squash` is requested | Step 5c checks `git merge-base --is-ancestor` before squashing and warns when fast-forward is imminent (#156) |
+| FAIL-17 | Implementer reports completion without running tests/lint/format | Pre-Report Gate missing from `implementer-prompt.md` or subagent ignored it | Ensure `implementer-prompt.md` contains the Pre-Report Gate section; enforce via red-flag line in `subagent-driven-development/SKILL.md` |
 
 ## Decision Framework
 
