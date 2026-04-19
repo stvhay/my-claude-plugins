@@ -3,6 +3,14 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## Unreleased <!-- bump: patch -->
+
+### Fixed
+
+- **`writing-plans`:** Two plan-quality improvements (#166 tracking).
+  - **#157** — New File Conflict Detection section instructs the planner to scan `**Files:**` lists and add dependencies when two tasks share a file. Plans include an explicit `## File Conflicts` table when conflicts are found.
+  - **#161** — New Acceptance Criteria Anti-Patterns section warns against fragile count assertions tied to user-chosen names (`pytest -k pattern reports N tests`). Prefer name-list, whole-suite-count, or behavior assertions.
+
 ## v1.18.6
 
 ### Fixed
