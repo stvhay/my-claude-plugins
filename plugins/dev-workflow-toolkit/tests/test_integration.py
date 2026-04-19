@@ -828,3 +828,30 @@ class TestUsingGitWorktreesIsolation:
         assert "UV_LINK_MODE=copy" in text, (
             "SKILL.md must export UV_LINK_MODE=copy for bind-mount/container environments (#160)"
         )
+
+
+class TestWritingPlansGuidance:
+    """#161 + #157: writing-plans must guide against fragile criteria and flag file conflicts."""
+
+    def test_file_conflict_detection_section(self, skills_dir: Path):
+        """SKILL.md must document File Conflict Detection before marking tasks Independent (#157)."""
+        text = (skills_dir / "writing-plans" / "SKILL.md").read_text()
+        assert "File Conflict" in text or "file conflict" in text.lower(), (
+            "SKILL.md must have a File Conflict Detection section (#157)"
+        )
+        # The guidance must instruct that two tasks modifying the same file are NOT independent
+        assert "Independent" in text and "same file" in text, (
+            "SKILL.md must state that tasks sharing a file cannot be marked Independent (#157)"
+        )
+
+    def test_acceptance_criteria_anti_patterns_section(self, skills_dir: Path):
+        """SKILL.md must warn against count assertions tied to user-chosen names (#161)."""
+        text = (skills_dir / "writing-plans" / "SKILL.md").read_text()
+        # Must mention the anti-pattern explicitly
+        assert "pytest" in text.lower() and "-k " in text, (
+            "SKILL.md must reference the -k pattern anti-pattern concretely (#161)"
+        )
+        # Must offer alternatives
+        assert "name-list" in text.lower() or "behavior assertion" in text.lower(), (
+            "SKILL.md must offer alternatives to fragile count assertions (#161)"
+        )

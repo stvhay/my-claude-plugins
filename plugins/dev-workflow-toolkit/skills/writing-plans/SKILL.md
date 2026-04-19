@@ -147,6 +147,37 @@ Mark each task's dependencies explicitly. Independent tasks can be dispatched to
 ### Task 3: Integration tests   [Depends on: Task 1, Task 2]
 ```
 
+### File Conflict Detection (#157)
+
+Before marking tasks `[Independent]`, scan each task's `**Files:**` list. If two tasks modify the same file, they are NOT independent — the second must declare `[Depends on: Task N]`. Include a `## File Conflicts` section below the task list whenever a conflict is detected:
+
+```markdown
+## File Conflicts
+
+| File | Tasks | Resolution |
+|---|---|---|
+| `store.py` | Task 3, Task 6 | Task 6 depends on Task 3 |
+| `README.md` | Task 2, Task 5 | Task 5 depends on Task 2 |
+```
+
+If no conflicts exist, omit the section.
+
+## Acceptance Criteria Anti-Patterns (#161)
+
+**Do not assert numeric counts that depend on test names the implementer is free to choose.** Example of a fragile criterion:
+
+```
+uv run pytest tests/test_foo.py -k streaming reports 9 tests
+```
+
+If the implementer names a new test `test_tail_reads_mid_stream` (a perfectly good name that doesn't contain `streaming`), the assertion fails even though the feature is complete. Prefer one of:
+
+1. **Name-list assertions** — `tests test_a, test_b exist and pass`
+2. **Whole-suite count assertions** — `uv run pytest reports N passed` (not fragile to naming)
+3. **Behavior assertions** — `tail_session_log reads a mid-stream byte range` (independent of test organization)
+
+**Rule of thumb:** Count assertions are fine when counting something the plan itself enumerates (files created, invariants registered). They are fragile when counting things derived from names the implementer chooses.
+
 ## Remember
 - Exact file paths always
 - Complete code in plan (not "add validation")
@@ -156,7 +187,9 @@ Mark each task's dependencies explicitly. Independent tasks can be dispatched to
 - Include nearest SPEC.md path and key invariants in each task
 - For cross-cutting tasks: full spec for primary subsystem, Public Interface only for adjacent subsystems. If >2 specs are relevant, the task is too large — split it by subsystem boundary
 - Mark dependencies between tasks
+- Scan File Conflicts before marking any task `[Independent]` (#157)
 - Acceptance criteria = what must be TRUE = the tests
+- Avoid count assertions tied to user-chosen names — prefer name-list or whole-suite counts (#161)
 - Anchor tests to SPEC.md item IDs (INV-N, FAIL-N) with inline `# Tests INV-N` comments on declaration lines
 - DRY, YAGNI, TDD, frequent commits
 
