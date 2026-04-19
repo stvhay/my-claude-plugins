@@ -3,6 +3,15 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## Unreleased <!-- bump: patch -->
+
+### Fixed
+
+- **`subagent-driven-development`:** Three orchestration improvements (#166 tracking).
+  - **#159** — Spec-reviewer prompt now has a `Known Expected Breakage` field so the orchestrator can pass cross-task dependency context; the reviewer marks downstream breakage as "handled by Task N" instead of flagging it as a failure.
+  - **#153** — Parallel dispatch section now notes that commit ordering is nondeterministic when parallel tasks commit to the same branch; reviewers should expect logical-vs-commit ordering divergence.
+  - **#122** — New Step 5b verifies quantitative task criteria (line counts, size limits, etc.) before spec review; if targets are missed by >10%, a follow-up subagent is dispatched.
+
 ## v1.18.4
 
 ### Fixed

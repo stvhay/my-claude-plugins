@@ -18,6 +18,13 @@ Task tool (general-purpose):
 
     [From implementer's report]
 
+    ## Known Expected Breakage (cross-task context)
+
+    [From orchestrator. If Task N's scope intentionally breaks downstream call sites
+    that a later task will fix, describe them here. Example: "Task 2 will update
+    server.py to use the new session API; breakage at session.add_message() call sites
+    is expected and handled there, not a Task 1 finding." Leave blank if none.]
+
     ## CRITICAL: Do Not Trust the Report
 
     The implementer finished suspiciously quickly. Their report may be incomplete,
@@ -59,6 +66,11 @@ Task tool (general-purpose):
     - Are there undocumented divergences (different tech stack, architecture, or approach than specified)?
 
     **Verify by reading code, not by trusting report.**
+
+    **Expected breakage exception:** Findings that match "Known Expected Breakage"
+    above are NOT issues for this task — flag them as "handled by Task N" instead of
+    failing the review. Still report them in a separate line so the orchestrator can
+    confirm the downstream task still accounts for them.
 
     Report:
     - ✅ Spec compliant (if everything matches after code inspection)

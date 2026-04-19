@@ -42,7 +42,8 @@ echo "Verified: on branch $branch in $(pwd)"
 3. **Load subsystem context.** For each task, find the nearest SPEC.md to the task's target files. If one exists, prepend its key sections (Purpose, Invariants, Failure Modes) to the task context when dispatching. For cross-cutting tasks: include the full spec for the primary subsystem and only the Public Interface section from adjacent subsystems. If a task needs >2 specs, it crosses too many boundaries — split it before dispatching.
 4. **Dispatch task.** Fresh subagent (via Task tool) with full task text and context. For independent tasks, dispatch in parallel. For dependent tasks, wait.
 5. **Handle questions.** If the subagent asks questions, answer clearly before letting them proceed.
-6. **Spec review.** Dispatch spec compliance reviewer (./spec-reviewer-prompt.md). If issues found, dispatch fix subagent, then re-review.
+5b. **Verify quantitative criteria.** If the task specifies numeric targets (line counts, file counts, performance thresholds, size limits), check the implementer's output against them before review. If a target is missed by >10%, dispatch a focused follow-up subagent with the specific gap and the target before moving on. Skip this step if the task has no quantitative criteria.
+6. **Spec review.** Dispatch spec compliance reviewer (./spec-reviewer-prompt.md). **Populate the "Known Expected Breakage" field** with any cross-task dependencies — e.g., "Task 2 will update server.py to use the new session API; breakage at old call sites is expected and handled there." This prevents the reviewer from flagging intentional in-flight breakage as a Task N failure. If issues found, dispatch fix subagent, then re-review.
 7. **Quality review.** Dispatch code quality reviewer (./code-quality-reviewer-prompt.md). If issues found, dispatch fix subagent, then re-review.
 8. **Document review.** After both reviews pass, post a summary to the GitHub issue:
    ```bash
@@ -66,6 +67,8 @@ echo "Verified: on branch $branch in $(pwd)"
 Independent tasks can be dispatched simultaneously. The per-task review cycle (steps 6-7) runs after each implementer finishes, so reviews can also run in parallel across tasks.
 
 **Guard:** Never parallelize tasks that write to the same files — this is hidden coupling even if tasks aren't marked as dependent.
+
+**Commit ordering is nondeterministic.** When parallel tasks commit to the same branch, commit order depends on agent completion timing — logical ordering may not match commit ordering (e.g., docs referencing new code may commit before the code itself). This is safe when tasks have no file overlap; reviewers should expect the divergence. For strict logical commit ordering, use sequential dispatch.
 
 > For larger efforts, consider using agent teams (Teammate tool) for self-coordinating execution.
 
