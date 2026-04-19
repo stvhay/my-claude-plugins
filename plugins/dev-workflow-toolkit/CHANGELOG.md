@@ -3,6 +3,12 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## Unreleased <!-- bump: patch -->
+
+### Fixed
+
+- **`requesting-code-review`:** Mandate posting reviews to GitHub (#116, #142). Code-reviewer template now carries a MANDATORY-OUTPUT preamble when a PR number is provided, and SKILL.md positions itself as the canonical review flow versus the built-in `/review` command (which does not post to GitHub).
+
 ## v1.18.3
 
 ### Fixed
