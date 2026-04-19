@@ -1,7 +1,7 @@
 {
   "name": "dev-workflow-toolkit",
   "description": "Development workflow skills: brainstorming, planning, execution, debugging, testing, code review, project scaffolding, retrospective, and automated quality gates",
-  "version": "1.18.4",
+  "version": "1.18.5",
   "author": {
     "name": "stvhay"
   },
