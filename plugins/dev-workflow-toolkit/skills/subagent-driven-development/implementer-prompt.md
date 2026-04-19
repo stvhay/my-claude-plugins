@@ -96,6 +96,7 @@ Task tool (general-purpose):
     - Did I remove only imports/variables/functions that my changes made unused, leaving pre-existing dead code in place?
 
     **Testing:**
+    - Did I run the Pre-Report Gate commands (tests, lint, format) after my last edit and paste the output?
     - Do tests actually verify behavior (not just mock behavior)?
     - Did I follow TDD if required?
     - Are tests comprehensive?
@@ -106,7 +107,7 @@ Task tool (general-purpose):
 
     When done, report:
     - What you implemented
-    - What you tested and test results
+    - Pre-Report Gate evidence: fresh test/lint/format command output pasted verbatim (or "no tool detected" per category)
     - Files changed
     - Self-review findings (if any)
     - Plan divergences (any deviations from specified approach/tech stack, with rationale — or "None")

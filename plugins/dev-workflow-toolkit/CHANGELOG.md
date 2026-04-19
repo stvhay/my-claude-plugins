@@ -7,7 +7,7 @@ read this file and apply retroactive actions marked with **ACTION**.
 
 ### Changed
 
-- **`subagent-driven-development`:** Implementer subagents now run tests/lint/format with fresh output as evidence before reporting completion (#145). Pre-Report Gate added to `implementer-prompt.md`; new red-flag in `SKILL.md`; enforced by new INV-21 and FAIL-17 in `plugins/dev-workflow-toolkit/skills/SPEC.md`.
+- **`subagent-driven-development`:** Implementer subagents now run tests/lint/format with fresh output as evidence before reporting completion (#145). Pre-Report Gate added to `implementer-prompt.md`; new red-flag in `SKILL.md`; enforced by new INV-21 and FAIL-17 in SPEC.md.
 
 ### Fixed
 

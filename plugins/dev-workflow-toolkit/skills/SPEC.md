@@ -113,7 +113,7 @@ lifecycle points (plan summaries, progress updates, review findings).
 | FAIL-14 | Shell cwd unusable after `git worktree remove` | Current worktree was removed while the shell's cwd was inside it | Step 6 resolves main worktree and `cd`s there before removing the current worktree (#149) |
 | FAIL-15 | `gh pr merge --delete-branch` reports "main is already used by worktree" | Running `gh pr merge --delete-branch` from a worktree triggers a conflicting `git checkout main` | Step 5c detects worktree context, drops `--delete-branch`, and deletes the remote branch via `gh api` (#162) |
 | FAIL-16 | Squash merge preserved all individual commits on main | GitHub fast-forwards rebased branches even when `--squash` is requested | Step 5c checks `git merge-base --is-ancestor` before squashing and warns when fast-forward is imminent (#156) |
-| FAIL-17 | Implementer reports completion without running tests/lint/format | Pre-Report Gate missing from `implementer-prompt.md` or subagent ignored it | Ensure `implementer-prompt.md` contains the Pre-Report Gate section; enforce via red-flag line in `subagent-driven-development/SKILL.md` |
+| FAIL-17 | Implementer reports completion without running tests/lint/format | Pre-Report Gate missing from `implementer-prompt.md` or subagent ignored it | Re-dispatch implementer with explicit reference to the Pre-Report Gate in `implementer-prompt.md`; reject the completion claim until fresh test/lint/format output is pasted |
 
 ## Decision Framework
 
@@ -148,6 +148,7 @@ INV-17: reasoning-required — verified during code review of SKILL.md turnover 
 INV-18: structural — enforced by `test_inv18_no_fail_on_error_flag` (scans SKILL.md for forbidden flag).
 INV-19: structural — enforced by `test_inv19_worktree_aware_merge` (scans Step 5c for detection + API cleanup).
 INV-20: reasoning-required — verified by `test_inv20_fast_forward_detection` (scans Step 5c for merge-base check) and during code review.
+INV-21: reasoning-required — verified by presence of the `## Pre-Report Gate` section in `subagent-driven-development/implementer-prompt.md` during code review; candidate for a string-presence structural test in a follow-up.
 
 Skills are additionally validated via subagent pressure testing — see `/skill-creator`.
 
