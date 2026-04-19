@@ -27,6 +27,8 @@ develop → verify (tests pass) → simplify → re-verify → complete
 - No new features added
 - Prefer deletion over modification
 - Tests must pass after each change
+- Every changed line should trace directly to the user's request
+- If you notice unrelated dead code, mention it — don't delete it unless asked
 
 ## Pattern Categories
 

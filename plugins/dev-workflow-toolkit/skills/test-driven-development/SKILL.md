@@ -124,7 +124,7 @@ async function retryOperation<T>(fn: () => Promise<T>): Promise<T> {
 ```
 Just enough to pass
 
-Don't add features, refactor other code, or "improve" beyond the test.
+Don't add features, refactor other code, or "improve" beyond the test. The test: every changed line traces to the user's request.
 
 **Formal grammars:** Use parsers (not regex/sed) for any format with a formal grammar. See `requesting-code-review/references/structured-format-parsing.md` for full guidance.
 

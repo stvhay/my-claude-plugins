@@ -72,6 +72,8 @@ Task tool (general-purpose):
     - Did I only build what was requested?
     - Did I follow existing patterns in the codebase?
     - Did I follow the approach/libraries specified in the task, or did I diverge? If I diverged, have I documented why?
+    - Match existing style, even if you'd do it differently
+    - Remove only imports/variables/functions that YOUR changes made unused — don't remove pre-existing dead code unless asked
 
     **Testing:**
     - Do tests actually verify behavior (not just mock behavior)?

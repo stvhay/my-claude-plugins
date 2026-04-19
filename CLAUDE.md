@@ -59,6 +59,12 @@ Plans and other working documents go under `.claude/` which is fully gitignored:
 - Structured with headers, bullet points, and blockquotes for key statements.
 - No filler or padding. Dense, scannable, useful.
 
+## Surgical Changes
+
+- Every changed line should trace directly to the user's request.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it — don't delete it unless asked.
+
 ## Lessons Learned
 
 - **Always use `finishing-a-development-branch` before creating PRs.** Its documentation gate (Step 2) validates README.md, ARCHITECTURE.md, and DESIGN.md against the changes. Skipping it leads to stale docs that must be patched post-merge (see heilmeier-catechism PR #42).
