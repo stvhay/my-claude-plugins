@@ -3,6 +3,17 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## Unreleased <!-- bump: patch -->
+
+### Fixed
+
+- **`finishing-a-development-branch`:** Four bugs surfaced in retrospectives (#166 tracking).
+  - **#158** — Removed invalid `--fail-on-error` flag from `gh pr checks` in Steps 1d and 5b. Step 1d now relies on natural non-zero exit; Step 5b uses `--watch --fail-fast`.
+  - **#149** — Step 6 now resolves the main worktree via `git worktree list --porcelain` and `cd`s there before `git worktree remove`, so the shell's cwd survives cleanup.
+  - **#162** — New Step 5c detects worktree context and omits `--delete-branch` when inside a worktree, deleting the remote ref via `gh api` instead. Prevents `main is already used by worktree` errors from `gh pr merge`.
+  - **#156** — Same Step 5c warns via `git merge-base --is-ancestor main HEAD` when a rebased branch would silently fast-forward past `--squash`.
+- **SPEC.md:** Registers INV-18 (gh flag compatibility), INV-19 (worktree-aware merge), INV-20 (fast-forward detection) and FAIL-14/15/16. Quality gate's `inv-numbering` check covers the new entries.
+
 ## v1.18.1
 
 ### Changed

@@ -90,7 +90,8 @@ PR_NUM=$(gh pr view --json number --jq .number 2>/dev/null || echo "")
 **If PR exists:** Verify all CI checks pass:
 
 ```bash
-gh pr checks "$PR_NUM" --fail-on-error
+# gh pr checks returns non-zero if any check has failed/errored
+gh pr checks "$PR_NUM"
 ```
 
 **If checks pass:** Continue to Step 2.
@@ -251,14 +252,11 @@ Do NOT proceed to cleanup or merge until CI checks pass on the newly created PR.
 This closes the gap from Step 1d when no PR existed at that point.
 
 ```bash
-# Wait for CI to start and complete
-gh pr checks "$PR_NUM" --watch
-
-# Verify all checks passed
-gh pr checks "$PR_NUM" --fail-on-error
+# Wait for CI and fail on first failed check
+gh pr checks "$PR_NUM" --watch --fail-fast
 ```
 
-**If checks pass:** Continue to Step 6.
+**If checks pass:** Continue to Step 5c.
 
 **If checks fail:**
 ```
@@ -269,19 +267,76 @@ CI checks failing on PR #<N>:
 Cannot proceed until CI passes. Fix the failing checks and re-run.
 ```
 
-Stop. Don't proceed to Step 6.
+Stop. Don't proceed to Step 5c.
+
+### Step 5c: Squash Merge
+
+<HARD-GATE>
+Do NOT merge until CI has passed (Step 5b).
+</HARD-GATE>
+
+**Fast-forward check (issue #156):** If the branch has been rebased onto main, `gh pr merge --squash` may silently fast-forward and preserve every individual commit instead of producing a single squash commit.
+
+```bash
+if git merge-base --is-ancestor main HEAD; then
+  echo "WARNING: branch is a direct descendant of main; --squash will fast-forward and preserve all commits."
+  echo "         Either merge via a merge commit, or accept the preserved history."
+fi
+```
+
+Offer the user the choice to proceed (accept fast-forward) or cancel and restructure. If no ambiguity (branch has merge-base behind tip), proceed silently.
+
+**Worktree-aware merge (issue #162):** Detect whether we are running from a worktree. `gh pr merge --delete-branch` attempts a local `git checkout main` after merging, which fails from a worktree because `main` is already checked out elsewhere.
+
+```bash
+# Detect worktree context: worktree root != git common dir parent
+if [ "$(git rev-parse --show-toplevel)" != "$(git rev-parse --git-common-dir | xargs dirname)" ]; then
+  IN_WORKTREE=yes
+else
+  IN_WORKTREE=no
+fi
+```
+
+Merge path:
+
+```bash
+if [ "$IN_WORKTREE" = "yes" ]; then
+  # Merge without --delete-branch (that step would checkout main and fail)
+  gh pr merge "$PR_NUM" --squash
+
+  # Delete the remote branch via API instead
+  OWNER_REPO=$(gh repo view --json owner,name --jq '.owner.login + "/" + .name')
+  BRANCH=$(git branch --show-current)
+  gh api -X DELETE "repos/$OWNER_REPO/git/refs/heads/$BRANCH"
+else
+  # Safe to let gh handle local checkout + branch delete
+  gh pr merge "$PR_NUM" --squash --delete-branch
+fi
+```
+
+**If merge fails:** Surface the error and stop. Do not proceed to Step 6.
+
+**If merge succeeds:** Continue to Step 6.
 
 ### Step 6: Cleanup Worktree
 
-Check if in worktree:
+Check if in a worktree:
+
 ```bash
 git worktree list | grep $(git branch --show-current)
 ```
 
-If yes:
+If yes, **cd to the main worktree first** so the shell's cwd survives the removal:
+
 ```bash
-git worktree remove <worktree-path>
+# The main worktree is always the first entry in porcelain output
+MAIN_WORKTREE=$(git worktree list --porcelain | head -1 | sed 's/^worktree //')
+WORKTREE_TO_REMOVE=$(git rev-parse --show-toplevel)
+cd "$MAIN_WORKTREE"
+git worktree remove "$WORKTREE_TO_REMOVE"
 ```
+
+> **Why:** If the shell is inside the worktree being removed, `git worktree remove` succeeds but every subsequent command fails with `Unable to read current working directory`. `cd` to the main worktree first to keep the shell usable (#149).
 
 ### Step 7: Retrospective
 
@@ -295,7 +350,7 @@ The retrospective opt-in is collected in the Pre-PR Batch (Step 3d). If the user
 1. Verify tests → Quality gate → Review doc check → CI check
 2. Validate docs → Changelog → Base branch → Scope check
 3. **Pre-PR Batch** (release type + scope + base + retrospective opt-in)
-4. Push → Squash merge PR → Post-PR CI verify → Cleanup → Retrospective
+4. Push → Post-PR CI verify → Squash merge → Cleanup → Retrospective
 
 ## Common Mistakes and Red Flags
 
@@ -311,7 +366,7 @@ The retrospective opt-in is collected in the Pre-PR Batch (Step 3d). If the user
 - **documentation-standards** — Validate mode, hard gate after test verification
 - **retrospective** — Step 7, non-blocking session analysis after PR creation
 
-**Workflow:** Verify → Quality gate → Review doc check → CI check → Validate → Changelog → Base → Scope → Pre-PR Batch → Push + squash merge PR → Post-PR CI verify → Cleanup → Retrospective
+**Workflow:** Verify → Quality gate → Review doc check → CI check → Validate → Changelog → Base → Scope → Pre-PR Batch → Push → Post-PR CI verify → Squash merge → Cleanup → Retrospective
 
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete
