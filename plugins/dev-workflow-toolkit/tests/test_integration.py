@@ -682,3 +682,45 @@ class TestFinishingWorktreeCleanupSafe:
         rm_pos = section.index("git worktree remove")
         assert cd_pos < rm_pos, "cd to main worktree must precede `git worktree remove`"
 
+
+class TestFinishingSquashMerge:
+    """#162 + #156: explicit merge step with worktree + fast-forward handling."""
+
+    def test_step_5c_squash_merge_exists(self, skills_dir: Path):
+        text = (skills_dir / "finishing-a-development-branch" / "SKILL.md").read_text()
+        assert "### Step 5c:" in text or "## Step 5c:" in text, (
+            "SKILL.md must have an explicit Step 5c for squash merge"
+        )
+        pos_5b = text.index("Step 5b")
+        pos_5c = text.index("Step 5c")
+        pos_6 = text.index("Step 6")
+        assert pos_5b < pos_5c < pos_6, "Step 5c must appear between 5b and 6"
+
+    def test_inv19_worktree_aware_merge(self, skills_dir: Path):  # Tests INV-19
+        text = (skills_dir / "finishing-a-development-branch" / "SKILL.md").read_text()
+        start = text.index("Step 5c")
+        end = text.index("Step 6")
+        section = text[start:end]
+        assert "gh pr merge" in section, "Step 5c must contain explicit `gh pr merge` command"
+        assert "git rev-parse --show-toplevel" in section, (
+            "Step 5c must detect worktree context via git rev-parse (#162)"
+        )
+        assert "--delete-branch" in section, (
+            "Step 5c must reference --delete-branch to show the conditional path (#162)"
+        )
+        assert "gh api" in section and "git/refs/heads/" in section, (
+            "Step 5c must delete remote branch via gh api when in worktree (#162)"
+        )
+
+    def test_inv20_fast_forward_detection(self, skills_dir: Path):  # Tests INV-20
+        text = (skills_dir / "finishing-a-development-branch" / "SKILL.md").read_text()
+        start = text.index("Step 5c")
+        end = text.index("Step 6")
+        section = text[start:end]
+        assert "git merge-base --is-ancestor" in section, (
+            "Step 5c must use `git merge-base --is-ancestor` for fast-forward detection (#156)"
+        )
+        assert "fast-forward" in section.lower() or "fast forward" in section.lower(), (
+            "Step 5c must explain fast-forward detection behavior (#156)"
+        )
+

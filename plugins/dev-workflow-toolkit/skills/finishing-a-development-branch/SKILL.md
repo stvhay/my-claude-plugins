@@ -256,7 +256,7 @@ This closes the gap from Step 1d when no PR existed at that point.
 gh pr checks "$PR_NUM" --watch --fail-fast
 ```
 
-**If checks pass:** Continue to Step 6.
+**If checks pass:** Continue to Step 5c.
 
 **If checks fail:**
 ```
@@ -267,7 +267,56 @@ CI checks failing on PR #<N>:
 Cannot proceed until CI passes. Fix the failing checks and re-run.
 ```
 
-Stop. Don't proceed to Step 6.
+Stop. Don't proceed to Step 5c.
+
+### Step 5c: Squash Merge
+
+<HARD-GATE>
+Do NOT merge until CI has passed (Step 5b).
+</HARD-GATE>
+
+**Fast-forward check (issue #156):** If the branch has been rebased onto main, `gh pr merge --squash` may silently fast-forward and preserve every individual commit instead of producing a single squash commit.
+
+```bash
+if git merge-base --is-ancestor main HEAD; then
+  echo "WARNING: branch is a direct descendant of main; --squash will fast-forward and preserve all commits."
+  echo "         Either merge via a merge commit, or accept the preserved history."
+fi
+```
+
+Offer the user the choice to proceed (accept fast-forward) or cancel and restructure. If no ambiguity (branch has merge-base behind tip), proceed silently.
+
+**Worktree-aware merge (issue #162):** Detect whether we are running from a worktree. `gh pr merge --delete-branch` attempts a local `git checkout main` after merging, which fails from a worktree because `main` is already checked out elsewhere.
+
+```bash
+# Detect worktree context: worktree root != git common dir parent
+if [ "$(git rev-parse --show-toplevel)" != "$(git rev-parse --git-common-dir | xargs dirname)" ]; then
+  IN_WORKTREE=yes
+else
+  IN_WORKTREE=no
+fi
+```
+
+Merge path:
+
+```bash
+if [ "$IN_WORKTREE" = "yes" ]; then
+  # Merge without --delete-branch (that step would checkout main and fail)
+  gh pr merge "$PR_NUM" --squash
+
+  # Delete the remote branch via API instead
+  OWNER_REPO=$(gh repo view --json owner,name --jq '.owner.login + "/" + .name')
+  BRANCH=$(git branch --show-current)
+  gh api -X DELETE "repos/$OWNER_REPO/git/refs/heads/$BRANCH"
+else
+  # Safe to let gh handle local checkout + branch delete
+  gh pr merge "$PR_NUM" --squash --delete-branch
+fi
+```
+
+**If merge fails:** Surface the error and stop. Do not proceed to Step 6.
+
+**If merge succeeds:** Continue to Step 6.
 
 ### Step 6: Cleanup Worktree
 
@@ -301,7 +350,7 @@ The retrospective opt-in is collected in the Pre-PR Batch (Step 3d). If the user
 1. Verify tests → Quality gate → Review doc check → CI check
 2. Validate docs → Changelog → Base branch → Scope check
 3. **Pre-PR Batch** (release type + scope + base + retrospective opt-in)
-4. Push → Squash merge PR → Post-PR CI verify → Cleanup → Retrospective
+4. Push → Post-PR CI verify → Squash merge → Cleanup → Retrospective
 
 ## Common Mistakes and Red Flags
 
@@ -317,7 +366,7 @@ The retrospective opt-in is collected in the Pre-PR Batch (Step 3d). If the user
 - **documentation-standards** — Validate mode, hard gate after test verification
 - **retrospective** — Step 7, non-blocking session analysis after PR creation
 
-**Workflow:** Verify → Quality gate → Review doc check → CI check → Validate → Changelog → Base → Scope → Pre-PR Batch → Push + squash merge PR → Post-PR CI verify → Cleanup → Retrospective
+**Workflow:** Verify → Quality gate → Review doc check → CI check → Validate → Changelog → Base → Scope → Pre-PR Batch → Push → Post-PR CI verify → Squash merge → Cleanup → Retrospective
 
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete
