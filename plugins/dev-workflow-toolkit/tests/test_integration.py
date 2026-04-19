@@ -724,3 +724,34 @@ class TestFinishingSquashMerge:
             "Step 5c must explain fast-forward detection behavior (#156)"
         )
 
+
+class TestRequestingCodeReviewPosting:
+    """#116 + #142: code-reviewer template must mandate posting to GitHub."""
+
+    def test_reviewer_template_mandates_github_posting(self, skills_dir: Path):
+        """Code-reviewer.md must have a MANDATORY-level instruction to post when PR_NUMBER is set."""
+        text = (skills_dir / "requesting-code-review" / "code-reviewer.md").read_text()
+        assert "MANDATORY" in text, (
+            "code-reviewer.md must mark posting as MANDATORY (#116)"
+        )
+        task_list_end = text.find("## What Was Implemented")
+        task_list_text = text[:task_list_end]
+        assert "post" in task_list_text.lower() and "PR_NUMBER" in task_list_text, (
+            "code-reviewer.md task list must include posting to PR (#116)"
+        )
+
+    def test_skill_description_prefers_over_builtin_review(self, skills_dir: Path):
+        """Skill description must position itself as the canonical posting flow vs. built-in /review."""
+        text = (skills_dir / "requesting-code-review" / "SKILL.md").read_text()
+        fm_end = text.find("\n---", 3)
+        fm = text[:fm_end]
+        assert "GitHub" in fm or "github" in fm.lower(), (
+            "requesting-code-review description must reference GitHub posting to distinguish it from built-in /review (#142)"
+        )
+
+    def test_skill_body_disambiguates_from_builtin_review(self, skills_dir: Path):
+        """SKILL.md must explicitly contrast itself with built-in /review."""
+        text = (skills_dir / "requesting-code-review" / "SKILL.md").read_text()
+        assert "/review" in text, (
+            "SKILL.md must reference the built-in /review command to disambiguate (#142)"
+        )

@@ -1,13 +1,15 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, before merging to verify work meets requirements, or to review a specific PR by number
+description: Canonical review flow for this repo — review a PR by number and post findings to GitHub. Use when completing tasks, implementing major features, before merging to verify work meets requirements, or to review a specific PR. Prefer over the built-in /review command, which does not post to GitHub.
 ---
 
 # Requesting Code Review
 
-Dispatch code-reviewer subagent to catch issues before they cascade.
+Dispatch code-reviewer subagent to catch issues before they cascade, **and always post the review to GitHub** when a PR exists.
 
-**Core principle:** Review early, review often.
+**Core principle:** Review early, review often — and always post findings to the PR surface so the record is visible to collaborators (INV-15 GitHub Projection).
+
+> **This skill vs. built-in `/review`:** The Claude Code built-in `/review <PR#>` command produces an in-chat review but does NOT post to GitHub. When a PR review needs to be recorded on GitHub, use this skill (or explicitly call `gh pr review`/`gh pr comment` after `/review`). The two skills have overlapping purposes but only this one closes the loop on GitHub.
 
 ## When to Request Review
 
