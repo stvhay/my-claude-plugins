@@ -7,7 +7,7 @@ read this file and apply retroactive actions marked with **ACTION**.
 
 ### Changed
 
-- Graft karpathy-guidelines phrasings into `code-simplification` (Constraints), `subagent-driven-development/implementer-prompt` (Self-Review Discipline), and `test-driven-development` (GREEN step) to close the Surgical Changes in-flight rule gap. Same rule now echoes in three skill load points: every changed line traces to the user's request; match existing style; don't delete unrelated dead code unless asked. See `skills/UPSTREAM-karpathy.md` for evaluation and rationale.
+- Graft karpathy-guidelines phrasings into `code-simplification` (Constraints), `subagent-driven-development/implementer-prompt` (Self-Review Discipline), and `test-driven-development` (GREEN step) to close the Surgical Changes in-flight rule gap. Same rule now echoes in three skill load points: every changed line traces to the user's request; match existing style; don't delete unrelated dead code unless asked. The project-root `CLAUDE.md` also gained a `## Surgical Changes` always-loaded section (out of plugin scope, not tracked here). See `skills/UPSTREAM-karpathy.md` for evaluation and rationale.
 
 ## v1.18.0
 
