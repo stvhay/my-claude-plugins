@@ -918,3 +918,40 @@ class TestProjectInitGitHooks:
         assert ".git/hooks/pre-commit" in hook2, (
             "HOOK-2 check must verify .git/hooks/pre-commit, not .claude/settings.json (#155)"
         )
+
+
+class TestCodifySubsystemTopLevel:
+    """#148: codify-subsystem must support top-level modules, not just directories."""
+
+    def test_description_mentions_module(self, skills_dir: Path):
+        """Frontmatter description must mention top-level modules (#148)."""
+        text = (skills_dir / "codify-subsystem" / "SKILL.md").read_text()
+        end = text.find("\n---", 3)
+        fm = text[:end]
+        assert "module" in fm.lower(), (
+            "codify-subsystem description must mention top-level modules as a target type (#148)"
+        )
+
+    def test_target_types_section_describes_file_target(self, skills_dir: Path):
+        """SKILL.md must have a Target Types section describing file targets with placement options (#148)."""
+        text = (skills_dir / "codify-subsystem" / "SKILL.md").read_text()
+        assert "Target Types" in text, (
+            "SKILL.md must have a Target Types section documenting directory-vs-file targets (#148)"
+        )
+        target_section = text[text.index("Target Types"):text.index("Target Types") + 2000]
+        assert "Sibling spec" in target_section or "sibling" in target_section.lower(), (
+            "Target Types must describe sibling SPEC placement (#148)"
+        )
+        assert "Promoted directory" in target_section or "promote" in target_section.lower(), (
+            "Target Types must describe promoted-directory placement (#148)"
+        )
+
+    def test_step_1_accepts_file_paths(self, skills_dir: Path):
+        """Step 1 must handle file-target paths, not only directory paths (#148)."""
+        text = (skills_dir / "codify-subsystem" / "SKILL.md").read_text()
+        step1_start = text.index("### Step 1: Identify Target")
+        step1_end = text.index("### Step 1b")
+        step1 = text[step1_start:step1_end]
+        assert "file" in step1.lower() and "directory" in step1.lower(), (
+            "Step 1 must handle both file and directory targets (#148)"
+        )

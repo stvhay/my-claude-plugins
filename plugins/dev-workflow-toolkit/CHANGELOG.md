@@ -3,6 +3,12 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## Unreleased <!-- bump: patch -->
+
+### Fixed
+
+- **`codify-subsystem`:** Support top-level modules, not just directories (#148, #166 tracking). Frontmatter description, "When to Use" list, and new "Target Types" section cover single-file targets (`store.py`, `server.py`, etc.) with two placement options: sibling `module.SPEC.md` or promoted `module/SPEC.md`. Step 1 now handles both file and directory paths.
+
 ## v1.18.9
 
 ### Fixed
