@@ -206,20 +206,20 @@ the project, and proposes fixes for failures.
 ### HOOK-1: check-version-bump hook
 
 - **Layer:** Hooks
-- **Check:** `check-version-bump.sh` registered as a Claude Code hook
-- **Expected:** Hook validates `## Unreleased` section and `<!-- bump: TYPE -->` comment on source changes
-- **Severity when failing:** OUTDATED
-- **Remediation:** Register check-version-bump.sh in Claude Code hook configuration
-- **Since:** v1.9.0 (updated v1.14.0)
+- **Check:** `check-version-bump.sh` invoked from `.git/hooks/pre-commit` (NOT from `.claude/settings.json`)
+- **Expected:** Git pre-commit hook validates `## Unreleased` section and `<!-- bump: TYPE -->` comment on source changes. Claude Code's `hooks` key does not support a `preCommit` event, so registering there silently fails (#155).
+- **Severity when failing:** OUTDATED | DRIFT
+- **Remediation:** Remove any `preCommit`-keyed entry from `.claude/settings.json` and install `check-version-bump.sh` into `.git/hooks/pre-commit` instead (project-init Step 8).
+- **Since:** v1.9.0 (updated v1.18.x for #155)
 
 ### HOOK-2: check-changelog hook
 
 - **Layer:** Hooks
-- **Check:** `check-changelog.sh` registered as a Claude Code hook
-- **Expected:** Hook validates bump comment presence when `## Unreleased` section exists
-- **Severity when failing:** OUTDATED
-- **Remediation:** Register check-changelog.sh in Claude Code hook configuration
-- **Since:** v1.9.0 (updated v1.14.0)
+- **Check:** `check-changelog.sh` invoked from `.git/hooks/pre-commit` (NOT from `.claude/settings.json`)
+- **Expected:** Git pre-commit hook validates bump comment presence when `## Unreleased` section exists.
+- **Severity when failing:** OUTDATED | DRIFT
+- **Remediation:** Remove any `preCommit`-keyed entry from `.claude/settings.json` and install `check-changelog.sh` into `.git/hooks/pre-commit` instead (project-init Step 8).
+- **Since:** v1.9.0 (updated v1.18.x for #155)
 
 ### HOOK-3: Quality gate SessionStart hook
 

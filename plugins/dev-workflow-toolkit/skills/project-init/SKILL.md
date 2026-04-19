@@ -125,7 +125,19 @@ After scaffolding the base files, offer to set up release infrastructure:
 5. **Generate compute_version.py** — Python implementation using stdlib `json` + `tomllib` for reading, regex-based writes for TOML. Include `--ci` mode that reads bump type from `<!-- bump: TYPE -->` in CHANGELOG.md and rewrites `## Unreleased` to `## vX.Y.Z`. Tailored to the project's version file locations.
 6. **Generate release.yml** — GitHub Actions workflow: on push to main, detect plugins with `## Unreleased` sections, run `compute-version.sh --ci --update`, commit version bumps, create timestamp git tag (`YYYY-MM-DDTHHMMSSZ`), create GitHub Release with changelog content. Include `concurrency: { group: version-bump, cancel-in-progress: false }` to serialize parallel merges.
 7. **Generate ci.yml version-check job** — Pre-merge CI job that validates `bump:TYPE` PR label matches `<!-- bump: TYPE -->` changelog comment for changed plugins
-8. **Register hooks** — add `check-version-bump.sh` (validates `## Unreleased` + bump comment on source changes) and `check-changelog.sh` (validates bump comment when `## Unreleased` exists) to the project's Claude Code hook configuration
+8. **Register git pre-commit hook** — install `check-version-bump.sh` and `check-changelog.sh` as entries in `.git/hooks/pre-commit` (NOT in `.claude/settings.json`). These scripts inspect git staged files and belong in the git hook pipeline; placing them under Claude Code's `hooks` key fails because `preCommit` is not a valid Claude Code event (valid events: `PreToolUse`, `PostToolUse`, `Notification`, `Stop`, `SubagentStop`, `UserPromptSubmit`). Write to `.git/hooks/pre-commit`:
+
+   ```bash
+   cat > .git/hooks/pre-commit <<'PRE_COMMIT_EOF'
+   #!/usr/bin/env bash
+   set -euo pipefail
+   bash "$(git rev-parse --show-toplevel)/scripts/check-version-bump.sh"
+   bash "$(git rev-parse --show-toplevel)/scripts/check-changelog.sh"
+   PRE_COMMIT_EOF
+   chmod +x .git/hooks/pre-commit
+   ```
+
+   `.git/hooks/` is not tracked by git — hook setup must be re-run on each clone. Document this in CONTRIBUTING.md and consider providing a `scripts/install-hooks.sh` helper for contributors.
 
 The release infrastructure is part of the initial commit with passing CI. The generated scripts are project-specific — the skill generates them based on the detected stack, not from templates.
 

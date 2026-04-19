@@ -890,3 +890,31 @@ class TestBrainstormingRecommendedDefaults:
         assert "supplement" in text.lower() and "decided" in text.lower(), (
             "SKILL.md must instruct ux-design-agent to supplement decided content, not restate (#132)"
         )
+
+
+class TestProjectInitGitHooks:
+    """#155: project-init must wire pre-commit hooks via .git/hooks/, not .claude/settings.json."""
+
+    def test_skill_uses_git_hooks_not_claude_settings(self, skills_dir: Path):
+        """SKILL.md must explicitly NOT register pre-commit scripts via Claude Code hooks (#155)."""
+        text = (skills_dir / "project-init" / "SKILL.md").read_text()
+        assert ".git/hooks/pre-commit" in text, (
+            "SKILL.md must install pre-commit checks into .git/hooks/pre-commit (#155)"
+        )
+        assert "preCommit" in text and "not a valid" in text.lower(), (
+            "SKILL.md must call out that preCommit is not a valid Claude Code hook event (#155)"
+        )
+
+    def test_audit_checklist_reflects_git_hook_expectation(self, plugin_root: Path):
+        """Audit checklist HOOK-1 + HOOK-2 must check for git pre-commit hooks, not Claude hooks (#155)."""
+        path = plugin_root / "skills" / "project-init" / "references" / "audit-checklist.md"
+        text = path.read_text()
+        hook1 = text[text.index("### HOOK-1:"):text.index("### HOOK-2:")]
+        assert ".git/hooks/pre-commit" in hook1, (
+            "HOOK-1 check must verify .git/hooks/pre-commit, not .claude/settings.json (#155)"
+        )
+        hook2_start = text.index("### HOOK-2:")
+        hook2 = text[hook2_start:hook2_start + 800]
+        assert ".git/hooks/pre-commit" in hook2, (
+            "HOOK-2 check must verify .git/hooks/pre-commit, not .claude/settings.json (#155)"
+        )
