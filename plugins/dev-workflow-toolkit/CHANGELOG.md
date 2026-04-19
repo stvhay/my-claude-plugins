@@ -9,6 +9,8 @@ read this file and apply retroactive actions marked with **ACTION**.
 
 - **`subagent-driven-development`:** Implementer subagents now run tests/lint/format with fresh output as evidence before reporting completion (#145). Pre-Report Gate added to `implementer-prompt.md`; new red-flag in `SKILL.md`; enforced by new INV-21 and FAIL-17 in SPEC.md.
 
+## v1.18.10
+
 ### Fixed
 
 - **`codify-subsystem`:** Support top-level modules, not just directories (#148, #166 tracking). Frontmatter description, "When to Use" list, and new "Target Types" section cover single-file targets (`store.py`, `server.py`, etc.) with two placement options: sibling `module.SPEC.md` or promoted `module/SPEC.md`. Step 1 now handles both file and directory paths.
