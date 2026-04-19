@@ -113,6 +113,7 @@ lifecycle points (plan summaries, progress updates, review findings).
 |---|---|---|
 | Adding a skill derived from upstream | Maintainer: add entry to UPSTREAM-*.md with "identical" status and sync date | INV-4 |
 | Modifying a skill that originated from upstream | Maintainer: update status to "diverged" in UPSTREAM-*.md with change notes | INV-4 |
+| Evaluating an upstream with a non-adopt outcome | Maintainer: create `UPSTREAM-<source>.md` with a `Verdict:` field (see `docs/DESIGN.md` for values) and analysis of why; omit the sync section unless the verdict is `adopt` | INV-4 |
 | Referencing another skill from within a SKILL.md | Use skill name in Integration section (e.g., "writing-plans"), never file paths | INV-5 |
 | Question has enumerable answers and agent can propose good options | Use `AskUserQuestion` with recommendation as first option | INV-14 |
 | Question is open-ended or agent lacks confidence in options | Use free-text in a single message | INV-14 |

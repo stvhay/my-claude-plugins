@@ -3,6 +3,17 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## Unreleased <!-- bump: patch -->
+
+### Changed
+
+- Graft karpathy-guidelines phrasings to close the Surgical Changes in-flight rule gap. Same rule now echoes in three skill load points:
+  - `code-simplification` Constraints — every changed line traces to the user's request; don't delete unrelated dead code.
+  - `subagent-driven-development/implementer-prompt` Self-Review Discipline — match existing style; leave pre-existing dead code in place.
+  - `test-driven-development` GREEN step — every changed line traces to the user's request.
+- The project-root `CLAUDE.md` also gained a `## Surgical Changes` always-loaded section (out of plugin scope, not tracked here).
+- See `skills/UPSTREAM-karpathy.md` for evaluation and rationale.
+
 ## v1.18.0
 
 

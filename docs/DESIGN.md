@@ -50,6 +50,22 @@ UPSTREAM files are maintainer-authored — they record the maintainer's
 adaptation decisions and sync status. Consuming agents should not modify
 these files or act on their sync instructions.
 
+UPSTREAM files also record decisions more nuanced than full adoption. A
+deliberate decision not to adopt is valuable provenance; so is a decision that
+only lifts one phrasing out of an external body of work. Rejection-case and
+partial-adoption files carry a `Verdict:` field in the header and the same
+analytical structure (coverage, rationale) as adoption-case files.
+
+Verdict values:
+
+- `adopt` — full adoption; sync section required.
+- `graft` — lift specific phrasings into existing skills.
+- `refactor` — rework an existing skill in light of the upstream.
+- `new-skill` — create a new skill derived from the upstream.
+- `do-not-adopt` — evaluated and rejected.
+
+Only the `adopt` case requires a sync section.
+
 ## Hub-and-Spoke Skill Architecture
 
 Plugins with multiple related skills use a hub-and-spoke topology:

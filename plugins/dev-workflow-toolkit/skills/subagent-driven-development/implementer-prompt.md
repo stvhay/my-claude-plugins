@@ -70,8 +70,9 @@ Task tool (general-purpose):
     **Discipline:**
     - Did I avoid overbuilding (YAGNI)?
     - Did I only build what was requested?
-    - Did I follow existing patterns in the codebase?
+    - Did I match existing patterns and style in the codebase, even where I'd do it differently?
     - Did I follow the approach/libraries specified in the task, or did I diverge? If I diverged, have I documented why?
+    - Did I remove only imports/variables/functions that my changes made unused, leaving pre-existing dead code in place?
 
     **Testing:**
     - Do tests actually verify behavior (not just mock behavior)?

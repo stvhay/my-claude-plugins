@@ -54,6 +54,12 @@ Plans and other working documents go under `.claude/` which is fully gitignored:
 4. **Always create PRs** — Never commit directly to main
 5. **Reference issue in PR** — Link back to the originating issue
 
+## Surgical Changes
+
+- Every changed line should trace directly to the user's request.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it — don't delete it unless asked.
+
 ## Writing Standards
 
 - Structured with headers, bullet points, and blockquotes for key statements.

@@ -9,7 +9,7 @@ description: Use after verification passes to automatically simplify code. Runs 
 
 Automated refactoring after tests pass. Part of the standard development pipeline.
 
-**Core principle:** Simplification that breaks tests is a signal, not just a failure. Analyze before reverting.
+**Core principle:** Simplification that breaks tests is a signal, not just a failure. Analyze before reverting — but analysis stays in-scope to the simplification at hand, not adjacent code.
 
 **Announce at start:** "I'm using the code-simplification skill to simplify the code you just verified."
 
@@ -27,6 +27,8 @@ develop → verify (tests pass) → simplify → re-verify → complete
 - No new features added
 - Prefer deletion over modification
 - Tests must pass after each change
+- Every changed line should trace directly to the user's request
+- If you notice unrelated dead code, mention it — don't delete it unless asked
 
 ## Pattern Categories
 
