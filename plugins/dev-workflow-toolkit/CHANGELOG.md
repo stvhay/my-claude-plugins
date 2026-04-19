@@ -3,6 +3,14 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## Unreleased <!-- bump: patch -->
+
+### Fixed
+
+- **`using-git-worktrees`:** Two worktree hygiene fixes (#166 tracking).
+  - **#120** — Worktrees now branch from `origin/<default-branch>` explicitly (detected via `git symbolic-ref`) instead of the current branch. Prevents add/add merge conflicts when two feature PRs each carry files from the other.
+  - **#160** — Setup phase now unsets `VIRTUAL_ENV` and exports `UV_LINK_MODE=copy` before running project setup. Isolates the worktree's Python environment from the parent and avoids hardlink failures in container/bind-mount filesystems.
+
 ## v1.18.5
 
 ### Fixed
