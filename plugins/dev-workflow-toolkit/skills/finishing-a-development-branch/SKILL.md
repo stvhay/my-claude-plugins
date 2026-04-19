@@ -271,15 +271,23 @@ Stop. Don't proceed to Step 6.
 
 ### Step 6: Cleanup Worktree
 
-Check if in worktree:
+Check if in a worktree:
+
 ```bash
 git worktree list | grep $(git branch --show-current)
 ```
 
-If yes:
+If yes, **cd to the main worktree first** so the shell's cwd survives the removal:
+
 ```bash
-git worktree remove <worktree-path>
+# The main worktree is always the first entry in porcelain output
+MAIN_WORKTREE=$(git worktree list --porcelain | head -1 | sed 's/^worktree //')
+WORKTREE_TO_REMOVE=$(git rev-parse --show-toplevel)
+cd "$MAIN_WORKTREE"
+git worktree remove "$WORKTREE_TO_REMOVE"
 ```
+
+> **Why:** If the shell is inside the worktree being removed, `git worktree remove` succeeds but every subsequent command fails with `Unable to read current working directory`. `cd` to the main worktree first to keep the shell usable (#149).
 
 ### Step 7: Retrospective
 

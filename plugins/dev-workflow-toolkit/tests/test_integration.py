@@ -662,3 +662,23 @@ class TestFinishingGhFlagCompatibility:
                     f"`gh pr checks --watch` must include --fail-fast to error-exit on CI failure; found: {snippet}"
                 )
 
+
+class TestFinishingWorktreeCleanupSafe:
+    """#149: Step 6 must cd to main worktree before removing the current worktree."""
+
+    def test_cleanup_cds_to_main_worktree_first(self, skills_dir: Path):
+        text = (skills_dir / "finishing-a-development-branch" / "SKILL.md").read_text()
+        # Locate Step 6 section
+        start = text.index("### Step 6: Cleanup Worktree")
+        end = text.index("### Step 7")
+        section = text[start:end]
+        assert "git worktree list --porcelain" in section, (
+            "Step 6 must resolve main worktree via `git worktree list --porcelain`"
+        )
+        assert 'cd "$MAIN_WORKTREE"' in section or "cd $MAIN_WORKTREE" in section, (
+            "Step 6 must cd to main worktree before removing the current one (#149)"
+        )
+        cd_pos = section.index("MAIN_WORKTREE")
+        rm_pos = section.index("git worktree remove")
+        assert cd_pos < rm_pos, "cd to main worktree must precede `git worktree remove`"
+
