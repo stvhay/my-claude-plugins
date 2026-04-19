@@ -279,31 +279,38 @@ always-loading, which we already have at the system level.
 
 ## Changes made
 
-**None — evaluation artifact only.** This file is the Task 1 deliverable.
-
-**Graft targets for Task 3** (do not apply in this task):
+Grafts applied on branch `feature/163-evaluate-karpathy` in commit
+`99608b3` with refinements in commit `46faf9e`:
 
 - `plugins/dev-workflow-toolkit/skills/code-simplification/SKILL.md`,
-  under "Constraints" or adjacent — add: "Every changed line should trace
-  directly to the user's request. If you notice unrelated dead code,
-  mention it — don't delete it unless asked." Rationale: closes the
-  "auto-delete crosses scope" failure mode; consolidates the two
-  tensions flagged under "Clarity & coherence."
+  Constraints — added: "Every changed line should trace directly to the
+  user's request" and "If you notice unrelated dead code, mention it —
+  don't delete it unless asked." Closes the auto-delete-crosses-scope
+  failure mode; consolidates the post-hoc vs. in-flight simplification
+  tension flagged under Clarity & coherence.
 - `plugins/dev-workflow-toolkit/skills/subagent-driven-development/implementer-prompt.md`,
-  under "Discipline:" — add: "Match existing style, even if you'd do it
-  differently. Remove only imports/variables/functions that YOUR changes
-  made unused." Rationale: gives the implementer subagent a crisp
-  in-flight rule for Surgical Changes, not a post-hoc review question.
+  Self-Review Discipline — existing "Did I follow existing patterns in
+  the codebase?" bullet widened to "Did I match existing patterns and
+  style in the codebase, even where I'd do it differently?" (absorbs
+  the Karpathy anti-ego clause into the existing question). New bullet
+  added: "Did I remove only imports/variables/functions that my changes
+  made unused, leaving pre-existing dead code in place?" Phrased as
+  questions to match the section's voice.
 - `plugins/dev-workflow-toolkit/skills/test-driven-development/SKILL.md`,
-  GREEN section — reinforce existing `:127` line with the Karpathy test:
-  "The test: every changed line traces to the user's request." Rationale:
-  one canonical phrasing that the other two grafts can echo, reducing
-  the fragmentation signal below.
-- Optional: `CLAUDE.md` (repo root) — consider a one-bullet "Surgical
-  changes" line under Writing Standards or a new section, matching tone
-  of existing "No filler or padding. Dense, scannable, useful." Rationale:
-  makes the Surgical Changes principle always-loaded, the way Simplicity
-  First already is via agent-level defaults.
+  GREEN section (:127) — appended to existing sentence: "The test: every
+  changed line traces to the user's request." Establishes the canonical
+  phrasing that the other two grafts echo.
+- `CLAUDE.md` (repo root) — added new `## Surgical Changes` section
+  between Workflow and Writing Standards with three bullets: "Every
+  changed line should trace directly to the user's request"; "Match
+  existing style, even if you'd do it differently"; "If you notice
+  unrelated dead code, mention it — don't delete it unless asked."
+  Always-loaded at the project level, matching how Simplicity First
+  reaches agents via always-loaded system instructions.
+
+CHANGELOG entry: `plugins/dev-workflow-toolkit/CHANGELOG.md` Unreleased
+with `<!-- bump: patch -->` — the three plugin-scope grafts only;
+project-root CLAUDE.md is out of plugin scope.
 
 ## Signals for broader review
 
