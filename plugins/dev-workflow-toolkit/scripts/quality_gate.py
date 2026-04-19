@@ -720,7 +720,7 @@ def check_doc_stats(results: Results, project_root: Path) -> None:
             else:
                 report(
                     results,
-                    "WARN",
+                    "FAIL",
                     "doc-stats",
                     f"{rel}: [^{label}] {check_name} claims {claimed}, actual {actual}",
                 )
