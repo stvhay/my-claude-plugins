@@ -369,7 +369,7 @@ class TestDocStats:
         assert "skill-count = 1" in result.stdout
 
     def test_wrong_skill_count(self, qg: str, fixture_dir: Path):
-        """Stat-check with wrong count warns but doesn't fail."""
+        """Stat-check with wrong count fails (#114 — was WARN, now FAIL)."""
         readme = fixture_dir / "plugins" / "test-plugin" / "README.md"
         readme.write_text(
             "# Test Plugin\n\n"
@@ -378,7 +378,7 @@ class TestDocStats:
             "[^stat-skill-count]: stat-check: skill-count\n"
         )
         result = run_qg(qg, "--check", "doc-stats", "--path", str(fixture_dir))
-        assert result.returncode == 0, "Stat mismatch should warn, not fail"
+        assert result.returncode != 0, "Stat mismatch must fail to block stale stats from shipping"
         assert "claims 5, actual 1" in result.stdout
 
     def test_unknown_check_name(self, qg: str, fixture_dir: Path):

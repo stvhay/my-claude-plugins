@@ -3,6 +3,12 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## Unreleased <!-- bump: patch -->
+
+### Fixed
+
+- **quality-gate doc-stats:** Stat mismatches now emit `FAIL` instead of `WARN` so CI blocks stale README counts from shipping (#114). Also registered `doc-stats` as a Step 7 structural check in `documentation-standards` so the finishing workflow runs it.
+
 ## v1.18.2
 
 ### Fixed

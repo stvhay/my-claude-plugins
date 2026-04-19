@@ -114,6 +114,7 @@ Do NOT allow the branch to proceed to option presentation, PR creation, or merge
    ```bash
    ${CLAUDE_SKILL_DIR}/../../scripts/quality-gate.sh --check inv-numbering --path "$(git rev-parse --show-toplevel)"
    ${CLAUDE_SKILL_DIR}/../../scripts/quality-gate.sh --check doc-structure --path "$(git rev-parse --show-toplevel)"
+   ${CLAUDE_SKILL_DIR}/../../scripts/quality-gate.sh --check doc-stats --path "$(git rev-parse --show-toplevel)"
    ```
 
    Include structural check results alongside documentation gap analysis.
