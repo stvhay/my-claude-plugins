@@ -143,6 +143,7 @@ See `tests/README.md` for details.
 
 - `docs/architecture/` — Design rationale and foundations
 - `docs/FIRST_RUN.md` — Project memory initialization
+- `docs/headless-patterns.md` — Common automation patterns using `claude -p` (headless mode)
 - `scripts/quality-gate.sh` — Structural validation (requires uv)
 
 ## Attribution

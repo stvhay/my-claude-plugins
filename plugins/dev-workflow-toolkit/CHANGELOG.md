@@ -3,6 +3,12 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## Unreleased <!-- bump: patch -->
+
+### Added
+
+- `docs/headless-patterns.md` — reference doc covering four `claude -p` headless-mode patterns (CI failure triage, post-merge cleanup, release tagging, batch lint/format). Linked from the README's `## Documentation` section.
+
 ## v1.18.11
 
 ### Changed
