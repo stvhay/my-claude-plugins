@@ -26,12 +26,12 @@ STDERR_BUF=""
 PY_FILES=$(printf '%s\n' "$STAGED" | grep -E '\.py$' || true)
 if [ -n "$PY_FILES" ] && [ -f "$REPO_ROOT/pyproject.toml" ]; then
     if command -v ruff >/dev/null 2>&1; then
-        if ! OUT=$(printf '%s\n' "$PY_FILES" | (cd "$REPO_ROOT" && xargs ruff check 2>&1)); then
+        if ! OUT=$(printf '%s\n' "$PY_FILES" | (cd "$REPO_ROOT" && xargs -d '\n' ruff check 2>&1)); then
             FAILED=1
             STDERR_BUF="${STDERR_BUF}${OUT}"$'\n'
         fi
     elif command -v flake8 >/dev/null 2>&1; then
-        if ! OUT=$(printf '%s\n' "$PY_FILES" | (cd "$REPO_ROOT" && xargs flake8 2>&1)); then
+        if ! OUT=$(printf '%s\n' "$PY_FILES" | (cd "$REPO_ROOT" && xargs -d '\n' flake8 2>&1)); then
             FAILED=1
             STDERR_BUF="${STDERR_BUF}${OUT}"$'\n'
         fi
@@ -45,7 +45,7 @@ if [ -n "$JS_FILES" ] && [ -f "$REPO_ROOT/package.json" ]; then
        [ -f "$REPO_ROOT/.eslintrc.yaml" ] || [ -f "$REPO_ROOT/.eslintrc.yml" ] || \
        [ -f "$REPO_ROOT/eslint.config.js" ] || [ -f "$REPO_ROOT/eslint.config.mjs" ]; then
         if command -v eslint >/dev/null 2>&1; then
-            if ! OUT=$(printf '%s\n' "$JS_FILES" | (cd "$REPO_ROOT" && xargs eslint 2>&1)); then
+            if ! OUT=$(printf '%s\n' "$JS_FILES" | (cd "$REPO_ROOT" && xargs -d '\n' eslint 2>&1)); then
                 FAILED=1
                 STDERR_BUF="${STDERR_BUF}${OUT}"$'\n'
             fi
@@ -62,7 +62,7 @@ if [ -n "$GO_FILES" ] && [ -f "$REPO_ROOT/go.mod" ]; then
             STDERR_BUF="${STDERR_BUF}${OUT}"$'\n'
         fi
     elif command -v gofmt >/dev/null 2>&1; then
-        OUT=$(printf '%s\n' "$GO_FILES" | (cd "$REPO_ROOT" && xargs gofmt -l 2>&1))
+        OUT=$(printf '%s\n' "$GO_FILES" | (cd "$REPO_ROOT" && xargs -d '\n' gofmt -l 2>&1))
         if [ -n "$OUT" ]; then
             FAILED=1
             STDERR_BUF="${STDERR_BUF}gofmt: files need formatting:"$'\n'"${OUT}"$'\n'

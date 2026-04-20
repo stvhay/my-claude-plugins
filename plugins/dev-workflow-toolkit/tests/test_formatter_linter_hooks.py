@@ -245,14 +245,23 @@ class TestPreCommitLinter:
         assert result.returncode == 2
         assert "dirty.py" in result.stderr
 
+    @pytest.mark.parametrize("command", [
+        "echo gitcommit",
+        "echo gitcommits",
+        "echo git-commit",
+        "echo mygit commit",
+        "echo 'fake git_commit'",
+    ])
     def test_word_boundary_on_git_commit(
-        self, hooks_dir: Path, tmp_path: Path
+        self, hooks_dir: Path, tmp_path: Path, command: str
     ):
-        """Commands containing 'gitcommit' (no space) should NOT trigger."""
+        """Commands that merely contain commit-like substrings must NOT trigger lint."""
         _init_git_repo(tmp_path)
         result = _run_hook(
             hooks_dir / "pre-commit-linter.sh",
             tmp_path,
-            {"tool_input": {"command": "echo gitcommit"}},
+            {"tool_input": {"command": command}},
         )
-        assert result.returncode == 0
+        assert result.returncode == 0, (
+            f"Hook triggered on non-commit command: {command!r}"
+        )
