@@ -65,6 +65,15 @@
             "command": "${CLAUDE_PLUGIN_ROOT}/scripts/context-gate-hook.sh"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/pre-commit-linter.sh"
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -74,6 +83,15 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/langfuse-trace.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/post-edit-formatter.sh"
           }
         ]
       }

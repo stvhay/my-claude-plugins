@@ -3,6 +3,13 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## Unreleased <!-- bump: minor -->
+
+### Added
+
+- **Post-edit formatter hook** (`hooks/post-edit-formatter.sh`) — `PostToolUse` on `Edit`/`Write`. Detects the project's toolchain (pyproject.toml, package.json, go.mod, Cargo.toml) and formats the touched file with ruff/black, prettier, gofmt, or rustfmt. Silent when no toolchain is detected.
+- **Pre-commit linter hook** (`hooks/pre-commit-linter.sh`) — `PreToolUse` on `Bash`. When the Bash command contains `git commit`, runs the project linter (ruff/flake8, eslint, golangci-lint/gofmt, cargo clippy) on staged files only. Exits 2 to block the commit on any failure; silent when no toolchain is detected.
+
 ## v1.18.12
 
 ### Added
