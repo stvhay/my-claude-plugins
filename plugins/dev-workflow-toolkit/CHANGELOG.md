@@ -9,6 +9,8 @@ read this file and apply retroactive actions marked with **ACTION**.
 
 - `docs/headless-patterns.md` — reference doc covering four `claude -p` headless-mode patterns (CI failure triage, post-merge cleanup, release tagging, batch lint/format). Linked from the README's `## Documentation` section.
 
+## v1.18.11
+
 ### Changed
 
 - **`subagent-driven-development`:** Implementer subagents now run tests/lint/format with fresh output as evidence before reporting completion (#145). Pre-Report Gate added to `implementer-prompt.md`; new red-flag in `SKILL.md`; enforced by new INV-21 and FAIL-17 in SPEC.md.
