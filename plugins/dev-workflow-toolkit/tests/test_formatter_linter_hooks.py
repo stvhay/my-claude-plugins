@@ -145,3 +145,114 @@ class TestPostEditFormatter:
         )
         assert result.returncode == 0
         assert f.read_text() == "x = 1\n"
+
+
+class TestPreCommitLinter:
+    """Tests for pre-commit-linter.sh."""
+
+    def test_script_exists_and_executable(self, hooks_dir: Path):
+        script = hooks_dir / "pre-commit-linter.sh"
+        assert script.exists(), f"Script not found: {script}"
+        assert script.stat().st_mode & 0o111, "Script must be executable"
+
+    def test_silent_on_non_commit_bash(
+        self, hooks_dir: Path, tmp_path: Path
+    ):
+        """Bash commands that are not 'git commit' → exit 0, no stderr."""
+        _init_git_repo(tmp_path)
+        result = _run_hook(
+            hooks_dir / "pre-commit-linter.sh",
+            tmp_path,
+            {"tool_input": {"command": "ls -la"}},
+        )
+        assert result.returncode == 0
+        assert result.stderr == ""
+
+    def test_silent_when_no_staged_files(
+        self, hooks_dir: Path, tmp_path: Path
+    ):
+        """git commit with no staged files → exit 0."""
+        _init_git_repo(tmp_path)
+        result = _run_hook(
+            hooks_dir / "pre-commit-linter.sh",
+            tmp_path,
+            {"tool_input": {"command": "git commit -m 'empty'"}},
+        )
+        assert result.returncode == 0
+
+    def test_silent_when_no_toolchain_detected(
+        self, hooks_dir: Path, tmp_path: Path
+    ):
+        """git commit in a repo with no lang marker → exit 0."""
+        _init_git_repo(tmp_path)
+        f = tmp_path / "README.md"
+        f.write_text("hi\n")
+        subprocess.run(
+            ["git", "add", "README.md"],
+            cwd=tmp_path, capture_output=True, check=True,
+        )
+        result = _run_hook(
+            hooks_dir / "pre-commit-linter.sh",
+            tmp_path,
+            {"tool_input": {"command": "git commit -m 'add readme'"}},
+        )
+        assert result.returncode == 0
+
+    @pytest.mark.skipif(not _HAS_RUFF, reason="ruff not available")
+    def test_allows_clean_python_commit(
+        self, hooks_dir: Path, tmp_path: Path
+    ):
+        """Clean staged Python file → exit 0."""
+        _init_git_repo(tmp_path)
+        (tmp_path / "pyproject.toml").write_text("[project]\nname='x'\n")
+        f = tmp_path / "clean.py"
+        f.write_text("x = 1\n")
+        subprocess.run(
+            ["git", "add", "clean.py", "pyproject.toml"],
+            cwd=tmp_path, capture_output=True, check=True,
+        )
+        result = _run_hook(
+            hooks_dir / "pre-commit-linter.sh",
+            tmp_path,
+            {"tool_input": {"command": "git commit -m 'ok'"}},
+            extra_env={"PATH": os.environ["PATH"]},
+        )
+        assert result.returncode == 0
+
+    @pytest.mark.skipif(not _HAS_RUFF, reason="ruff not available")
+    def test_blocks_dirty_python_commit(
+        self, hooks_dir: Path, tmp_path: Path
+    ):
+        """Staged Python file with lint error → exit 2, stderr mentions file."""
+        _init_git_repo(tmp_path)
+        (tmp_path / "pyproject.toml").write_text(
+            "[project]\nname='x'\n"
+            "[tool.ruff.lint]\nselect=['F']\n"
+        )
+        # F401 = unused import
+        f = tmp_path / "dirty.py"
+        f.write_text("import os\n")
+        subprocess.run(
+            ["git", "add", "dirty.py", "pyproject.toml"],
+            cwd=tmp_path, capture_output=True, check=True,
+        )
+        result = _run_hook(
+            hooks_dir / "pre-commit-linter.sh",
+            tmp_path,
+            {"tool_input": {"command": "git commit -m 'bad'"}},
+            extra_env={"PATH": os.environ["PATH"]},
+        )
+        assert result.returncode == 2
+        assert "dirty.py" in result.stderr
+
+    def test_word_boundary_on_git_commit(
+        self, hooks_dir: Path, tmp_path: Path
+    ):
+        """Commands containing 'gitcommit' (no space) should NOT trigger."""
+        _init_git_repo(tmp_path)
+        result = _run_hook(
+            hooks_dir / "pre-commit-linter.sh",
+            tmp_path,
+            {"tool_input": {"command": "echo gitcommit"}},
+        )
+        assert result.returncode == 0
