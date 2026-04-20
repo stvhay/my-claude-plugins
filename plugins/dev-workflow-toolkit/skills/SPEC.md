@@ -82,7 +82,8 @@ Skills compose into a development workflow graph. The primary flow is:
 | INV-19 | `finishing-a-development-branch` Step 5c detects worktree context and omits `--delete-branch` when inside a worktree, cleaning up the remote branch via `gh api` instead | structural | `gh pr merge --delete-branch` fails from worktrees because its post-merge `git checkout main` collides with the main worktree |
 | INV-20 | `finishing-a-development-branch` Step 5c checks for fast-forward topology (`git merge-base --is-ancestor main HEAD`) before squashing and warns the user | reasoning-required | GitHub silently fast-forwards rebased branches even when `--squash` is requested, defeating the squash-merge intent |
 | INV-21 | Implementer subagents dispatched by `subagent-driven-development` run tests, lint, and format before reporting completion, and paste fresh command output as evidence | reasoning-required | Shifts quality enforcement left — reviewers catch meaningful issues instead of basic compilation/lint failures; prevents wasted review cycles |
-| INV-22 | Post-edit formatter hook (`post-edit-formatter.sh`) runs synchronously after `Edit`/`Write` and reformats the touched file using the detected project toolchain; pre-commit linter hook (`pre-commit-linter.sh`) blocks `git commit` commands (exit 2) when staged files fail project lint | structural | Shifts code hygiene from agent attention to mechanical enforcement; prevents unformatted or unlinted code from being committed |
+| INV-22 | Post-edit formatter hook (`post-edit-formatter.sh`) runs synchronously after `Edit`/`Write` and reformats the touched file using the detected project toolchain (ruff/black, prettier, gofmt, rustfmt); silent when no toolchain is detected | structural | Removes "did I format this?" from the agent's attention; prevents unformatted code from being committed |
+| INV-23 | Pre-commit linter hook (`pre-commit-linter.sh`) blocks `git commit` commands (exit 2) when staged files fail the project linter (ruff, eslint, golangci-lint, cargo clippy); silent when no toolchain or no staged files | structural | Moves lint enforcement from the agent's attention to a mechanical gate; prevents unlinted code from being committed |
 
 **Enforcement classification:**
 - **structural** — enforced by test suite, gitignore structure, or directory convention; pattern-matchable
@@ -115,7 +116,7 @@ lifecycle points (plan summaries, progress updates, review findings).
 | FAIL-15 | `gh pr merge --delete-branch` reports "main is already used by worktree" | Running `gh pr merge --delete-branch` from a worktree triggers a conflicting `git checkout main` | Step 5c detects worktree context, drops `--delete-branch`, and deletes the remote branch via `gh api` (#162) |
 | FAIL-16 | Squash merge preserved all individual commits on main | GitHub fast-forwards rebased branches even when `--squash` is requested | Step 5c checks `git merge-base --is-ancestor` before squashing and warns when fast-forward is imminent (#156) |
 | FAIL-17 | Implementer reports completion without running tests/lint/format | Pre-Report Gate missing from `implementer-prompt.md` or subagent ignored it | Re-dispatch implementer with explicit reference to the Pre-Report Gate in `implementer-prompt.md`; reject the completion claim until fresh test/lint/format output is pasted |
-| FAIL-18 | `git commit` blocked by pre-commit linter hook | Staged files fail the project linter (ruff, eslint, golangci-lint, cargo clippy) | Read the stderr output from the hook; fix the reported issues; re-stage; retry commit |
+| FAIL-18 | `git commit` blocked by pre-commit linter hook (INV-23) | Staged files fail the project linter (ruff, eslint, golangci-lint, cargo clippy) | Read the stderr output from the hook; fix the reported issues; re-stage; retry. Do NOT bypass with `--no-verify` — that skips the gate and defeats its purpose |
 
 ## Decision Framework
 
@@ -151,7 +152,8 @@ INV-18: structural — enforced by `test_inv18_no_fail_on_error_flag` (scans SKI
 INV-19: structural — enforced by `test_inv19_worktree_aware_merge` (scans Step 5c for detection + API cleanup).
 INV-20: reasoning-required — verified by `test_inv20_fast_forward_detection` (scans Step 5c for merge-base check) and during code review.
 INV-21: reasoning-required — verified by presence of the `## Pre-Report Gate` section in `subagent-driven-development/implementer-prompt.md` during code review; candidate for a string-presence structural test in a follow-up.
-INV-22: structural — enforced by `test_formatter_linter_hooks.py` (script presence, exit codes, detection dispatch).
+INV-22: structural — enforced by `test_formatter_linter_hooks.py::TestPostEditFormatter` (script presence, formatter dispatch, silent-on-miss).
+INV-23: structural — enforced by `test_formatter_linter_hooks.py::TestPreCommitLinter` (script presence, exit-2-on-failure, word-boundary matching, silent-on-no-toolchain).
 
 Skills are additionally validated via subagent pressure testing — see `/skill-creator`.
 
