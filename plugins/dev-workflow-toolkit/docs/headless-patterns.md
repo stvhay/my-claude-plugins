@@ -4,8 +4,6 @@ Common automation patterns using Claude Code's headless mode (`claude -p`). Each
 
 ## Cross-Pattern Guidance
 
-Read this once before adopting any pattern below.
-
 - **Always restrict `--allowedTools`.** Headless mode runs without confirmation prompts; the tool whitelist is your safety boundary. Default to the smallest set that lets the task complete.
 - **Treat headless runs as production.** They often execute in CI or shell scripts where there is no human in the loop to catch a mistake.
 - **Read first, write second.** Patterns that modify state should start by reading current state and reporting it before acting. This makes failures easier to diagnose and limits blast radius.
@@ -19,6 +17,8 @@ Re-run a failing CI workflow, diagnose the failure, fix it, push, and verify the
 claude -p "The CI workflow on branch <BRANCH> is failing. Run gh run view --log-failed, diagnose, fix, commit, push, and verify the next run passes." \
   --allowedTools "Bash,Read,Edit,Write"
 ```
+
+**Pre-requisite:** `gh` must be authenticated (`gh auth status` should succeed). In CI, export `GH_TOKEN`.
 
 **When to use it**
 
@@ -34,7 +34,7 @@ claude -p "The CI workflow on branch <BRANCH> is failing. Run gh run view --log-
 
 **Expected behavior**
 
-The agent runs `gh run view --log-failed`, identifies the failing step, makes a targeted edit, commits with a message that references the failure, pushes, and watches the next run with `gh run watch` (or equivalent) until it succeeds. If it cannot find a fix in one or two iterations, it reports the diagnosis instead of guessing.
+The agent runs `gh run view --log-failed`, identifies the failing step, makes a targeted edit, commits with a message that references the failure, pushes, and watches the next run with `gh run watch` until it succeeds. If it cannot find a fix in one or two iterations, it reports the diagnosis instead of guessing.
 
 ## Pattern 2: Post-Merge Cleanup
 
@@ -42,7 +42,7 @@ Delete the feature branch, prune the local main worktree, and remove any stale w
 
 ```bash
 claude -p "Clean up after merging PR #<N>: delete the feature branch locally and remotely, update local main, prune any stale worktree." \
-  --allowedTools "Bash"
+  --allowedTools "Bash,Read"
 ```
 
 **When to use it**
@@ -63,28 +63,29 @@ The agent confirms the PR is merged, fetches origin, deletes the local feature b
 
 ## Pattern 3: Release Tagging
 
-Verify the changelog, bump the version, move the entry under the new version header, create the tag, push.
+Verify the changelog has an unreleased entry with the right bump type and push it to main; CI handles the version bump and tag.
 
 ```bash
-claude -p "Create release v<X.Y.Z>: verify CHANGELOG.md has an Unreleased section, bump plugin.json version, move the changelog entry under v<X.Y.Z>, create and push the tag." \
-  --allowedTools "Bash,Read,Edit"
+claude -p "Prepare release for the dev-workflow-toolkit plugin: confirm plugins/dev-workflow-toolkit/CHANGELOG.md has an '## Unreleased <!-- bump: TYPE -->' section with at least one entry, confirm the most recent commit on this branch contains that entry, then push the branch. The release bot will compute the version, move the changelog entry under the new version header, edit plugin.json, and create the tag." \
+  --allowedTools "Bash,Read"
 ```
 
 **When to use it**
 
-- The project follows the changelog-driven bump convention (`## Unreleased <!-- bump: TYPE -->`)
+- The project uses changelog-driven CI bumping (`## Unreleased <!-- bump: TYPE -->`)
 - The release is a routine patch or minor bump from a known-good main
-- You want consistent tag formatting and changelog hygiene
+- You want to keep the version-of-record in CI rather than in your local working copy
 
 **When interactive is better**
 
 - A breaking change requires migration notes that need human review
 - The release coordinates multiple plugins or repos
 - Stakeholders need a heads-up before the tag goes out
+- The project does NOT use changelog-driven bumping — manual `plugin.json`/`package.json` edits should stay interactive so you can sanity-check the version number
 
 **Expected behavior**
 
-The agent reads `CHANGELOG.md`, confirms the `## Unreleased` section exists and matches the requested bump type, edits `plugin.json` to set the new version, replaces the `## Unreleased` header with `## v<X.Y.Z>`, commits, tags with `git tag v<X.Y.Z>`, and pushes both the commit and the tag. If the changelog is empty or the bump-type comment is missing, it stops and asks.
+The agent reads `CHANGELOG.md`, confirms the `## Unreleased` header exists with a `<!-- bump: TYPE -->` comment, confirms at least one bullet has been added since the last release, and pushes. It does NOT edit `plugin.json` or rewrite the changelog header — those are the release bot's responsibility. If the unreleased section is empty or missing the bump comment, it stops and reports.
 
 ## Pattern 4: Batch Linting and Formatting
 
@@ -109,4 +110,4 @@ claude -p "Fix all linting and formatting errors in the current branch, run test
 
 **Expected behavior**
 
-The agent runs the project's linter and formatter (auto-detected from `pyproject.toml`, `package.json`, `go.mod`, etc.), applies fixes, runs the test suite, and commits in a single commit titled `chore: apply lint and format fixes`. If tests fail after fixes, it stops and reports — it does not attempt to fix test failures under this prompt.
+The agent looks for the project's lint/format commands in `CONTRIBUTING.md` and the standard config files (`pyproject.toml`, `package.json`, `go.mod`); if it can't determine them, it asks. It then applies fixes, runs the test suite, and commits in a single commit titled `chore: apply lint and format fixes`. If tests fail after fixes, it stops and reports — it does not attempt to fix test failures under this prompt.
