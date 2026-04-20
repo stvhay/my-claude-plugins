@@ -14,12 +14,10 @@ FILE_PATH=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev
 # Walk up from the file's directory to find the nearest project marker.
 DIR=$(cd "$(dirname "$FILE_PATH")" 2>/dev/null && pwd -P) || exit 0
 MARKER=""
-PROJECT_ROOT=""
 while [ "$DIR" != "/" ] && [ -n "$DIR" ]; do
     for M in pyproject.toml package.json go.mod Cargo.toml rustfmt.toml; do
         if [ -f "$DIR/$M" ]; then
             MARKER="$M"
-            PROJECT_ROOT="$DIR"
             break 2
         fi
     done

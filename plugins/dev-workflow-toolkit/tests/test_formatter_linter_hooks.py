@@ -6,6 +6,9 @@ import subprocess
 from pathlib import Path
 
 import pytest
+import shutil
+
+_HAS_RUFF = shutil.which("ruff") is not None
 
 _HOOK_ENV_BASE = {"PATH": "/usr/bin:/bin:/usr/local/bin"}
 
@@ -91,6 +94,7 @@ class TestPostEditFormatter:
         )
         assert result.returncode == 0
 
+    @pytest.mark.skipif(not _HAS_RUFF, reason="ruff not available")
     def test_formats_python_file_with_ruff(
         self, hooks_dir: Path, tmp_path: Path
     ):
@@ -98,10 +102,6 @@ class TestPostEditFormatter:
         (tmp_path / "pyproject.toml").write_text("[project]\nname='x'\n")
         unformatted = tmp_path / "src.py"
         unformatted.write_text("x  =  1\n")
-        if subprocess.run(
-            ["which", "ruff"], capture_output=True
-        ).returncode != 0:
-            pytest.skip("ruff not available in test env")
         result = _run_hook(
             hooks_dir / "post-edit-formatter.sh",
             tmp_path,
@@ -127,6 +127,7 @@ class TestPostEditFormatter:
         assert result.returncode == 0
         assert f.read_text() == original
 
+    @pytest.mark.skipif(not _HAS_RUFF, reason="ruff not available")
     def test_detects_project_marker_walking_up(
         self, hooks_dir: Path, tmp_path: Path
     ):
@@ -136,10 +137,6 @@ class TestPostEditFormatter:
         subdir.mkdir(parents=True)
         f = subdir / "deep.py"
         f.write_text("x=1\n")
-        if subprocess.run(
-            ["which", "ruff"], capture_output=True
-        ).returncode != 0:
-            pytest.skip("ruff not available in test env")
         result = _run_hook(
             hooks_dir / "post-edit-formatter.sh",
             tmp_path,
