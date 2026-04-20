@@ -72,6 +72,8 @@ The plugin registers hooks via `hooks/hooks.json` for Langfuse tracing:
 | `PostToolUse` / `PostToolUseFailure` | LLM generations (model, tokens, cost) + tool observations |
 | `SubagentStop` | Parent agent span with nested observations |
 | `SessionEnd` | Summary span with totals; cleans up state |
+| `PostToolUse` (`Edit\|Write`) | Auto-formats the touched file using the detected project toolchain (ruff/black, prettier, gofmt, rustfmt) |
+| `PreToolUse` (`Bash`) | When the command contains `git commit`, lints staged files; exits 2 to block on failure |
 
 **Setup:** Set `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_HOST`, and `LANGFUSE_SOURCE_PROJECT` env vars. The hook bootstraps its own venv at `~/.cache/langfuse-hook/venv/` on first run.
 
@@ -126,7 +128,7 @@ cd plugins/dev-workflow-toolkit
 ./tests/run-all.sh
 ```
 
-**350 tests**[^stat-test-count] across 14 modules[^stat-suite-count]:
+**368 tests**[^stat-test-count] across 15 modules[^stat-suite-count]:
 - Structure — frontmatter validation, SPEC.md checks, project-init templates, setup-rag config, cross-plugin validation
 - Integration — skill loading, dependency resolution, trigger patterns, reference files
 - Quality gate — smoke tests, negative fixtures, doc-stats validation
