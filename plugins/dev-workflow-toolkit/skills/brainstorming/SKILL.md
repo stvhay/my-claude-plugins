@@ -21,9 +21,25 @@ Every project goes through this process regardless of perceived simplicity. The 
 
 ## Pre-flight Checks
 
-Before exploring the project, verify the CONTRIBUTING.md workflow prerequisites. Both checks are **soft gates** — the user can always proceed anyway.
+Before exploring the project, verify the CONTRIBUTING.md workflow prerequisites. All checks are **soft gates** — the user can always proceed anyway.
 
-### 1a. Issue Check
+### 1a. Tree Hygiene
+
+Sweep the local repo for stale state before starting fresh work. Surface findings; do not auto-delete anything ambiguous.
+
+1. **CWD outside any worktree.** Compare `git rev-parse --show-toplevel` to the main checkout (`git worktree list --porcelain | head -1 | sed 's|^worktree ||'`). If they differ, tell the user: "You're inside worktree `<path>` — recommend running this from the main checkout." Let the user decide whether to continue.
+
+2. **Sync main with remote.** From the main checkout: `git fetch --all --prune`, then check `main` vs `origin/main`. If behind, recommend `git pull --ff-only`. If ahead with unpushed commits, surface them.
+
+3. **Worktree audit.** Run `git worktree list`. For each non-main worktree, classify and act:
+   - **Stale** — branch upstream is `[gone]` or branch is fully merged into `main`. Remove with `git worktree remove <path>`.
+   - **Active** — has uncommitted/untracked work or commits ahead of `main`. List these to the user with branch names; do not remove.
+
+4. **Stale feature branch audit.** Use `git branch -vv` to find branches with `[gone]` upstream. For each, verify the originating PR was squash-merged via `gh pr view <branch> --json state,mergeCommit` (looked up by `headRefName`). If `state=MERGED`, force-delete with `git branch -D <branch>`. If unmerged or PR not found, list to the user — do not delete.
+
+5. **Dirty main check.** If on `main` with uncommitted or untracked files (excluding gitignored), list them and recommend an action: commit on a feature branch, `git stash`, or discard. Dirty files may be outside the current scope — surface, don't auto-act.
+
+### 1b. Issue Check
 
 The user's initial message or `/brainstorming` arguments describe the work. Use this to determine or create the issue automatically — do not prompt the user for an issue number unless the description is too vague to search.
 
@@ -40,7 +56,7 @@ The user's initial message or `/brainstorming` arguments describe the work. Use 
 
 1. Record the GH issue number for the design doc header.
 
-### 1b. Branch Check
+### 1c. Branch Check
 
 Run `git branch --show-current` to detect the current branch.
 

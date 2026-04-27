@@ -436,18 +436,6 @@ def check_tool_health(results: Results, project_root: Path) -> None:
             "jq: not installed (required for plansDirectory resolution)",
         )
 
-    # bd (beads)
-    if shutil.which("bd"):
-        try:
-            ver = subprocess.run(
-                ["bd", "--version"], capture_output=True, text=True, check=True
-            ).stdout.strip()
-            report(results, "PASS", "tool-health", f"bd: {ver}")
-        except subprocess.CalledProcessError:
-            report(results, "PASS", "tool-health", "bd: installed (version unknown)")
-    else:
-        report(results, "WARN", "tool-health", "bd: not installed (optional)")
-
 
 def check_issue_tracking(results: Results, project_root: Path) -> None:
     try:
@@ -497,23 +485,6 @@ def check_issue_tracking(results: Results, project_root: Path) -> None:
             )
     else:
         report(results, "WARN", "issue-tracking", f"No PR found for branch {branch}")
-
-    # Check beads if available
-    if shutil.which("bd") and (project_root / ".beads").is_dir():
-        try:
-            result = subprocess.run(
-                ["bd", "list", "--status=in_progress", "--json"],
-                capture_output=True,
-                text=True,
-                cwd=project_root,
-            )
-            output = result.stdout.strip()
-            if output and output != "[]":
-                report(results, "PASS", "issue-tracking", "Beads issues found for in-progress work")
-            else:
-                report(results, "WARN", "issue-tracking", "No in-progress beads issues found")
-        except FileNotFoundError:
-            pass
 
 
 # ── Check: cross-links ───────────────────────────────────────────────

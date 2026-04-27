@@ -18,10 +18,6 @@ __pycache__/
 # Local working files
 MEMORY.md
 
-# Dolt database files (added by bd init)
-.dolt/
-*.db
-
 docs/plans
 
 # Machine-specific

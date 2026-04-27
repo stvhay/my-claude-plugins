@@ -186,12 +186,9 @@ class TestReferenceFiles:
                 # Resolve path: if there's a "/" before "references/", it's a cross-skill ref
                 ref_idx = span.find("references/")
                 prefix = span[:ref_idx]
-                ref_file_name = span[ref_idx + len("references/"):]
-                if prefix and "/" not in prefix.rstrip("/"):
-                    # Cross-skill reference like "other-skill/references/file.md"
-                    owner = prefix.rstrip("/")
-                else:
-                    owner = skill
+                ref_file_name = span[ref_idx + len("references/") :]
+                # Cross-skill reference like "other-skill/references/file.md"
+                owner = prefix.rstrip("/") if prefix and "/" not in prefix.rstrip("/") else skill
                 ref_path = skills_dir / owner / "references" / ref_file_name
                 if not ref_path.exists():
                     missing.append(f"{owner}/references/{ref_file_name}")
@@ -278,9 +275,7 @@ class TestEntryPointIssueCreation:
         skill_file = skills_dir / skill / "SKILL.md"
         assert skill_file.exists(), f"Skill file not found: {skill}"
         text = skill_file.read_text()
-        assert pattern in text, (
-            f"{skill} must contain '{pattern}' for duplicate issue search"
-        )
+        assert pattern in text, f"{skill} must contain '{pattern}' for duplicate issue search"
 
     @pytest.mark.parametrize("skill", list(ENTRY_POINT_SKILLS.keys()))
     def test_entry_point_handles_issue_creation_failure(self, skills_dir: Path, skill: str):
@@ -288,11 +283,15 @@ class TestEntryPointIssueCreation:
         skill_file = skills_dir / skill / "SKILL.md"
         assert skill_file.exists(), f"Skill file not found: {skill}"
         text = skill_file.read_text().lower()
-        assert any(phrase in text for phrase in [
-            "fail", "unavailable", "proceed without", "error",
-        ]), (
-            f"{skill} must document graceful handling when issue creation fails (FAIL-6)"
-        )
+        assert any(
+            phrase in text
+            for phrase in [
+                "fail",
+                "unavailable",
+                "proceed without",
+                "error",
+            ]
+        ), f"{skill} must document graceful handling when issue creation fails (FAIL-6)"
 
 
 # ---------------------------------------------------------------------------
@@ -325,9 +324,7 @@ class TestGitHubProjection:
         skill_file = skills_dir / skill / "SKILL.md"
         assert skill_file.exists(), f"Skill file not found: {skill}"
         text = skill_file.read_text().lower()
-        assert pattern in text, (
-            f"{skill} must project state to GitHub via '{pattern}'"
-        )
+        assert pattern in text, f"{skill} must project state to GitHub via '{pattern}'"
 
 
 # ---------------------------------------------------------------------------
@@ -344,17 +341,18 @@ class TestEpicScopeCheck:
         checklist_match = re.search(r"## Checklist.*?(?=\n## )", text, re.DOTALL)
         assert checklist_match, "brainstorming must have a Checklist section"
         lines = [
-            l.strip()
-            for l in checklist_match.group().splitlines()
-            if re.match(r"\d+\.", l.strip())
+            line.strip()
+            for line in checklist_match.group().splitlines()
+            if re.match(r"\d+\.", line.strip())
         ]
         steps = {
-            re.sub(r"^\d+\.\s+\*\*", "", l).split("**")[0]: i
-            for i, l in enumerate(lines)
+            re.sub(r"^\d+\.\s+\*\*", "", line).split("**")[0]: i for i, line in enumerate(lines)
         }
         assert "Evaluate epic scope" in steps, "checklist must have 'Evaluate epic scope' step"
         assert "Present design" in steps, "checklist must have 'Present design' step"
-        assert "Identify documentation impact" in steps, "checklist must have 'Identify documentation impact' step"
+        assert "Identify documentation impact" in steps, (
+            "checklist must have 'Identify documentation impact' step"
+        )
         assert steps["Present design"] < steps["Evaluate epic scope"], (
             "epic scope must come after design presentation"
         )
@@ -375,9 +373,7 @@ class TestEpicScopeCheck:
         assert "Step 3b: Scope Check" in text, "finishing must have Step 3b: Scope Check"
         scope_pos = text.index("Step 3b: Scope Check")
         pr_pos = text.index("Step 4: Create Pull Request")
-        assert scope_pos < pr_pos, (
-            "scope check (Step 3b) must appear before PR creation (Step 4)"
-        )
+        assert scope_pos < pr_pos, "scope check (Step 3b) must appear before PR creation (Step 4)"
 
     def test_finishing_scope_check_offers_user_choice(self, skills_dir: Path):
         """Scope check must be a soft gate offering proceed-or-split choice."""
@@ -483,7 +479,8 @@ class TestCheckReviewDocumentedScript:
         assert "beads" not in text.lower(), "Script must not reference beads"
         # Allow "bd" as substring in other words, but not as a standalone command
         import re
-        assert not re.search(r'\bbd\b', text), "Script must not invoke bd command"
+
+        assert not re.search(r"\bbd\b", text), "Script must not invoke bd command"
 
     def test_script_checks_github(self, plugin_root: Path):
         script = plugin_root / "scripts" / "check-review-documented.sh"
@@ -505,25 +502,20 @@ class TestBranchCheckAutoWorktree:
     def test_no_ask_pattern_in_branch_check(self, skills_dir: Path):
         """Branch check must not ask user if they want a worktree."""
         text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
-        assert "Want me to run" not in text, (
-            "branch check must auto-create worktree, not ask"
-        )
+        assert "Want me to run" not in text, "branch check must auto-create worktree, not ask"
 
     def test_auto_create_on_main(self, skills_dir: Path):
         """Branch check must auto-invoke using-git-worktrees on main."""
         text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
-        # Find the 1b. Branch Check section
-        section_match = re.search(
-            r"### 1b\. Branch Check.*?(?=\n### |\n## )", text, re.DOTALL
-        )
-        assert section_match, "must have '### 1b. Branch Check' section"
+        # Find the 1c. Branch Check section
+        section_match = re.search(r"### 1c\. Branch Check.*?(?=\n### |\n## )", text, re.DOTALL)
+        assert section_match, "must have '### 1c. Branch Check' section"
         section = section_match.group()
-        assert "using-git-worktrees" in section, (
-            "branch check must reference using-git-worktrees"
-        )
+        assert "using-git-worktrees" in section, "branch check must reference using-git-worktrees"
         assert "If yes" not in section, (
             "branch check must not have conditional 'If yes' for worktree creation"
         )
+
 
 # ---------------------------------------------------------------------------
 # Structured question preference (INV-14)
@@ -539,7 +531,7 @@ class TestStructuredQuestionPreference:
         content = spec_path.read_text()
         assert "INV-14" in content, "SPEC.md missing INV-14"
         inv14_start = content.index("INV-14")
-        inv14_section = content[inv14_start:inv14_start + 500]
+        inv14_section = content[inv14_start : inv14_start + 500]
         assert "AskUserQuestion" in inv14_section, "INV-14 must reference AskUserQuestion"
         assert "batch" in inv14_section.lower(), "INV-14 must reference batching"
 
@@ -553,9 +545,7 @@ class TestStructuredQuestionPreference:
     def test_inv14_brainstorming_references_askuserquestion(self, skills_dir: Path):
         """Brainstorming must reference AskUserQuestion for structured choices."""
         text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
-        assert "AskUserQuestion" in text, (
-            "brainstorming must reference AskUserQuestion (INV-14)"
-        )
+        assert "AskUserQuestion" in text, "brainstorming must reference AskUserQuestion (INV-14)"
 
     def test_inv14_brainstorming_has_delegation_pattern(self, skills_dir: Path):
         """Brainstorming must include delegation pattern (approval or information)."""
@@ -568,7 +558,8 @@ class TestStructuredQuestionPreference:
         """Brainstorming must NOT contain 'Ready to set up for implementation?' prompt."""
         text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
         assert "Ready to set up for implementation?" not in text, (
-            "brainstorming must not ask 'Ready to set up for implementation?' — proceed directly (INV-14)"
+            "brainstorming must not ask 'Ready to set up for implementation?' — "
+            "proceed directly (INV-14)"
         )
 
     def test_inv14_finishing_references_askuserquestion(self, skills_dir: Path):
@@ -582,27 +573,25 @@ class TestStructuredQuestionPreference:
         """finishing-a-development-branch must batch retrospective opt-in with other questions."""
         text = (skills_dir / "finishing-a-development-branch" / "SKILL.md").read_text().lower()
         assert "batch" in text and "retrospective" in text, (
-            "finishing-a-development-branch must batch retrospective opt-in with pre-PR questions (INV-14)"
+            "finishing-a-development-branch must batch retrospective opt-in with "
+            "pre-PR questions (INV-14)"
         )
 
     def test_inv14_retrospective_references_askuserquestion(self, skills_dir: Path):
         """retrospective must reference AskUserQuestion for wrap-up decisions."""
         text = (skills_dir / "retrospective" / "SKILL.md").read_text()
-        assert "AskUserQuestion" in text, (
-            "retrospective must reference AskUserQuestion (INV-14)"
-        )
+        assert "AskUserQuestion" in text, "retrospective must reference AskUserQuestion (INV-14)"
 
     def test_inv14_codify_no_one_question_mandate(self, skills_dir: Path):
         """codify-subsystem must NOT mandate 'one question at a time' in Key Principles."""
         text = (skills_dir / "codify-subsystem" / "SKILL.md").read_text()
         # Extract Key Principles section
-        principles_match = re.search(
-            r"## Key Principles.*?(?=\n## |\Z)", text, re.DOTALL
-        )
+        principles_match = re.search(r"## Key Principles.*?(?=\n## |\Z)", text, re.DOTALL)
         assert principles_match, "codify-subsystem must have a Key Principles section"
         principles = principles_match.group().lower()
         assert "one question at a time" not in principles, (
-            "codify-subsystem Key Principles must not mandate 'one question at a time' — use batching (INV-14)"
+            "codify-subsystem Key Principles must not mandate 'one question at a time' — "
+            "use batching (INV-14)"
         )
 
     def test_inv14_codify_references_adaptive_modality(self, skills_dir: Path):
@@ -617,9 +606,7 @@ class TestStructuredQuestionPreference:
     def test_inv14_project_init_references_askuserquestion(self, skills_dir: Path):
         """project-init must reference AskUserQuestion for batched setup questions."""
         text = (skills_dir / "project-init" / "SKILL.md").read_text()
-        assert "AskUserQuestion" in text, (
-            "project-init must reference AskUserQuestion (INV-14)"
-        )
+        assert "AskUserQuestion" in text, "project-init must reference AskUserQuestion (INV-14)"
 
     def test_inv14_project_init_worktrees_default(self, skills_dir: Path):
         """project-init must establish .worktrees as default worktree location."""
@@ -629,7 +616,7 @@ class TestStructuredQuestionPreference:
         )
 
     def test_inv14_documentation_standards_references_askuserquestion(self, skills_dir: Path):
-        """documentation-standards must reference AskUserQuestion for batched approve/defer decisions."""
+        """documentation-standards must reference AskUserQuestion for batched approve/defer."""
         text = (skills_dir / "documentation-standards" / "SKILL.md").read_text()
         assert "AskUserQuestion" in text, (
             "documentation-standards must reference AskUserQuestion (INV-14)"
@@ -655,11 +642,13 @@ class TestFinishingGhFlagCompatibility:
         )
         # Any --watch usage must pair with --fail-fast (otherwise checks don't gate)
         import re
+
         for match in re.finditer(r"gh pr checks[^\n`]*", text):
             snippet = match.group(0)
             if "--watch" in snippet:
                 assert "--fail-fast" in snippet, (
-                    f"`gh pr checks --watch` must include --fail-fast to error-exit on CI failure; found: {snippet}"
+                    "`gh pr checks --watch` must include --fail-fast to error-exit "
+                    f"on CI failure; found: {snippet}"
                 )
 
 
@@ -729,11 +718,9 @@ class TestRequestingCodeReviewPosting:
     """#116 + #142: code-reviewer template must mandate posting to GitHub."""
 
     def test_reviewer_template_mandates_github_posting(self, skills_dir: Path):
-        """Code-reviewer.md must have a MANDATORY-level instruction to post when PR_NUMBER is set."""
+        """Code-reviewer.md must mark posting as MANDATORY when PR_NUMBER is set."""
         text = (skills_dir / "requesting-code-review" / "code-reviewer.md").read_text()
-        assert "MANDATORY" in text, (
-            "code-reviewer.md must mark posting as MANDATORY (#116)"
-        )
+        assert "MANDATORY" in text, "code-reviewer.md must mark posting as MANDATORY (#116)"
         task_list_end = text.find("## What Was Implemented")
         task_list_text = text[:task_list_end]
         assert "post" in task_list_text.lower() and "PR_NUMBER" in task_list_text, (
@@ -741,12 +728,13 @@ class TestRequestingCodeReviewPosting:
         )
 
     def test_skill_description_prefers_over_builtin_review(self, skills_dir: Path):
-        """Skill description must position itself as the canonical posting flow vs. built-in /review."""
+        """Skill description must position itself as canonical posting vs. built-in /review."""
         text = (skills_dir / "requesting-code-review" / "SKILL.md").read_text()
         fm_end = text.find("\n---", 3)
         fm = text[:fm_end]
         assert "GitHub" in fm or "github" in fm.lower(), (
-            "requesting-code-review description must reference GitHub posting to distinguish it from built-in /review (#142)"
+            "requesting-code-review description must reference GitHub posting "
+            "to distinguish it from built-in /review (#142)"
         )
 
     def test_skill_body_disambiguates_from_builtin_review(self, skills_dir: Path):
@@ -764,24 +752,25 @@ class TestSubagentDrivenDevelopmentContext:
         """Spec reviewer template must accept cross-task dependency context (#159)."""
         text = (skills_dir / "subagent-driven-development" / "spec-reviewer-prompt.md").read_text()
         assert "Known Expected Breakage" in text, (
-            "spec-reviewer-prompt.md must have an Expected Breakage field so orchestrator can pass cross-task context (#159)"
+            "spec-reviewer-prompt.md must have an Expected Breakage field so "
+            "orchestrator can pass cross-task context (#159)"
         )
         assert "handled by Task" in text or "handled there" in text, (
             "spec-reviewer-prompt.md must instruct reviewer how to mark cross-task findings (#159)"
         )
 
     def test_sdd_skill_instructs_populating_breakage_field(self, skills_dir: Path):
-        """SKILL.md Step 6 must instruct the orchestrator to populate the Expected Breakage field."""
+        """SKILL.md Step 6 must instruct orchestrator to populate Expected Breakage."""
         text = (skills_dir / "subagent-driven-development" / "SKILL.md").read_text()
         assert "Known Expected Breakage" in text or "Expected Breakage" in text, (
             "SKILL.md must instruct orchestrator to populate the Expected Breakage field (#159)"
         )
 
     def test_sdd_parallel_commit_ordering_note(self, skills_dir: Path):
-        """SKILL.md parallel dispatch section must warn about nondeterministic commit ordering (#153)."""
+        """SKILL.md parallel dispatch must warn about nondeterministic commit ordering (#153)."""
         text = (skills_dir / "subagent-driven-development" / "SKILL.md").read_text()
         start = text.index("Parallel dispatch")
-        section = text[start:start + 1500]
+        section = text[start : start + 1500]
         assert "nondeterministic" in section.lower() or "order" in section.lower(), (
             "Parallel dispatch section must discuss commit ordering nondeterminism (#153)"
         )
@@ -816,14 +805,14 @@ class TestUsingGitWorktreesIsolation:
         )
 
     def test_worktree_unsets_virtual_env(self, skills_dir: Path):
-        """SKILL.md must unset VIRTUAL_ENV before setup to avoid parent .venv bleedthrough (#160)."""
+        """SKILL.md must unset VIRTUAL_ENV before setup to avoid parent .venv bleed (#160)."""
         text = (skills_dir / "using-git-worktrees" / "SKILL.md").read_text()
         assert "unset VIRTUAL_ENV" in text, (
             "SKILL.md must unset VIRTUAL_ENV in setup phase to isolate worktree's Python env (#160)"
         )
 
     def test_worktree_sets_uv_link_mode_copy(self, skills_dir: Path):
-        """SKILL.md must set UV_LINK_MODE=copy to avoid hardlink failures in container envs (#160)."""
+        """SKILL.md must set UV_LINK_MODE=copy to avoid hardlink failures in containers (#160)."""
         text = (skills_dir / "using-git-worktrees" / "SKILL.md").read_text()
         assert "UV_LINK_MODE=copy" in text, (
             "SKILL.md must export UV_LINK_MODE=copy for bind-mount/container environments (#160)"
@@ -834,7 +823,7 @@ class TestWritingPlansGuidance:
     """#161 + #157: writing-plans must guide against fragile criteria and flag file conflicts."""
 
     def test_file_conflict_detection_section(self, skills_dir: Path):
-        """SKILL.md must document File Conflict Detection before marking tasks Independent (#157)."""
+        """SKILL.md must document File Conflict Detection before tasks are Independent (#157)."""
         text = (skills_dir / "writing-plans" / "SKILL.md").read_text()
         assert "File Conflict" in text or "file conflict" in text.lower(), (
             "SKILL.md must have a File Conflict Detection section (#157)"
@@ -863,9 +852,10 @@ class TestBrainstormingRecommendedDefaults:
     def test_recommended_option_first_guidance(self, skills_dir: Path):
         """SKILL.md must instruct that the Recommended option is listed first (#140)."""
         text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
-        assert "Recommended option must be listed first" in text or "Recommended option is listed first" in text, (
-            "SKILL.md must require Recommended option to be first in AskUserQuestion calls (#140)"
-        )
+        assert (
+            "Recommended option must be listed first" in text
+            or "Recommended option is listed first" in text
+        ), "SKILL.md must require Recommended option to be first in AskUserQuestion calls (#140)"
 
     def test_ux_design_question_recommended_first(self, skills_dir: Path):
         """The UX design question must list 'No, do UX design (Recommended)' before Skip."""
@@ -874,12 +864,10 @@ class TestBrainstormingRecommendedDefaults:
         start = text.find("This requires UX design")
         assert start != -1, "SKILL.md must ask the UX design question"
         # In the 300 chars after, "No, do UX design" should appear before "Yes, skip"
-        section = text[start:start + 500]
+        section = text[start : start + 500]
         recommended_pos = section.find("No, do UX design")
         skip_pos = section.find("Yes, skip")
-        assert recommended_pos != -1 and skip_pos != -1, (
-            "SKILL.md must list both UX design options"
-        )
+        assert recommended_pos != -1 and skip_pos != -1, "SKILL.md must list both UX design options"
         assert recommended_pos < skip_pos, (
             "Recommended UX design option must appear before Skip option (#140)"
         )
@@ -888,7 +876,8 @@ class TestBrainstormingRecommendedDefaults:
         """SKILL.md must warn against re-deriving already-decided UX content (#132)."""
         text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
         assert "supplement" in text.lower() and "decided" in text.lower(), (
-            "SKILL.md must instruct ux-design-agent to supplement decided content, not restate (#132)"
+            "SKILL.md must instruct ux-design-agent to supplement decided content, "
+            "not restate (#132)"
         )
 
 
@@ -906,15 +895,15 @@ class TestProjectInitGitHooks:
         )
 
     def test_audit_checklist_reflects_git_hook_expectation(self, plugin_root: Path):
-        """Audit checklist HOOK-1 + HOOK-2 must check for git pre-commit hooks, not Claude hooks (#155)."""
+        """Audit checklist HOOK-1 + HOOK-2 must check git pre-commit hooks, not Claude (#155)."""
         path = plugin_root / "skills" / "project-init" / "references" / "audit-checklist.md"
         text = path.read_text()
-        hook1 = text[text.index("### HOOK-1:"):text.index("### HOOK-2:")]
+        hook1 = text[text.index("### HOOK-1:") : text.index("### HOOK-2:")]
         assert ".git/hooks/pre-commit" in hook1, (
             "HOOK-1 check must verify .git/hooks/pre-commit, not .claude/settings.json (#155)"
         )
         hook2_start = text.index("### HOOK-2:")
-        hook2 = text[hook2_start:hook2_start + 800]
+        hook2 = text[hook2_start : hook2_start + 800]
         assert ".git/hooks/pre-commit" in hook2, (
             "HOOK-2 check must verify .git/hooks/pre-commit, not .claude/settings.json (#155)"
         )
@@ -933,12 +922,12 @@ class TestCodifySubsystemTopLevel:
         )
 
     def test_target_types_section_describes_file_target(self, skills_dir: Path):
-        """SKILL.md must have a Target Types section describing file targets with placement options (#148)."""
+        """SKILL.md Target Types section must describe file targets with placement options (#148)."""  # noqa: E501
         text = (skills_dir / "codify-subsystem" / "SKILL.md").read_text()
         assert "Target Types" in text, (
             "SKILL.md must have a Target Types section documenting directory-vs-file targets (#148)"
         )
-        target_section = text[text.index("Target Types"):text.index("Target Types") + 2000]
+        target_section = text[text.index("Target Types") : text.index("Target Types") + 2000]
         assert "Sibling spec" in target_section or "sibling" in target_section.lower(), (
             "Target Types must describe sibling SPEC placement (#148)"
         )
