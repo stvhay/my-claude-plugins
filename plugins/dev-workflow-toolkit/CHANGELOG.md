@@ -3,9 +3,8 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
-## Unreleased
+## v1.21.0
 
-<!-- bump: minor -->
 
 ### Added
 
