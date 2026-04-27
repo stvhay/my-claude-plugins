@@ -19,6 +19,23 @@ spec templates, CI) but couples release mechanics — a broken CI on one plugin
 blocks merges for all. Per-plugin versioning in `plugin.json` mitigates this
 at the metadata level; full decoupling would require separate repos.
 
+### Plugin Shape: Skills vs Runtime Component
+
+Two plugin shapes coexist in this marketplace:
+
+1. **Skill collection.** A `skills/` directory of SKILL.md files; loaded by
+   the harness via the Agent Skills standard. All current toolkits follow
+   this shape.
+
+2. **Runtime component.** Ships a `.mcp.json` declaring a server the harness
+   launches at install time, plus the source needed to run it
+   (`pyproject.toml`, `src/`, optional `flake.nix`). `ssh-mcp` is the
+   reference example. A runtime-component plugin may, but need not, also
+   ship skills.
+
+Both shapes share the same `plugin.json` manifest and live under
+`plugins/<name>/`; the marketplace catalog treats them identically.
+
 ## Agent Skills Standard
 
 Every skill is defined by a `SKILL.md` file with YAML frontmatter containing
