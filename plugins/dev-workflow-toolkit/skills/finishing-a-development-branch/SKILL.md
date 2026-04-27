@@ -338,6 +338,22 @@ git worktree remove "$WORKTREE_TO_REMOVE"
 
 > **Why:** If the shell is inside the worktree being removed, `git worktree remove` succeeds but every subsequent command fails with `Unable to read current working directory`. `cd` to the main worktree first to keep the shell usable (#149).
 
+### Step 6b: Repo Hygiene
+
+Now that the PR is merged and `Closes #N` has closed the parent issue, sweep related stale state from the local repo. All sub-checks are **soft gates** — surface findings, recommend action, do not auto-delete anything ambiguous.
+
+1. **CWD on the main checkout.** Step 6 already `cd`'d there; verify `git rev-parse --show-toplevel` equals the main worktree (`git worktree list --porcelain | head -1 | sed 's|^worktree ||'`). If still inside a worktree, `cd` to the main checkout.
+
+2. **Sync main with remote.** `git fetch --all --prune`; if `main` is behind `origin/main`, run `git pull --ff-only`.
+
+3. **Worktree audit.** `git worktree list`. For each non-main worktree:
+   - **Stale** — branch upstream is `[gone]` or branch is fully merged into `main`. Remove with `git worktree remove <path>`.
+   - **Active** — has uncommitted/untracked work or commits ahead of `main`. List these to the user as a reminder; do not remove.
+
+4. **Stale feature branch audit.** `git branch -vv` to find branches with `[gone]` upstream. For each, verify the originating PR via `gh pr view <branch> --json state,mergeCommit`; if `state=MERGED`, force-delete with `git branch -D <branch>`. If unmerged or PR not found, list to the user — do not delete.
+
+5. **Dirty main check.** If `main` has uncommitted or untracked files (excluding gitignored) outside the current scope, surface them and recommend an action: commit on a fresh branch, `git stash`, or discard.
+
 ### Step 7: Retrospective
 
 **After all other steps complete,** invoke the retrospective skill.
@@ -350,7 +366,7 @@ The retrospective opt-in is collected in the Pre-PR Batch (Step 3d). If the user
 1. Verify tests → Quality gate → Review doc check → CI check
 2. Validate docs → Changelog → Base branch → Scope check
 3. **Pre-PR Batch** (release type + scope + base + retrospective opt-in)
-4. Push → Post-PR CI verify → Squash merge → Cleanup → Retrospective
+4. Push → Post-PR CI verify → Squash merge → Cleanup → Repo hygiene → Retrospective
 
 ## Common Mistakes and Red Flags
 
@@ -366,7 +382,7 @@ The retrospective opt-in is collected in the Pre-PR Batch (Step 3d). If the user
 - **documentation-standards** — Validate mode, hard gate after test verification
 - **retrospective** — Step 7, non-blocking session analysis after PR creation
 
-**Workflow:** Verify → Quality gate → Review doc check → CI check → Validate → Changelog → Base → Scope → Pre-PR Batch → Push → Post-PR CI verify → Squash merge → Cleanup → Retrospective
+**Workflow:** Verify → Quality gate → Review doc check → CI check → Validate → Changelog → Base → Scope → Pre-PR Batch → Push → Post-PR CI verify → Squash merge → Cleanup → Repo hygiene → Retrospective
 
 **Called by:**
 - **subagent-driven-development** (Step 7) - After all tasks complete

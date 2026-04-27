@@ -3,6 +3,17 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## Unreleased
+
+<!-- bump: minor -->
+
+### Added
+
+- **Repo hygiene checks** at two trigger points (#194):
+  - `brainstorming` — new pre-flight subsection `1a. Tree Hygiene`, before the existing issue check (which renumbers to `1b`; branch check becomes `1c`). Catches stale state before a fresh session inherits it.
+  - `finishing-a-development-branch` — new `Step 6b. Repo Hygiene`, after `Step 6` (Cleanup Worktree) and before `Step 7` (Retrospective). Catches stale state immediately after a PR merges and its parent issue closes.
+  - Both call sites perform the same five soft-gate checks: cwd-outside-worktree, main-synced-with-remote, worktree audit (stale removed, active surfaced), `[gone]`-upstream branch audit (squash-merged force-deleted, others surfaced), dirty-main check.
+
 ## v1.20.0
 
 
