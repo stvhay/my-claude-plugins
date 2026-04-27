@@ -25,7 +25,7 @@ MEMORY.md
 docs/plans
 
 # Machine-specific
-.mcp.json
+/.mcp.json
 .issue
 
 # Ragling (reproducible clone + config with absolute paths)
