@@ -1,0 +1,9 @@
+{
+  "name": "ssh-mcp",
+  "description": "MCP server: register (host, project directory) entries and run bash on them via system ssh — respects ~/.ssh/config",
+  "version": "0.1.0",
+  "author": {
+    "name": "stvhay"
+  },
+  "license": "Apache-2.0"
+}
