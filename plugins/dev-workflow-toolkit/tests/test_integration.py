@@ -507,9 +507,9 @@ class TestBranchCheckAutoWorktree:
     def test_auto_create_on_main(self, skills_dir: Path):
         """Branch check must auto-invoke using-git-worktrees on main."""
         text = (skills_dir / "brainstorming" / "SKILL.md").read_text()
-        # Find the 1b. Branch Check section
-        section_match = re.search(r"### 1b\. Branch Check.*?(?=\n### |\n## )", text, re.DOTALL)
-        assert section_match, "must have '### 1b. Branch Check' section"
+        # Find the 1c. Branch Check section
+        section_match = re.search(r"### 1c\. Branch Check.*?(?=\n### |\n## )", text, re.DOTALL)
+        assert section_match, "must have '### 1c. Branch Check' section"
         section = section_match.group()
         assert "using-git-worktrees" in section, "branch check must reference using-git-worktrees"
         assert "If yes" not in section, (
