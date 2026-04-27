@@ -15,11 +15,14 @@ plugins/
   plugin-name/
     .claude-plugin/
       plugin.json          # Plugin manifest
-    skills/
+    .mcp.json              # Optional: declares MCP servers the harness launches at install
+    src/                   # Optional: source for shipped MCP server / runtime component
+    pyproject.toml         # Optional: runtime component build/deps
+    skills/                # Optional: SKILL.md files (Agent Skills standard)
       SPEC.md              # Subsystem spec (VSA — agents walk up to find it)
       UPSTREAM-*.md        # Upstream provenance tracking
       skill-name/
-        SKILL.md           # Skill definition (Agent Skills standard)
+        SKILL.md           # Skill definition
         references/        # Optional supporting docs
     README.md
 ```

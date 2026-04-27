@@ -100,25 +100,38 @@ MAX_LINES = 350
 
 
 class TestSpecFiles:
-    """Each plugin must have a skills/SPEC.md of appropriate length."""
+    """Each plugin must have a SPEC.md of appropriate length.
+
+    Skill-collection plugins place SPEC.md under `skills/`; runtime-component
+    plugins (no `skills/` directory) place it at the plugin root. Both are
+    accepted.
+    """
 
     def _plugin_dirs(self, repo_root: Path) -> list[Path]:
         plugins_dir = repo_root / "plugins"
         return sorted(d for d in plugins_dir.iterdir() if d.is_dir())
 
+    def _spec_path(self, plugin_dir: Path) -> Path | None:
+        skills_spec = plugin_dir / "skills" / "SPEC.md"
+        if skills_spec.exists():
+            return skills_spec
+        root_spec = plugin_dir / "SPEC.md"
+        if root_spec.exists():
+            return root_spec
+        return None
+
     def test_spec_md_exists(self, repo_root: Path):
         missing = []
         for plugin_dir in self._plugin_dirs(repo_root):
-            spec = plugin_dir / "skills" / "SPEC.md"
-            if not spec.exists():
+            if self._spec_path(plugin_dir) is None:
                 missing.append(str(plugin_dir.relative_to(repo_root)))
-        assert not missing, f"Missing skills/SPEC.md in: {missing}"
+        assert not missing, f"Missing SPEC.md (looked in skills/ and plugin root) in: {missing}"
 
     def test_spec_md_line_count(self, repo_root: Path):
         violations = []
         for plugin_dir in self._plugin_dirs(repo_root):
-            spec = plugin_dir / "skills" / "SPEC.md"
-            if not spec.exists():
+            spec = self._spec_path(plugin_dir)
+            if spec is None:
                 continue  # covered by test_spec_md_exists
             lines = len(spec.read_text().splitlines())
             if not (MIN_LINES <= lines <= MAX_LINES):
@@ -198,7 +211,13 @@ REQUIRED_CHECKLIST_FIELDS = [
     "**Since:**",
 ]
 
-CHECKLIST_LAYERS = {"Scaffolding", "CLAUDE.md", "Release Infrastructure", "Spec Compliance", "Hooks"}
+CHECKLIST_LAYERS = {
+    "Scaffolding",
+    "CLAUDE.md",
+    "Release Infrastructure",
+    "Spec Compliance",
+    "Hooks",
+}
 
 VALID_SEVERITIES = {"MISSING", "OUTDATED", "DRIFT"}
 
@@ -248,17 +267,13 @@ class TestProjectInitAudit:
         )
 
     @pytest.mark.parametrize("field", REQUIRED_CHECKLIST_FIELDS)
-    def test_checklist_items_have_required_fields(
-        self, checklist_items: list[str], field: str
-    ):
+    def test_checklist_items_have_required_fields(self, checklist_items: list[str], field: str):
         missing = []
         for item in checklist_items:
             header = item.splitlines()[0]
             if field not in item:
                 missing.append(header)
-        assert not missing, (
-            f"Checklist items missing '{field}':\n" + "\n".join(missing)
-        )
+        assert not missing, f"Checklist items missing '{field}':\n" + "\n".join(missing)
 
     def test_checklist_covers_all_layers(self, checklist_text: str):
         for layer in CHECKLIST_LAYERS:
@@ -454,15 +469,11 @@ class TestMarketplacePluginRegistration:
     """marketplace.json must list all plugins (no version check — plugin.json is authority)."""
 
     def test_all_plugins_registered(self, repo_root: Path, all_plugin_dirs: list[Path]):
-        marketplace = json.loads(
-            (repo_root / ".claude-plugin" / "marketplace.json").read_text()
-        )
+        marketplace = json.loads((repo_root / ".claude-plugin" / "marketplace.json").read_text())
         marketplace_names = {p["name"] for p in marketplace["plugins"]}
         missing = []
         for plugin_dir in all_plugin_dirs:
-            plugin_json = json.loads(
-                (plugin_dir / ".claude-plugin" / "plugin.json").read_text()
-            )
+            plugin_json = json.loads((plugin_dir / ".claude-plugin" / "plugin.json").read_text())
             name = plugin_json["name"]
             if name not in marketplace_names:
                 missing.append(name)
@@ -470,9 +481,7 @@ class TestMarketplacePluginRegistration:
 
     def test_no_version_in_marketplace_entries(self, repo_root: Path):
         """marketplace.json plugin entries must not contain version fields."""
-        marketplace = json.loads(
-            (repo_root / ".claude-plugin" / "marketplace.json").read_text()
-        )
+        marketplace = json.loads((repo_root / ".claude-plugin" / "marketplace.json").read_text())
         with_version = [p["name"] for p in marketplace["plugins"] if "version" in p]
         assert not with_version, (
             f"Marketplace entries must not have 'version' field (plugin.json is authority): "
@@ -481,13 +490,9 @@ class TestMarketplacePluginRegistration:
 
     def test_no_metadata_version(self, repo_root: Path):
         """marketplace.json metadata must not contain version field."""
-        marketplace = json.loads(
-            (repo_root / ".claude-plugin" / "marketplace.json").read_text()
-        )
+        marketplace = json.loads((repo_root / ".claude-plugin" / "marketplace.json").read_text())
         metadata = marketplace.get("metadata", {})
-        assert "version" not in metadata, (
-            "marketplace.json metadata must not have 'version' field"
-        )
+        assert "version" not in metadata, "marketplace.json metadata must not have 'version' field"
 
 
 PLUGINS_WITH_UPSTREAM = {

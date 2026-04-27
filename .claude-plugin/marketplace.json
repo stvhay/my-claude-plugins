@@ -55,6 +55,12 @@
       "description": "Development workflow skills: brainstorming, planning, execution, debugging, testing, code review, and project scaffolding",
       "license": "Apache-2.0",
       "source": "./plugins/dev-workflow-toolkit"
+    },
+    {
+      "name": "ssh-mcp",
+      "description": "MCP server: per-project SSH host registry; run/upload/download tools shell out to system ssh and never edit ~/.ssh/config",
+      "license": "Apache-2.0",
+      "source": "./plugins/ssh-mcp"
     }
   ]
 }

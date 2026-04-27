@@ -1,0 +1,39 @@
+# Nix / direnv
+.direnv/
+.envrc.local
+.envrc.local.d/
+result
+result-*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# uv
+uv.lock.bak
+
+# Editors
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Claude Code local workspace state
+.claude/
+
+# Worktrees (default location)
+.worktrees/
+
+# Project-local secrets / runtime
+*.log
+.env
+.env.local
+
+# Per-project ssh-mcp host registry (this repo dogfoods itself)
+.ssh-mcp.toml
