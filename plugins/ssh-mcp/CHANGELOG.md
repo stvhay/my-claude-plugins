@@ -3,9 +3,8 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
-## Unreleased
+## v0.2.0
 
-<!-- bump: minor -->
 
 - **New tools: `upload` / `download`.** Thin scp wrappers — single file by default, set `recursive=True` for directories. Relative `remote_path` resolves against the host's registered `directory` (mirrors `run`'s cd convention); absolute or `~`-prefixed paths pass through. Existing destination files are silently overwritten (scp default).
 - **Per-project configuration.** State now lives in `<project>/.ssh-mcp.toml`; all tools take a `project` argument. The server is stateless across projects.
