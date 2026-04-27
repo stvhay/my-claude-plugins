@@ -331,7 +331,30 @@ class TestDocStructureNegative:
         spec.unlink()
         result = run_qg(qg, "--check", "doc-structure", "--path", str(fixture_dir))
         assert result.returncode != 0
-        assert "SPEC.md missing" in result.stdout
+        assert "SPEC.md" in result.stdout and "missing" in result.stdout
+
+    def test_plugin_root_spec_accepted_for_runtime_component(self, qg: str, fixture_dir: Path):
+        """Runtime-component plugins (no skills/) may put SPEC.md at plugin root."""
+        # Create a sibling plugin with SPEC.md at the plugin root and no skills/
+        plugin_dir = fixture_dir / "plugins" / "runtime-plugin"
+        plugin_dir.mkdir()
+        (plugin_dir / "SPEC.md").write_text(
+            "# Runtime Plugin Spec\n\n"
+            "## Invariants\n\n"
+            "| ID | Invariant | Type |\n"
+            "|----|-----------|------|\n"
+            "| INV-1 | First invariant | structural |\n\n"
+            "## Failure Modes\n\n"
+            "| ID | Mode |\n"
+            "|----|------|\n"
+            "| FAIL-1 | First failure |\n\n"
+            "## Testing\n\n"
+            "INV-1 is tested by the test suite.\n"
+            "FAIL-1 is tested via integration tests.\n"
+        )
+        result = run_qg(qg, "--check", "doc-structure", "--path", str(fixture_dir))
+        assert result.returncode == 0, f"doc-structure failed:\n{result.stdout}"
+        assert "plugins/runtime-plugin/SPEC.md exists" in result.stdout
 
 
 # ---------------------------------------------------------------------------

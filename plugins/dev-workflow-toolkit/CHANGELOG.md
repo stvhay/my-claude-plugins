@@ -3,6 +3,14 @@
 Agent-focused changelog. When a new version of this plugin is installed,
 read this file and apply retroactive actions marked with **ACTION**.
 
+## v1.19.1
+
+<!-- bump: patch -->
+
+### Fixed
+
+- **`quality-gate.sh` `doc-structure` check now accepts plugin-root `SPEC.md`** for runtime-component plugins (those with no `skills/` directory). Previously the gate hard-failed on any plugin missing `<plugin>/skills/SPEC.md`, which made it impossible to ship a plugin shape that has no skills (e.g. an MCP-server-only plugin). The gate now looks for `<plugin>/skills/SPEC.md` first, falls back to `<plugin>/SPEC.md`, and only fails if neither exists. The `inv-numbering` and `cross-links` checks were updated to match so plugin-root SPECs participate in numbering and dependency-link validation. The `test_spec_md_exists` / `test_spec_md_line_count` structure tests were updated to use the same dual-location lookup.
+
 ## v1.19.0
 
 ### Added

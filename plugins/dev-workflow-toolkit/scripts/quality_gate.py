@@ -17,9 +17,9 @@ import re
 import shutil
 import subprocess
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from collections.abc import Callable
 from typing import Any
 
 from markdown_it import MarkdownIt
@@ -156,13 +156,40 @@ def extract_definition_ids(tokens: list[Any], prefix: str) -> list[int]:
 # ── Checks ───────────────────────────────────────────────────────────
 
 
+def _plugin_spec_path(plugin_dir: Path) -> Path | None:
+    """Return the SPEC.md path for a plugin, or None if absent.
+
+    Skill-collection plugins live at `<plugin>/skills/SPEC.md`.
+    Runtime-component plugins (no `skills/` directory) live at `<plugin>/SPEC.md`.
+    """
+    skills_spec = plugin_dir / "skills" / "SPEC.md"
+    if skills_spec.exists():
+        return skills_spec
+    root_spec = plugin_dir / "SPEC.md"
+    if root_spec.exists():
+        return root_spec
+    return None
+
+
+def _all_plugin_specs(plugins_dir: Path) -> list[Path]:
+    """All SPEC.md files across plugins, in either supported location."""
+    specs: list[Path] = []
+    for plugin_dir in sorted(plugins_dir.iterdir()):
+        if not plugin_dir.is_dir():
+            continue
+        spec = _plugin_spec_path(plugin_dir)
+        if spec is not None:
+            specs.append(spec)
+    return specs
+
+
 def check_inv_numbering(results: Results, project_root: Path) -> None:
     plugins_dir = project_root / "plugins"
     if not plugins_dir.exists():
         report(results, "WARN", "inv-numbering", "No plugins/ directory found")
         return
 
-    spec_files = sorted(plugins_dir.rglob("skills/SPEC.md"))
+    spec_files = _all_plugin_specs(plugins_dir)
     if not spec_files:
         report(results, "WARN", "inv-numbering", "No SPEC.md files found")
         return
@@ -309,12 +336,18 @@ def check_doc_structure(results: Results, project_root: Path) -> None:
     for plugin_dir in sorted(plugins_dir.iterdir()):
         if not plugin_dir.is_dir():
             continue
-        spec = plugin_dir / "skills" / "SPEC.md"
         name = plugin_dir.name
-        if spec.exists():
-            report(results, "PASS", "doc-structure", f"plugins/{name}/skills/SPEC.md exists")
-        else:
-            report(results, "FAIL", "doc-structure", f"plugins/{name}/skills/SPEC.md missing")
+        spec = _plugin_spec_path(plugin_dir)
+        if spec is None:
+            report(
+                results,
+                "FAIL",
+                "doc-structure",
+                f"plugins/{name}/skills/SPEC.md or plugins/{name}/SPEC.md missing",
+            )
+            continue
+        rel = spec.relative_to(project_root)
+        report(results, "PASS", "doc-structure", f"{rel} exists")
 
 
 def check_vsa_coverage(results: Results, project_root: Path) -> None:
@@ -396,7 +429,12 @@ def check_tool_health(results: Results, project_root: Path) -> None:
         except subprocess.CalledProcessError:
             report(results, "PASS", "tool-health", "jq: installed (version unknown)")
     else:
-        report(results, "WARN", "tool-health", "jq: not installed (required for plansDirectory resolution)")
+        report(
+            results,
+            "WARN",
+            "tool-health",
+            "jq: not installed (required for plansDirectory resolution)",
+        )
 
     # bd (beads)
     if shutil.which("bd"):
@@ -535,7 +573,7 @@ def check_cross_links(results: Results, project_root: Path) -> None:
         report(results, "WARN", "cross-links", "No plugins/ directory found")
         return
 
-    spec_files = sorted(plugins_dir.rglob("skills/SPEC.md"))
+    spec_files = _all_plugin_specs(plugins_dir)
     if not spec_files:
         report(results, "WARN", "cross-links", "No SPEC.md files found")
         return
