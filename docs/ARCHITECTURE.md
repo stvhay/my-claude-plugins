@@ -116,7 +116,7 @@ structural checks against any project using the plugin:
 4. **doc-structure** — Required documents (SPEC.md, README.md) exist at their
    canonical paths.
 5. **vsa-coverage** — Every plugin's skills directory has a SPEC.md.
-6. **tool-health** — Required tools (uv, git) and optional tools (gh, bd) are
+6. **tool-health** — Required tools (uv, git) and optional tools (gh) are
    installed and working.
 
 The script is invoked by verification-before-completion (pre-merge gate),

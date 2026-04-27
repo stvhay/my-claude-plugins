@@ -14,6 +14,21 @@ read this file and apply retroactive actions marked with **ACTION**.
   - `finishing-a-development-branch` — new `Step 6b. Repo Hygiene`, after `Step 6` (Cleanup Worktree) and before `Step 7` (Retrospective). Catches stale state immediately after a PR merges and its parent issue closes.
   - Both call sites perform the same five soft-gate checks: cwd-outside-worktree, main-synced-with-remote, worktree audit (stale removed, active surfaced), `[gone]`-upstream branch audit (squash-merged force-deleted, others surfaced), dirty-main check.
 
+### Removed
+
+- **Beads (`bd`) integration** — removed as unused. The repo no longer tracks issues via beads; GitHub issues are the single source of truth. **ACTION:** Delete any local `.beads/` directory; uninstall the `bd` CLI if installed only for this repo. Specifically deleted/changed:
+  - `.beads/` directory (config, README, hooks, metadata) — deleted
+  - `scripts/plan_to_beads.py`, `scripts/plan-to-beads.sh` — deleted
+  - `tests/test_plan_to_beads.py` — deleted
+  - `docs/beads-setup.md` — deleted
+  - `scripts/quality_gate.py` — `bd` tool-health and beads issue-tracking sub-checks removed
+  - `.gitignore` — removed `.dolt/` and `*.db` (added by `bd init`)
+  - `docs/ARCHITECTURE.md` — `bd` dropped from the tool-health optional-tools list
+
+### Chore
+
+- Cleaned pre-existing E501/E741/SIM108 issues in `tests/test_integration.py` so the new `pre-commit-linter.sh` hook (#146/#189) stops blocking unrelated edits to the file.
+
 ## v1.20.0
 
 
