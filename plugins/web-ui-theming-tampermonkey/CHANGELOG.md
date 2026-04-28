@@ -1,8 +1,7 @@
 # Changelog
 
-## Unreleased
+## v0.1.1
 
-<!-- bump: patch -->
 
 ### Changed
 
