@@ -12,6 +12,7 @@ bcd213ff on 2026-04-26).
   `vision-verification.md`, `existing-themes.md`.
 - Reusable Playwright screenshot rig parameterized for any site.
 - First named style: `themes/luci-dark-material.md`.
-- Plugin renamed from `web-ui-theming` to `web-ui-theming-tampermonkey` on incorporation, reserving the `web-ui-theming-*` namespace for future delivery-target siblings (e.g. Stylus-only, browser-extension).
+- Plugin renamed from `web-ui-theming` to `web-ui-theming-tampermonkey` on incorporation.
+- Reserves the `web-ui-theming-*` namespace for future delivery-target siblings (e.g. Stylus-only, browser-extension).
 - Added plugin-level `DESIGN.md` (load-bearing intent extracted from the now-removed `TURNOVER.md`).
 - Added `skills/SPEC.md`.

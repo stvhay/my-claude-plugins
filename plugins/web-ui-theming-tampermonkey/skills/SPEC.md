@@ -32,7 +32,6 @@ A six-phase workflow gated by nine "Iron Laws" that turn visual claims from anal
 | YAML frontmatter `name: layer-theme` | Claude Code skill router | Unique, lowercase, matches directory name |
 | Phase 6 finalize step | The user, on completion | Produces a named theme spec under `themes/<name>.md` |
 | `themes/<name>.md` references | Future invocations like "apply the luci-dark-material style to grafana" | Self-contained palette + pattern library, readable by future skill invocations |
-| `scripts/screenshot.py` / `scripts/contrast.py` | Skill-internal Phase 5 verification | Run from a project's working directory; expects `theme-vendor/`, `fixtures/`, and a userscript file |
 
 ## Invariants
 
@@ -72,7 +71,7 @@ A six-phase workflow gated by nine "Iron Laws" that turn visual claims from anal
 
 ## Testing
 
-**Traceability:** INV-1 — structural — enforced by frontmatter validation in the dev-workflow-toolkit `quality-gate.sh` (`skill-structure` and `inv-numbering` checks). INV-2 through INV-5 — reasoning-required — enforced by the skill's Iron Laws and Phase gates; verified during code review and by repeated invocation against real third-party sites.
+**Traceability:** INV-1 — structural — enforced by frontmatter validation in the dev-workflow-toolkit `quality-gate.sh` (`skill-structure` check). INV-2 through INV-5 — reasoning-required — enforced by the skill's Iron Laws and Phase gates; verified during code review and by repeated invocation against real third-party sites.
 
 Validate via manual invocation: trigger `layer-theme` against a real site, walk through the 6 phases, verify each Iron Law gate fires (no visual claim without a PNG read; no selectors before Phase 3 critique; no claim that a JS change "works" without a post-change PNG).
 
@@ -83,5 +82,4 @@ Validate via manual invocation: trigger `layer-theme` against a real site, walk 
 | Claude Code skill router | external | N/A — built into Claude Code runtime |
 | Read tool (Claude Code) | external | required for INV-2 PNG reads |
 | Playwright (Python) | external | runtime dependency, installed per-project |
-| Pillow (Python) | external | runtime dependency for screenshot.py image ops |
 | Tampermonkey / Greasemonkey / Stylus | external | end-user-installed userscript managers; not consumed by the skill itself |

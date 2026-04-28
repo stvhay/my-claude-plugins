@@ -1,4 +1,4 @@
-# web-ui-theming
+# web-ui-theming-tampermonkey
 
 Claude Code plugin for layering themes onto existing HTML applications.
 
@@ -24,7 +24,7 @@ userscript (or plain CSS) that re-tones a site without touching its source.
 
 ## Install
 
-This plugin lives in `plugin/web-ui-theming/`. To install via the
+This plugin lives in `plugins/web-ui-theming-tampermonkey/`. To install via the
 my-claude-plugins marketplace, copy the directory into
 `marketplaces/my-claude-plugins/plugins/` and add an entry to that
 marketplace's plugin index, then `/plugin install web-ui-theming-tampermonkey@my-claude-plugins`.
