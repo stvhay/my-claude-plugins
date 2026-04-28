@@ -22,6 +22,7 @@ Personal Claude Code plugin marketplace.
 | [redteam](plugins/redteam/) | Adversarial analysis with parallel agent deployment: stress-test ideas and produce content through competition |
 | [dev-workflow-toolkit](plugins/dev-workflow-toolkit/) | Development workflow skills: brainstorming, planning, execution, debugging, testing, code review, project scaffolding, retrospective, and automated quality gates |
 | [ssh-mcp](plugins/ssh-mcp/) | MCP server: per-project SSH host registry; `run`/`upload`/`download` tools that shell out to system `ssh` and never edit `~/.ssh/config` |
+| [web-ui-theming-tampermonkey](plugins/web-ui-theming-tampermonkey/) | Layer themes onto existing HTML applications via userscripts (Tampermonkey/Greasemonkey/Stylus). Vendor real CSS, drive iteration with screenshot + Claude Vision, and persist finalized styles by name for reuse on future sites. |
 
 ## Documentation
 
