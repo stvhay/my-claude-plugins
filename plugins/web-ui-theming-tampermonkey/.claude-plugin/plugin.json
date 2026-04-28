@@ -1,0 +1,9 @@
+{
+  "name": "web-ui-theming-tampermonkey",
+  "description": "Layer themes onto existing HTML applications via userscripts (Tampermonkey/Greasemonkey/Stylus). Vendor real CSS, drive iteration with screenshot + Claude Vision, and persist finalized styles by name for reuse on future sites.",
+  "version": "0.1.0",
+  "author": {
+    "name": "stvhay"
+  },
+  "license": "Apache-2.0"
+}
